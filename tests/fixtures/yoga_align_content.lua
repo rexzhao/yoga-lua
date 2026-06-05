@@ -43,6 +43,57 @@ local function align_content_wrap(name, align_content, tops)
   }
 end
 
+local function align_content_nowrap(name, align_content)
+  return {
+    name = name,
+    source = source(name),
+    root = {
+      style = {
+        position = "absolute",
+        width = 140,
+        height = 120,
+        flexDirection = "row",
+        alignContent = align_content,
+      },
+      children = {
+        child(),
+        child(),
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 140, height = 120 },
+      { left = 0, top = 0, width = 50, height = 10 },
+      { left = 50, top = 0, width = 50, height = 10 },
+    },
+  }
+end
+
+local function align_content_singleline(name, align_content, top)
+  return {
+    name = name,
+    source = source(name),
+    root = {
+      style = {
+        position = "absolute",
+        width = 140,
+        height = 120,
+        flexWrap = "wrap",
+        flexDirection = "row",
+        alignContent = align_content,
+      },
+      children = {
+        child(),
+        child(),
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 140, height = 120 },
+      { left = 0, top = top, width = 50, height = 10 },
+      { left = 50, top = top, width = 50, height = 10 },
+    },
+  }
+end
+
 local function negative_space(name, align_content, tops, gap)
   return {
     name = name,
@@ -282,12 +333,24 @@ local function stretch_column()
 end
 
 return {
+  align_content_nowrap("align_content_flex_start_nowrap", "flex-start"),
   align_content_wrap("align_content_flex_start_wrap", "flex-start", { 0, 10, 20 }),
+  align_content_singleline("align_content_flex_start_wrap_singleline", "flex-start", 0),
+  align_content_nowrap("align_content_flex_end_nowrap", "flex-end"),
   align_content_wrap("align_content_flex_end_wrap", "flex-end", { 90, 100, 110 }),
+  align_content_singleline("align_content_flex_end_wrap_singleline", "flex-end", 110),
+  align_content_nowrap("align_content_center_nowrap", "center"),
   align_content_wrap("align_content_center_wrap", "center", { 45, 55, 65 }),
+  align_content_singleline("align_content_center_wrap_singleline", "center", 55),
+  align_content_nowrap("align_content_space_between_nowrap", "space-between"),
   align_content_wrap("align_content_space_between_wrap", "space-between", { 0, 55, 110 }),
+  align_content_singleline("align_content_space_between_wrap_singleline", "space-between", 0),
+  align_content_nowrap("align_content_space_around_nowrap", "space-around"),
   align_content_wrap("align_content_space_around_wrap", "space-around", { 15, 55, 95 }),
+  align_content_singleline("align_content_space_around_wrap_singleline", "space-around", 55),
+  align_content_nowrap("align_content_space_evenly_nowrap", "space-evenly"),
   align_content_wrap("align_content_space_evenly_wrap", "space-evenly", { 23, 55, 88 }),
+  align_content_singleline("align_content_space_evenly_wrap_singleline", "space-evenly", 55),
   negative_space("align_content_flex_start_wrapped_negative_space", "flex-start", { 0, 20, 40 }),
   negative_space("align_content_flex_end_wrapped_negative_space", "flex-end", { -50, -30, -10 }),
   negative_space("align_content_center_wrapped_negative_space", "center", { -25, -5, 15 }),
