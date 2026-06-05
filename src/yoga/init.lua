@@ -2,6 +2,7 @@ local yoga = {}
 
 yoga.MEASURE_MODE_UNDEFINED = "undefined"
 yoga.MEASURE_MODE_AT_MOST = "at-most"
+yoga.MEASURE_MODE_EXACTLY = "exactly"
 
 local function shallow_copy(source)
   local copy = {}
@@ -525,13 +526,17 @@ local function cross_axis_gap(style, direction)
   return number_or_zero(style.columnGap or style.gap)
 end
 
-local function measure_node(node, available_width, available_height)
+local function measure_mode_from_available(available)
+  return type(available) == "number" and yoga.MEASURE_MODE_AT_MOST or yoga.MEASURE_MODE_UNDEFINED
+end
+
+local function measure_node(node, available_width, available_height, width_mode, height_mode)
   if type(node.measure) ~= "function" then
     return nil
   end
 
-  local width_mode = type(available_width) == "number" and yoga.MEASURE_MODE_AT_MOST or yoga.MEASURE_MODE_UNDEFINED
-  local height_mode = type(available_height) == "number" and yoga.MEASURE_MODE_AT_MOST or yoga.MEASURE_MODE_UNDEFINED
+  width_mode = width_mode or measure_mode_from_available(available_width)
+  height_mode = height_mode or measure_mode_from_available(available_height)
   local cache = node._measure_cache
 
   if not node.dirty
@@ -660,13 +665,31 @@ local function child_measure_available(parent_style, direction, inner_width, inn
   return inner_width, nil
 end
 
+local function child_measure_constraints(parent_style, child_style, direction, inner_width, inner_height)
+  local measure_width, measure_height = child_measure_available(parent_style, direction, inner_width, inner_height)
+  local width_mode = measure_mode_from_available(measure_width)
+  local height_mode = measure_mode_from_available(measure_height)
+  local align = child_style.alignSelf or parent_style.alignItems or "stretch"
+
+  if align == "stretch" and not aspect_ratio(child_style) then
+    if is_row_direction(direction) then
+      if measure_height ~= nil and resolve_value(child_style.height, measure_height) == nil then
+        height_mode = yoga.MEASURE_MODE_EXACTLY
+      end
+    elseif measure_width ~= nil and resolve_value(child_style.width, measure_width) == nil then
+      width_mode = yoga.MEASURE_MODE_EXACTLY
+    end
+  end
+
+  return measure_width, measure_height, width_mode, height_mode
+end
+
 local function build_child_specs(children, parent_style, direction, gap, inner_width, inner_height, layout_direction)
   local specs = {}
   local total_grow = 0
   local used_main = 0
   local visible_count = 0
   local available_main = is_row_direction(direction) and inner_width or inner_height
-  local measure_width, measure_height = child_measure_available(parent_style, direction, inner_width, inner_height)
 
   for index, child in ipairs(children) do
     if is_display_none(child) then
@@ -689,7 +712,9 @@ local function build_child_specs(children, parent_style, direction, gap, inner_w
       local auto_margin = resolve_auto_edges(style, "margin", layout_direction)
       local grow = flex_grow(style)
       local shrink = flex_shrink(style)
-      local measured = measure_node(child, measure_width, measure_height)
+      local measure_width, measure_height, width_mode, height_mode =
+        child_measure_constraints(parent_style, style, direction, inner_width, inner_height)
+      local measured = measure_node(child, measure_width, measure_height, width_mode, height_mode)
       local available_cross = is_row_direction(direction) and inner_height or inner_width
       local base_main = main_size(style, direction, available_main, available_cross, measured)
 
@@ -1570,7 +1595,6 @@ local function layout_wrapped_children(
   local line_gap = cross_axis_gap(style, direction)
   local available_main = is_row_direction(direction) and inner_width or inner_height
   local available_cross = is_row_direction(direction) and inner_height or inner_width
-  local measure_width, measure_height = child_measure_available(style, direction, inner_width, inner_height)
   local lines = {}
   local current_line = { items = {}, used_main = 0 }
   local specs = {}
@@ -1592,7 +1616,9 @@ local function layout_wrapped_children(
     else
       local child_style = child.style or {}
       local margin = resolve_edges(child_style, "margin", inner_width, layout_direction)
-      local measured = measure_node(child, measure_width, measure_height)
+      local measure_width, measure_height, width_mode, height_mode =
+        child_measure_constraints(style, child_style, direction, inner_width, inner_height)
+      local measured = measure_node(child, measure_width, measure_height, width_mode, height_mode)
       local base_main = main_size(child_style, direction, available_main, available_cross, measured)
       local spec = {
         child = child,

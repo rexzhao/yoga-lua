@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 437 tests, 2 skipped`
+- `lua tests/run.lua` -> `ok - 443 tests, 2 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 - `lua benchmarks/run.lua` -> records 100, 1,000, and 5,000 node layout timings in `BENCHMARKS.md`
 
@@ -196,7 +196,9 @@ Status: complete for the supported Milestone 4 scope; upstream-disabled skipped 
 - [x] Love2D visual demo for a large virtualized scroll list.
 - [x] Relayout behavior tests.
 - [x] Dirty marking tests.
-- [ ] Measure tests.
+- [x] Basic measure callback layout tests.
+- [x] Migrated supported non-flex `YGMeasureModeTest` subset.
+- [ ] Broader upstream `YGMeasureTest` migration.
 - [x] Measure cache tests.
 - [x] Overflow and scroll-container measure mode tests.
 - [x] `hadOverflow` behavior tests.
@@ -205,4 +207,4 @@ Status: complete for the supported Milestone 4 scope; upstream-disabled skipped 
 - [x] Benchmarks for 5,000 nodes.
 - [x] Virtualized list scroll and jump benchmark.
 
-Status: in progress; dirty marking, layout/measure caching, hadOverflow, scroll measure modes, layout benchmarks, and UI virtualized lists are implemented, while full overflow semantics remain.
+Status: in progress; dirty marking, layout/measure caching, hadOverflow, scroll measure modes, layout benchmarks, UI virtualized lists, and the supported non-flex measure mode subset are implemented, while full overflow semantics and broader upstream measure migration remain.
