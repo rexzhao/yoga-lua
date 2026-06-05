@@ -88,4 +88,12 @@ return function(runner, helper)
     helper.assert_layout(child, { left = 0, top = 0, width = 100, height = 100 }, "auto-sized absolute child")
     helper.assert_layout(child.children[1], { left = 0, top = 0, width = 100, height = 100 }, "absolute grandchild")
   end)
+
+  runner:test("absolute root physical left is unchanged by rtl layout direction", function()
+    local root = yoga.node({ position = "absolute", left = 72, width = 52, height = 52 })
+
+    yoga.calculateLayout(root, nil, nil, "rtl")
+
+    helper.assert_layout(root, { left = 72, top = 0, width = 52, height = 52 }, "root")
+  end)
 end

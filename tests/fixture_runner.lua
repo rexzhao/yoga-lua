@@ -51,7 +51,7 @@ function fixture_runner.register(runner, helper, cases)
     else
       runner:test(name, function()
         local root = build_node(case.root)
-        yoga.calculateLayout(root, case.width, case.height)
+        yoga.calculateLayout(root, case.width, case.height, case.direction)
 
         local nodes = flatten(root, {})
         helper.assert_equal(#nodes, #case.expect, case.name .. " node count")

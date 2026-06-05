@@ -275,8 +275,13 @@ return {
   {
     name = "position_root_with_rtl_should_position_withoutdirection",
     source = source("position_root_with_rtl_should_position_withoutdirection"),
-    skip = true,
-    unsupportedReason = "RTL direction is not implemented",
+    direction = "rtl",
+    root = {
+      style = { position = "absolute", left = 72, width = 52, height = 52 },
+    },
+    expect = {
+      { left = 72, top = 0, width = 52, height = 52 },
+    },
   },
   {
     name = "absolute_layout_percentage_bottom_based_on_parent_height",

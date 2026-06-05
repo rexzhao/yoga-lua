@@ -60,4 +60,46 @@ return function(runner, helper)
     helper.assert_layout(root.children[1], { left = 0, top = 10, width = 100, height = 40 }, "fixed child")
     helper.assert_layout(root.children[2], { left = 0, top = 54, width = 100, height = 136 }, "grow child")
   end)
+
+  runner:test("rtl row layout reverses horizontal flow", function()
+    local root = yoga.node({ width = 30, height = 20, flexDirection = "row" }, {
+      yoga.node({ width = 10 }),
+      yoga.node({ width = 10 }),
+      yoga.node({ width = 10 }),
+    })
+
+    yoga.calculateLayout(root, nil, nil, "rtl")
+
+    helper.assert_layout(root.children[1], { left = 20, top = 0, width = 10, height = 20 }, "first child")
+    helper.assert_layout(root.children[2], { left = 10, top = 0, width = 10, height = 20 }, "second child")
+    helper.assert_layout(root.children[3], { left = 0, top = 0, width = 10, height = 20 }, "third child")
+  end)
+
+  runner:test("rtl row-reverse layout uses normal horizontal flow", function()
+    local root = yoga.node({ width = 30, height = 20, flexDirection = "row-reverse" }, {
+      yoga.node({ width = 10 }),
+      yoga.node({ width = 10 }),
+      yoga.node({ width = 10 }),
+    })
+
+    yoga.calculateLayout(root, nil, nil, "rtl")
+
+    helper.assert_layout(root.children[1], { left = 0, top = 0, width = 10, height = 20 }, "first child")
+    helper.assert_layout(root.children[2], { left = 10, top = 0, width = 10, height = 20 }, "second child")
+    helper.assert_layout(root.children[3], { left = 20, top = 0, width = 10, height = 20 }, "third child")
+  end)
+
+  runner:test("rtl column layout starts horizontal cross-axis from the right", function()
+    local root = yoga.node({ width = 100, height = 30, flexDirection = "column" }, {
+      yoga.node({ width = 10, height = 10 }),
+      yoga.node({ width = 10, height = 10 }),
+      yoga.node({ width = 10, height = 10 }),
+    })
+
+    yoga.calculateLayout(root, nil, nil, "rtl")
+
+    helper.assert_layout(root.children[1], { left = 90, top = 0, width = 10, height = 10 }, "first child")
+    helper.assert_layout(root.children[2], { left = 90, top = 10, width = 10, height = 10 }, "second child")
+    helper.assert_layout(root.children[3], { left = 90, top = 20, width = 10, height = 10 }, "third child")
+  end)
 end

@@ -37,8 +37,28 @@ local function is_row_direction(direction)
   return direction == "row" or direction == "row-reverse"
 end
 
-local function is_reverse_direction(direction)
-  return direction == "row-reverse" or direction == "column-reverse"
+local function normalize_layout_direction(direction)
+  if direction == "rtl" or direction == "RTL" then
+    return "rtl"
+  end
+
+  return "ltr"
+end
+
+local function is_rtl(layout_direction)
+  return normalize_layout_direction(layout_direction) == "rtl"
+end
+
+local function is_main_axis_reversed(direction, layout_direction)
+  if direction == "row" then
+    return is_rtl(layout_direction)
+  end
+
+  if direction == "row-reverse" then
+    return not is_rtl(layout_direction)
+  end
+
+  return direction == "column-reverse"
 end
 
 local function zero_layout_box(node)
@@ -563,7 +583,7 @@ local function justify_offsets(style, specs, direction, gap, inner_width, inner_
   return leading, between
 end
 
-local function cross_axis_layout(parent_style, child_style, direction, margin, inner_width, inner_height, measured, main)
+local function cross_axis_layout(parent_style, child_style, direction, margin, inner_width, inner_height, measured, main, layout_direction)
   local align = child_style.alignSelf or parent_style.alignItems or "stretch"
   local available
   local explicit
@@ -617,6 +637,10 @@ local function cross_axis_layout(parent_style, child_style, direction, margin, i
     offset = before + remaining
   end
 
+  if not is_row_direction(direction) and is_rtl(layout_direction) then
+    offset = available - offset - size
+  end
+
   return size, offset
 end
 
@@ -668,7 +692,7 @@ local function absolute_axis_size(style, dimension, owner_size, start_offset, en
   return nil
 end
 
-local function absolute_default_offset(parent_style, child_style, direction, axis, available, size)
+local function absolute_default_offset(parent_style, child_style, direction, axis, available, size, layout_direction)
   local offset
   local is_cross_axis
   local is_main_axis
@@ -693,11 +717,14 @@ local function absolute_default_offset(parent_style, child_style, direction, axi
     is_main_axis = true
   end
 
-  if is_main_axis and (direction == "row-reverse" or direction == "column-reverse") then
-    return available - offset - size
-  end
+  local should_reverse = is_main_axis and is_main_axis_reversed(direction, layout_direction)
+    or is_cross_axis and axis == "horizontal" and is_rtl(layout_direction)
 
   if is_cross_axis and parent_style.flexWrap == "wrap-reverse" then
+    should_reverse = not should_reverse
+  end
+
+  if should_reverse then
     return available - offset - size
   end
 
@@ -717,7 +744,8 @@ local function absolute_axis_position(
   start_offset,
   end_offset,
   start_margin,
-  end_margin
+  end_margin,
+  layout_direction
 )
   start_margin = start_margin or 0
   end_margin = end_margin or 0
@@ -733,10 +761,10 @@ local function absolute_axis_position(
   local available_without_margin = clamp_size(default_available - start_margin - end_margin)
   return default_origin
     + start_margin
-    + absolute_default_offset(parent_style, child_style, direction, axis, available_without_margin, size or 0)
+    + absolute_default_offset(parent_style, child_style, direction, axis, available_without_margin, size or 0, layout_direction)
 end
 
-local function layout_absolute_node(child, parent_style, padding, border, parent_width, parent_height, inner_width, inner_height)
+local function layout_absolute_node(child, parent_style, padding, border, parent_width, parent_height, inner_width, inner_height, layout_direction)
   local style = child.style or {}
   local measured = measure_node(child, inner_width, inner_height)
   local margin = resolve_edges(style, "margin", inner_width)
@@ -784,7 +812,8 @@ local function layout_absolute_node(child, parent_style, padding, border, parent
     left_offset,
     right_offset,
     margin.left,
-    margin.right
+    margin.right,
+    layout_direction
   )
   local child_top = absolute_axis_position(
     parent_style,
@@ -799,13 +828,14 @@ local function layout_absolute_node(child, parent_style, padding, border, parent
     top_offset,
     bottom_offset,
     margin.top,
-    margin.bottom
+    margin.bottom,
+    layout_direction
   )
 
   layout_node(child, child_left, child_top, width, height, inner_width, inner_height, measured, {
     useAvailableWidth = width ~= nil,
     useAvailableHeight = height ~= nil,
-  })
+  }, layout_direction)
 end
 
 local function main_outer_size(spec, direction)
@@ -992,7 +1022,7 @@ local function child_cross_extent(specs, direction, padding, border)
   return border.left + padding.left + cross + padding.right + border.right
 end
 
-local function relayout_stretched_auto_cross_children(node, specs, direction, padding, border)
+local function relayout_stretched_auto_cross_children(node, specs, direction, padding, border, layout_direction)
   local style = node.style or {}
   local inner_width = clamp_size(node.layout.width - border.left - padding.left - padding.right - border.right)
   local inner_height = clamp_size(node.layout.height - border.top - padding.top - padding.bottom - border.bottom)
@@ -1022,7 +1052,8 @@ local function relayout_stretched_auto_cross_children(node, specs, direction, pa
             inner_width,
             inner_height,
             spec.measured,
-            { useAvailableWidth = true }
+            { useAvailableWidth = true },
+            layout_direction
           )
         else
           local width = constrain_size(
@@ -1040,7 +1071,8 @@ local function relayout_stretched_auto_cross_children(node, specs, direction, pa
             inner_width,
             inner_height,
             spec.measured,
-            { useAvailableHeight = true }
+            { useAvailableHeight = true },
+            layout_direction
           )
         end
       end
@@ -1095,8 +1127,8 @@ local function align_content_offsets(style, lines, gap, available_cross, auto_cr
   return leading, between
 end
 
-local function cross_axis_layout_in_line(parent_style, child_style, direction, margin, line_cross, measured, main)
-  return cross_axis_layout(parent_style, child_style, direction, margin, line_cross, line_cross, measured, main)
+local function cross_axis_layout_in_line(parent_style, child_style, direction, margin, line_cross, measured, main, layout_direction)
+  return cross_axis_layout(parent_style, child_style, direction, margin, line_cross, line_cross, measured, main, layout_direction)
 end
 
 local function layout_wrapped_children(
@@ -1108,7 +1140,8 @@ local function layout_wrapped_children(
   owner_width,
   owner_height,
   auto_main_size,
-  auto_cross_size
+  auto_cross_size,
+  layout_direction
 )
   local style = node.style or {}
   local direction = style.flexDirection or "column"
@@ -1199,7 +1232,7 @@ local function layout_wrapped_children(
 
       if is_row_direction(direction) then
         local child_height, cross_offset =
-          cross_axis_layout_in_line(style, child_style, direction, margin, line.cross, spec.measured, spec.main)
+          cross_axis_layout_in_line(style, child_style, direction, margin, line.cross, spec.measured, spec.main, layout_direction)
         if spec.auto_cross then
           local line_height = clamp_size(line.cross - margin.top - margin.bottom)
           child_height = math.max(auto_cross_size_from_child(spec, direction, inner_width, inner_height) or 0, line_height)
@@ -1219,12 +1252,13 @@ local function layout_wrapped_children(
           inner_width,
           inner_height,
           spec.measured,
-          { useAvailableWidth = true }
+          { useAvailableWidth = true },
+          layout_direction
         )
         main_cursor = main_cursor + margin.left + child.layout.width + margin.right + between
       else
         local child_width, cross_offset =
-          cross_axis_layout_in_line(style, child_style, direction, margin, line.cross, spec.measured, spec.main)
+          cross_axis_layout_in_line(style, child_style, direction, margin, line.cross, spec.measured, spec.main, layout_direction)
         if spec.auto_cross then
           local line_width = clamp_size(line.cross - margin.left - margin.right)
           child_width = math.max(auto_cross_size_from_child(spec, direction, inner_width, inner_height) or 0, line_width)
@@ -1244,7 +1278,8 @@ local function layout_wrapped_children(
           inner_width,
           inner_height,
           spec.measured,
-          { useAvailableHeight = true }
+          { useAvailableHeight = true },
+          layout_direction
         )
         main_cursor = main_cursor + margin.top + child.layout.height + margin.bottom + between
       end
@@ -1270,7 +1305,7 @@ local function layout_wrapped_children(
     if spec and spec.hidden then
       zero_layout_tree(child)
     elseif spec and spec.absolute then
-      layout_absolute_node(child, style, padding, border, node.layout.width, node.layout.height, inner_width, inner_height)
+      layout_absolute_node(child, style, padding, border, node.layout.width, node.layout.height, inner_width, inner_height, layout_direction)
     end
   end
 
@@ -1302,13 +1337,14 @@ local function layout_wrapped_children(
 
 end
 
-function layout_node(node, left, top, available_width, available_height, owner_width, owner_height, measured, options)
+function layout_node(node, left, top, available_width, available_height, owner_width, owner_height, measured, options, layout_direction)
   if is_display_none(node) then
     zero_layout_tree(node)
     return node
   end
 
   options = options or {}
+  layout_direction = normalize_layout_direction(layout_direction)
 
   local style = node.style or {}
   local measured_size = measured or measure_node(node, available_width, available_height)
@@ -1371,7 +1407,8 @@ function layout_node(node, left, top, available_width, available_height, owner_w
       owner_width,
       owner_height,
       auto_main_size,
-      auto_cross_size
+      auto_cross_size,
+      layout_direction
     )
     return node
   end
@@ -1400,7 +1437,7 @@ function layout_node(node, left, top, available_width, available_height, owner_w
     if spec.hidden then
       zero_layout_tree(child)
     elseif spec.absolute then
-      layout_absolute_node(child, style, padding, border, node.layout.width, node.layout.height, inner_width, inner_height)
+      layout_absolute_node(child, style, padding, border, node.layout.width, node.layout.height, inner_width, inner_height, layout_direction)
     else
       local margin = spec.margin
       local child_left = border.left + padding.left
@@ -1408,7 +1445,7 @@ function layout_node(node, left, top, available_width, available_height, owner_w
 
       if is_row_direction(direction) then
         local child_height, cross_offset =
-          cross_axis_layout(style, child_style, direction, margin, inner_width, inner_height, spec.measured, spec.main)
+          cross_axis_layout(style, child_style, direction, margin, inner_width, inner_height, spec.measured, spec.main, layout_direction)
         local child_auto_main = auto_main_size and spec.auto_main
         local child_width = spec.main
         if auto_cross_size and spec.auto_cross then
@@ -1418,7 +1455,7 @@ function layout_node(node, left, top, available_width, available_height, owner_w
         if child_auto_main then
           child_width = nil
         end
-        if is_reverse_direction(direction) then
+        if is_main_axis_reversed(direction, layout_direction) then
           child_left = child_left + inner_width - leading - cursor - margin.right - (child_width or spec.main)
         else
           child_left = child_left + leading + cursor + margin.left
@@ -1433,7 +1470,8 @@ function layout_node(node, left, top, available_width, available_height, owner_w
           inner_width,
           inner_height,
           spec.measured,
-          { useAvailableWidth = not child_auto_main }
+          { useAvailableWidth = not child_auto_main },
+          layout_direction
         )
         if child_auto_main then
           spec.main = child.layout.width
@@ -1443,7 +1481,7 @@ function layout_node(node, left, top, available_width, available_height, owner_w
         cursor = cursor + margin.left + child.layout.width + margin.right + between
       else
         local child_width, cross_offset =
-          cross_axis_layout(style, child_style, direction, margin, inner_width, inner_height, spec.measured, spec.main)
+          cross_axis_layout(style, child_style, direction, margin, inner_width, inner_height, spec.measured, spec.main, layout_direction)
         local child_auto_main = auto_main_size and spec.auto_main
         local child_height = spec.main
         if auto_cross_size and spec.auto_cross then
@@ -1454,7 +1492,7 @@ function layout_node(node, left, top, available_width, available_height, owner_w
           child_height = nil
         end
         child_left = child_left + cross_offset
-        if is_reverse_direction(direction) then
+        if is_main_axis_reversed(direction, layout_direction) then
           child_top = child_top + inner_height - leading - cursor - margin.bottom - (child_height or spec.main)
         else
           child_top = child_top + leading + cursor + margin.top
@@ -1468,7 +1506,8 @@ function layout_node(node, left, top, available_width, available_height, owner_w
           inner_width,
           inner_height,
           spec.measured,
-          { useAvailableHeight = not child_auto_main }
+          { useAvailableHeight = not child_auto_main },
+          layout_direction
         )
         if child_auto_main then
           spec.main = child.layout.height
@@ -1497,7 +1536,7 @@ function layout_node(node, left, top, available_width, available_height, owner_w
       node.layout.width = constrain_size(child_cross_extent(specs, direction, padding, border), style, "width", owner_width)
     end
 
-    relayout_stretched_auto_cross_children(node, specs, direction, padding, border)
+    relayout_stretched_auto_cross_children(node, specs, direction, padding, border, layout_direction)
   end
 
   return node
@@ -1537,8 +1576,9 @@ local function root_offsets(root, owner_width, owner_height)
   return left + margin.left, top + margin.top
 end
 
-function yoga.calculateLayout(root, width, height)
-  layout_node(root, 0, 0, width, height, width, height)
+function yoga.calculateLayout(root, width, height, layout_direction)
+  layout_direction = normalize_layout_direction(layout_direction)
+  layout_node(root, 0, 0, width, height, width, height, nil, nil, layout_direction)
   local root_left, root_top = root_offsets(root, width, height)
   offset_layout_box(root, root_left, root_top)
   round_layout_tree(root)
