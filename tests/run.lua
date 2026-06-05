@@ -19,6 +19,7 @@ require("relative_test")(runner, helper)
 require("rounding_test")(runner, helper)
 require("dirty_test")(runner, helper)
 require("layout_cache_test")(runner, helper)
+require("measure_cache_test")(runner, helper)
 require("love2d_test")(runner, helper)
 require("fixture_test")(runner, helper)
 

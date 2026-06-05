@@ -526,19 +526,46 @@ local function measure_node(node, available_width, available_height)
 
   local width_mode = type(available_width) == "number" and yoga.MEASURE_MODE_AT_MOST or yoga.MEASURE_MODE_UNDEFINED
   local height_mode = type(available_height) == "number" and yoga.MEASURE_MODE_AT_MOST or yoga.MEASURE_MODE_UNDEFINED
-  local width, height = node.measure(available_width, width_mode, available_height, height_mode, node)
+  local cache = node._measure_cache
 
-  if type(width) == "table" then
+  if not node.dirty
+    and cache
+    and cache.available_width == available_width
+    and cache.available_height == available_height
+    and cache.width_mode == width_mode
+    and cache.height_mode == height_mode
+  then
     return {
-      width = width.width,
-      height = width.height,
+      width = cache.width,
+      height = cache.height,
     }
   end
 
-  return {
-    width = width,
-    height = height,
+  local width, height = node.measure(available_width, width_mode, available_height, height_mode, node)
+  local measured
+
+  if type(width) == "table" then
+    measured = {
+      width = width.width,
+      height = width.height,
+    }
+  else
+    measured = {
+      width = width,
+      height = height,
+    }
+  end
+
+  node._measure_cache = {
+    available_width = available_width,
+    available_height = available_height,
+    width_mode = width_mode,
+    height_mode = height_mode,
+    width = measured.width,
+    height = measured.height,
   }
+
+  return measured
 end
 
 local function main_size(style, direction, owner_size, cross_owner_size, measured)

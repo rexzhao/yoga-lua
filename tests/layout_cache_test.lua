@@ -58,6 +58,7 @@ return function(runner, helper)
     yoga.calculateLayout(root, 120, 20, "ltr")
     yoga.calculateLayout(root, 120, 20, "rtl")
 
-    helper.assert_equal(calls, 3, "measure calls across cache keys")
+    helper.assert_equal(calls, 2, "measure calls across available sizes")
+    helper.assert_layout(child, { left = 100, top = 0, width = 20, height = 10 }, "direction change relayout")
   end)
 end
