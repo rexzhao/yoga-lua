@@ -296,6 +296,15 @@ local function alternating_with_percent()
   }
 end
 
+local function unsupported_logical_edge(name)
+  return {
+    name = name,
+    source = source(name),
+    skip = true,
+    unsupportedReason = "logical start/end edges and RTL direction are not implemented",
+  }
+end
+
 return {
   column_no_height(),
   row_no_width(),
@@ -352,4 +361,20 @@ return {
   inner_absolute_spacing("flex_direction_col_reverse_inner_padding_top", "column-reverse", { paddingTop = 10 }, 0, 90, { 0, 0 }, 100),
   inner_absolute_spacing("flex_direction_col_reverse_inner_padding_bottom", "column-reverse", { paddingBottom = 10 }, 0, 90, { 0, 0 }, 100),
   alternating_with_percent(),
+  unsupported_logical_edge("flex_direction_row_reverse_margin_start"),
+  unsupported_logical_edge("flex_direction_row_reverse_margin_end"),
+  unsupported_logical_edge("flex_direction_row_reverse_padding_start"),
+  unsupported_logical_edge("flex_direction_row_reverse_padding_end"),
+  unsupported_logical_edge("flex_direction_row_reverse_border_start"),
+  unsupported_logical_edge("flex_direction_row_reverse_border_end"),
+  unsupported_logical_edge("flex_direction_row_reverse_pos_start"),
+  unsupported_logical_edge("flex_direction_row_reverse_pos_end"),
+  unsupported_logical_edge("flex_direction_row_reverse_inner_pos_start"),
+  unsupported_logical_edge("flex_direction_row_reverse_inner_pos_end"),
+  unsupported_logical_edge("flex_direction_row_reverse_inner_marign_start"),
+  unsupported_logical_edge("flex_direction_row_reverse_inner_margin_end"),
+  unsupported_logical_edge("flex_direction_row_reverse_inner_border_start"),
+  unsupported_logical_edge("flex_direction_row_reverse_inner_border_end"),
+  unsupported_logical_edge("flex_direction_row_reverse_inner_padding_start"),
+  unsupported_logical_edge("flex_direction_row_reverse_inner_padding_end"),
 }
