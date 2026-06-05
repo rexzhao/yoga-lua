@@ -43,6 +43,25 @@ local function align_content_wrap(name, align_content, tops)
   }
 end
 
+local function stretch_row(name, children, expected)
+  return {
+    name = name,
+    source = source(name),
+    root = {
+      style = {
+        position = "absolute",
+        width = 150,
+        height = 100,
+        flexWrap = "wrap",
+        flexDirection = "row",
+        alignContent = "stretch",
+      },
+      children = children,
+    },
+    expect = expected,
+  }
+end
+
 return {
   align_content_wrap("align_content_flex_start_wrap", "flex-start", { 0, 10, 20 }),
   align_content_wrap("align_content_flex_end_wrap", "flex-end", { 90, 100, 110 }),
@@ -50,4 +69,40 @@ return {
   align_content_wrap("align_content_space_between_wrap", "space-between", { 0, 55, 110 }),
   align_content_wrap("align_content_space_around_wrap", "space-around", { 15, 55, 95 }),
   align_content_wrap("align_content_space_evenly_wrap", "space-evenly", { 23, 55, 88 }),
+  stretch_row("align_content_stretch_row", {
+    { style = { width = 50 } },
+    { style = { width = 50 } },
+    { style = { width = 50 } },
+    { style = { width = 50 } },
+    { style = { width = 50 } },
+  }, {
+    { left = 0, top = 0, width = 150, height = 100 },
+    { left = 0, top = 0, width = 50, height = 50 },
+    { left = 50, top = 0, width = 50, height = 50 },
+    { left = 100, top = 0, width = 50, height = 50 },
+    { left = 0, top = 50, width = 50, height = 50 },
+    { left = 50, top = 50, width = 50, height = 50 },
+  }),
+  stretch_row("align_content_stretch_row_with_single_row", {
+    { style = { width = 50 } },
+    { style = { width = 50 } },
+  }, {
+    { left = 0, top = 0, width = 150, height = 100 },
+    { left = 0, top = 0, width = 50, height = 100 },
+    { left = 50, top = 0, width = 50, height = 100 },
+  }),
+  stretch_row("align_content_stretch_row_with_fixed_height", {
+    { style = { width = 50 } },
+    { style = { width = 50, height = 60 } },
+    { style = { width = 50 } },
+    { style = { width = 50 } },
+    { style = { width = 50 } },
+  }, {
+    { left = 0, top = 0, width = 150, height = 100 },
+    { left = 0, top = 0, width = 50, height = 80 },
+    { left = 50, top = 0, width = 50, height = 60 },
+    { left = 100, top = 0, width = 50, height = 80 },
+    { left = 0, top = 80, width = 50, height = 20 },
+    { left = 50, top = 80, width = 50, height = 20 },
+  }),
 }
