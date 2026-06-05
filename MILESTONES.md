@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 324 tests, 3 skipped`
+- `lua tests/run.lua` -> `ok - 327 tests, 3 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -41,6 +41,7 @@ Status: complete.
 - [x] Migrated physical-position `YGFlexDirectionTest` reverse subset.
 - [x] Migrated inner absolute-position `YGFlexDirectionTest` reverse subset.
 - [x] Migrated inner absolute-spacing `YGFlexDirectionTest` reverse subset.
+- [x] Migrated auto-size and percent `YGFlexDirectionTest` subset.
 - [ ] Broader Yoga dimension/flex-direction/margin/padding fixture migration.
 
 Status: mostly complete; broader Yoga fixture migration remains.

@@ -59,6 +59,55 @@ local function row_case(name, direction, lefts)
   }
 end
 
+local function column_no_height()
+  return {
+    name = "flex_direction_column_no_height",
+    source = source("flex_direction_column_no_height"),
+    root = {
+      style = {
+        position = "absolute",
+        width = 100,
+      },
+      children = {
+        { style = { height = 10 } },
+        { style = { height = 10 } },
+        { style = { height = 10 } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 100, height = 30 },
+      { left = 0, top = 0, width = 100, height = 10 },
+      { left = 0, top = 10, width = 100, height = 10 },
+      { left = 0, top = 20, width = 100, height = 10 },
+    },
+  }
+end
+
+local function row_no_width()
+  return {
+    name = "flex_direction_row_no_width",
+    source = source("flex_direction_row_no_width"),
+    root = {
+      style = {
+        position = "absolute",
+        height = 100,
+        flexDirection = "row",
+      },
+      children = {
+        { style = { width = 10 } },
+        { style = { width = 10 } },
+        { style = { width = 10 } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 30, height = 100 },
+      { left = 0, top = 0, width = 10, height = 100 },
+      { left = 10, top = 0, width = 10, height = 100 },
+      { left = 20, top = 0, width = 10, height = 100 },
+    },
+  }
+end
+
 local function row_reverse_spacing(name, style, lefts)
   style.position = "absolute"
   style.width = 100
@@ -222,7 +271,34 @@ local function inner_absolute_spacing(name, direction, spacing_style, absolute_l
   }
 end
 
+local function alternating_with_percent()
+  return {
+    name = "flex_direction_alternating_with_percent",
+    source = source("flex_direction_alternating_with_percent"),
+    root = {
+      style = { position = "absolute", width = 200, height = 300 },
+      children = {
+        {
+          style = {
+            width = "50%",
+            height = "50%",
+            left = "10%",
+            top = "10%",
+            flexDirection = "row",
+          },
+        },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 200, height = 300 },
+      { left = 20, top = 30, width = 100, height = 150 },
+    },
+  }
+end
+
 return {
+  column_no_height(),
+  row_no_width(),
   column_case("flex_direction_column", nil, { 0, 10, 20 }),
   row_case("flex_direction_row", "row", { 0, 10, 20 }),
   column_case("flex_direction_column_reverse", "column-reverse", { 90, 80, 70 }),
@@ -275,4 +351,5 @@ return {
   inner_absolute_spacing("flex_direction_row_reverse_inner_padding_right", "row-reverse", { paddingRight = 10 }, 90, 0, { 90, 80 }, 0),
   inner_absolute_spacing("flex_direction_col_reverse_inner_padding_top", "column-reverse", { paddingTop = 10 }, 0, 90, { 0, 0 }, 100),
   inner_absolute_spacing("flex_direction_col_reverse_inner_padding_bottom", "column-reverse", { paddingBottom = 10 }, 0, 90, { 0, 0 }, 100),
+  alternating_with_percent(),
 }
