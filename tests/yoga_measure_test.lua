@@ -140,6 +140,22 @@ return function(runner, helper)
     helper.assert_equal(calls.count, 1, "absolute measure count")
   end, source("measure_absolute_child_with_no_constraints"))
 
+  runner:test("cross-axis auto margin keeps measured size instead of stretch", function()
+    local child = yoga.node({
+      marginLeft = "auto",
+      measure = function()
+        return { width = 10, height = 10 }
+      end,
+    })
+    local root = yoga.node({ width = 500, height = 500 }, {
+      child,
+    })
+
+    yoga.calculateLayout(root)
+
+    helper.assert_layout(child, { left = 490, top = 0, width = 10, height = 10 }, "auto margin measured")
+  end, source("measure_nodes_with_margin_auto_and_stretch"))
+
   runner:test("measured child can grow from zero available content space", function()
     local calls = { count = 0 }
     local child = yoga.node(with_measure({

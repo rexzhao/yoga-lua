@@ -1074,7 +1074,7 @@ local function cross_axis_layout(
     else
       size = clamp_size(main * ratio)
     end
-  elseif align == "stretch" then
+  elseif align == "stretch" and not before_auto and not after_auto then
     size = available_without_margin
   else
     size = clamp_size(measured_size)
