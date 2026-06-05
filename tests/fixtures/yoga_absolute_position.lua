@@ -361,14 +361,30 @@ return {
   {
     name = "absolute_layout_percentage_height_based_on_padded_parent",
     source = source("absolute_layout_percentage_height_based_on_padded_parent"),
-    skip = true,
-    unsupportedReason = "absolute percentage sizing with padding/border is not implemented",
+    root = {
+      style = { position = "absolute", width = 100, height = 100, paddingTop = 10, borderTop = 10 },
+      children = {
+        { style = { position = "absolute", width = 100, height = "50%" } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 100, height = 100 },
+      { left = 0, top = 20, width = 100, height = 45 },
+    },
   },
   {
     name = "absolute_layout_percentage_height_based_on_padded_parent_and_align_items_center",
     source = source("absolute_layout_percentage_height_based_on_padded_parent_and_align_items_center"),
-    skip = true,
-    unsupportedReason = "absolute percentage sizing with padding is not implemented",
+    root = {
+      style = { width = 100, height = 100, alignItems = "center", justifyContent = "center", paddingTop = 20, paddingBottom = 20 },
+      children = {
+        { style = { position = "absolute", width = 100, height = "50%" } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 100, height = 100 },
+      { left = 0, top = 25, width = 100, height = 50 },
+    },
   },
   {
     name = "absolute_layout_padding_left",

@@ -694,7 +694,7 @@ local function layout_absolute_node(child, parent_style, padding, border, parent
   local width = absolute_axis_size(
     style,
     "width",
-    inner_width,
+    explicit_width_available,
     left_offset,
     right_offset,
     measured and measured.width,
@@ -704,7 +704,7 @@ local function layout_absolute_node(child, parent_style, padding, border, parent
   local height = absolute_axis_size(
     style,
     "height",
-    inner_height,
+    explicit_height_available,
     top_offset,
     bottom_offset,
     measured and measured.height,
@@ -747,7 +747,10 @@ local function layout_absolute_node(child, parent_style, padding, border, parent
     margin.bottom
   )
 
-  layout_node(child, child_left, child_top, width, height, inner_width, inner_height, measured)
+  layout_node(child, child_left, child_top, width, height, inner_width, inner_height, measured, {
+    useAvailableWidth = width ~= nil,
+    useAvailableHeight = height ~= nil,
+  })
 end
 
 local function main_outer_size(spec, direction)
