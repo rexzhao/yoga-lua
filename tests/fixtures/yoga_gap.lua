@@ -236,8 +236,20 @@ return {
   {
     name = "column_gap_determines_parent_width",
     source = source("column_gap_determines_parent_width"),
-    skip = true,
-    unsupportedReason = "auto main-size from children is not implemented",
+    root = {
+      style = { height = 100, flexDirection = "row", alignItems = "stretch", columnGap = 10 },
+      children = {
+        { style = { width = 10 } },
+        { style = { width = 20 } },
+        { style = { width = 30 } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 80, height = 100 },
+      { left = 0, top = 0, width = 10, height = 100 },
+      { left = 20, top = 0, width = 20, height = 100 },
+      { left = 50, top = 0, width = 30, height = 100 },
+    },
   },
   {
     name = "row_gap_align_items_stretch",
@@ -325,7 +337,19 @@ return {
   {
     name = "row_gap_determines_parent_height",
     source = source("row_gap_determines_parent_height"),
-    skip = true,
-    unsupportedReason = "auto main-size from children is not implemented",
+    root = {
+      style = { width = 100, alignItems = "stretch", rowGap = 10 },
+      children = {
+        { style = { height = 10 } },
+        { style = { height = 20 } },
+        { style = { height = 30 } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 100, height = 80 },
+      { left = 0, top = 0, width = 100, height = 10 },
+      { left = 0, top = 20, width = 100, height = 20 },
+      { left = 0, top = 50, width = 100, height = 30 },
+    },
   },
 }

@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 185 tests, 35 skipped`
+- `lua tests/run.lua` -> `ok - 189 tests, 33 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -124,8 +124,6 @@ Known skipped cases:
 - [ ] `absolute_layout_border`: skipped pending border support.
 - [ ] `absolute_layout_column_reverse_margin_border`: skipped pending column-reverse and border support.
 - [ ] `flex_grow_less_than_factor_one`: skipped pending partial remaining-space distribution for total `flexGrow` below 1.
-- [ ] `column_gap_determines_parent_width`: skipped pending auto main-size from children.
-- [ ] `row_gap_determines_parent_height`: skipped pending auto main-size from children.
 - [ ] `aspect_ratio_does_not_stretch_cross_axis_dim`: skipped because upstream generated test is disabled.
 - [ ] `wrap_column`: skipped because upstream generated test is disabled.
 - [ ] `flex_wrap_wrap_to_child_height`: skipped pending auto content sizing from nested wrapped children.
@@ -143,6 +141,7 @@ Status: partially complete.
 - [x] `flexShrink`.
 - [x] Love2D visual demo for `flexShrink`.
 - [x] Auto cross-size from non-wrapped flex children.
+- [x] Auto main-size from non-wrapped flex children.
 - [x] `flexBasis`.
 - [x] Love2D visual demo for `flexBasis`.
 - [ ] `flexWrap`.
