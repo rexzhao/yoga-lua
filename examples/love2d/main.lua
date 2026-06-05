@@ -84,6 +84,7 @@ local layout_modules = {
   "layouts.baseline",
   "layouts.percent",
   "layouts.measure",
+  "layouts.virtual_list",
   "layouts.minmax",
   "layouts.display",
   "layouts.absolute",
@@ -281,8 +282,9 @@ local function find_deepest(node, x, y, parent_left, parent_top)
   local hit = has_box and point_in_rect(x, y, left, top, width, height)
 
   if hit or not has_box then
+    local child_parent_top = top - ((node.virtual and node.virtual.scrollOffset) or 0)
     for index = #(node.children or {}), 1, -1 do
-      local child, rect = find_deepest(node.children[index], x, y, left, top)
+      local child, rect = find_deepest(node.children[index], x, y, left, child_parent_top)
       if child then
         return child, rect
       end
@@ -477,8 +479,10 @@ local function draw_node(node, depth, parent_left, parent_top)
     )
   end
 
+  local child_parent_top = top - ((node.virtual and node.virtual.scrollOffset) or 0)
+
   for _, child in ipairs(node.children or {}) do
-    draw_node(child, depth + 1, left, top)
+    draw_node(child, depth + 1, left, child_parent_top)
   end
 
   if props_clip_children then

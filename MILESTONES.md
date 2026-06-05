@@ -193,7 +193,7 @@ Status: complete for the supported Milestone 4 scope; upstream-disabled skipped 
 - [x] Layout results expose Yoga-compatible `hadOverflow`.
 - [x] UI-level virtualized scroll list builds visible rows, overscan rows, and spacer nodes only.
 - [x] Fixed-height virtualized list supports direct jumps without laying out skipped rows.
-- [ ] Love2D visual demo for a large virtualized scroll list.
+- [x] Love2D visual demo for a large virtualized scroll list.
 - [x] Relayout behavior tests.
 - [x] Dirty marking tests.
 - [ ] Measure tests.
@@ -205,4 +205,4 @@ Status: complete for the supported Milestone 4 scope; upstream-disabled skipped 
 - [x] Benchmarks for 5,000 nodes.
 - [ ] Virtualized list scroll and jump benchmark.
 
-Status: in progress; dirty marking, layout/measure caching, hadOverflow, scroll measure modes, layout benchmarks, and UI virtualized lists are implemented, while full overflow semantics and Love2D/benchmark coverage for virtualization remain.
+Status: in progress; dirty marking, layout/measure caching, hadOverflow, scroll measure modes, layout benchmarks, and UI virtualized lists are implemented, while full overflow semantics and virtualized list benchmarking remain.
