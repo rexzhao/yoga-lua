@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 103 tests, 26 skipped`
+- `lua tests/run.lua` -> `ok - 109 tests, 25 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -84,7 +84,7 @@ Status: mostly complete; explicit tests/examples for function components and eve
 - [x] Love2D visual demo for min/max constraints.
 - [x] `position = "absolute"`.
 - [x] Love2D visual demo for `position = "absolute"`.
-- [ ] Relative position offsets.
+- [x] Relative position offsets.
 - [x] `display = "none"`.
 - [x] Love2D visual demo for `display = "none"`.
 - [x] Migrated supported subset of `YGJustifyContentTest`.
@@ -100,7 +100,6 @@ Known skipped cases:
 - [ ] `justify_content_row_space_evenly`: skipped pending rounding policy.
 - [ ] `align_baseline`: skipped pending baseline alignment.
 - [ ] `align_self_baseline`: skipped pending baseline alignment.
-- [ ] `percentage_position_left_top`: skipped pending relative position offsets.
 - [ ] `percentage_flex_basis`: skipped pending `flexBasis`.
 - [ ] `display_contents`: skipped pending `display = "contents"`.
 - [ ] `display_contents_fixed_size`: skipped pending `display = "contents"`.

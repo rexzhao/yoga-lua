@@ -65,8 +65,30 @@ return {
   {
     name = "percentage_position_left_top",
     source = source("percentage_position_left_top"),
-    skip = true,
-    unsupportedReason = "relative position offsets are not implemented",
+    root = {
+      style = { width = 400, height = 400, flexDirection = "row" },
+      children = {
+        { style = { width = "45%", height = "55%", left = "10%", top = "20%" } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 400, height = 400 },
+      { left = 40, top = 80, width = 180, height = 220 },
+    },
+  },
+  {
+    name = "percentage_position_bottom_right",
+    source = source("percentage_position_bottom_right"),
+    root = {
+      style = { width = 500, height = 500, flexDirection = "row" },
+      children = {
+        { style = { width = "55%", height = "15%", right = "20%", bottom = "10%" } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 500, height = 500 },
+      { left = -100, top = -50, width = 275, height = 75 },
+    },
   },
   {
     name = "percentage_flex_basis",

@@ -41,6 +41,15 @@ local function zero_layout_tree(node)
   end
 end
 
+local function offset_layout_tree(node, dx, dy)
+  node.layout.left = node.layout.left + dx
+  node.layout.top = node.layout.top + dy
+
+  for _, child in ipairs(node.children or {}) do
+    offset_layout_tree(child, dx, dy)
+  end
+end
+
 function yoga.node(style, children)
   local node_style = shallow_copy(style)
   local measure = node_style.measure
@@ -81,6 +90,25 @@ local function resolve_value(value, owner_size)
   end
 
   return nil
+end
+
+local function relative_axis_offset(style, start_key, end_key, owner_size)
+  local start = resolve_value(style[start_key], owner_size)
+  if start ~= nil then
+    return start
+  end
+
+  local ending = resolve_value(style[end_key], owner_size)
+  if ending ~= nil then
+    return -ending
+  end
+
+  return 0
+end
+
+local function relative_offsets(style, owner_width, owner_height)
+  return relative_axis_offset(style, "left", "right", owner_width),
+    relative_axis_offset(style, "top", "bottom", owner_height)
 end
 
 local function resolve_edge(style, prefix, edge, axis, owner_size)
@@ -490,6 +518,8 @@ function layout_node(node, left, top, available_width, available_height, owner_w
           inner_height,
           spec.measured
         )
+        local relative_left, relative_top = relative_offsets(child_style, inner_width, inner_height)
+        offset_layout_tree(child, relative_left, relative_top)
         cursor = cursor + margin.left + child.layout.width + margin.right + between
       else
         local child_width, cross_offset =
@@ -506,6 +536,8 @@ function layout_node(node, left, top, available_width, available_height, owner_w
           inner_height,
           spec.measured
         )
+        local relative_left, relative_top = relative_offsets(child_style, inner_width, inner_height)
+        offset_layout_tree(child, relative_left, relative_top)
         cursor = cursor + margin.top + child.layout.height + margin.bottom + between
       end
     end
