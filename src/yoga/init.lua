@@ -168,6 +168,14 @@ local function flex_shrink(style)
   return number_or_zero(style.flexShrink)
 end
 
+local function aspect_ratio(style)
+  if type(style.aspectRatio) == "number" and style.aspectRatio > 0 then
+    return style.aspectRatio
+  end
+
+  return nil
+end
+
 local function main_axis_gap(style, direction)
   if direction == "row" then
     return number_or_zero(style.columnGap or style.gap)
@@ -198,14 +206,24 @@ local function measure_node(node, available_width, available_height)
   }
 end
 
-local function main_size(style, direction, owner_size, measured)
+local function main_size(style, direction, owner_size, cross_owner_size, measured)
+  local ratio = aspect_ratio(style)
+
   if direction == "row" then
     local basis = resolve_value(style.flexBasis, owner_size)
     if basis ~= nil then
       return constrain_size(basis, style, "width", owner_size)
     end
 
-    local width = resolve_value(style.width, owner_size) or number_or_zero(measured and measured.width)
+    local width = resolve_value(style.width, owner_size)
+    if width == nil and ratio then
+      local height = resolve_value(style.height, cross_owner_size) or (measured and measured.height)
+      if height ~= nil then
+        width = height * ratio
+      end
+    end
+
+    width = width or number_or_zero(measured and measured.width)
     return constrain_size(width, style, "width", owner_size)
   end
 
@@ -214,7 +232,15 @@ local function main_size(style, direction, owner_size, measured)
     return constrain_size(basis, style, "height", owner_size)
   end
 
-  local height = resolve_value(style.height, owner_size) or number_or_zero(measured and measured.height)
+  local height = resolve_value(style.height, owner_size)
+  if height == nil and ratio then
+    local width = resolve_value(style.width, cross_owner_size) or (measured and measured.width)
+    if width ~= nil then
+      height = width / ratio
+    end
+  end
+
+  height = height or number_or_zero(measured and measured.height)
   return constrain_size(height, style, "height", owner_size)
 end
 
@@ -246,7 +272,8 @@ local function build_child_specs(children, direction, gap, inner_width, inner_he
       local grow = flex_grow(style)
       local shrink = flex_shrink(style)
       local measured = measure_node(child, inner_width, inner_height)
-      local base_main = main_size(style, direction, available_main, measured)
+      local available_cross = direction == "row" and inner_height or inner_width
+      local base_main = main_size(style, direction, available_main, available_cross, measured)
 
       specs[index] = {
         style = style,
@@ -371,7 +398,7 @@ local function justify_offsets(style, specs, direction, gap, inner_width, inner_
   return leading, between
 end
 
-local function cross_axis_layout(parent_style, child_style, direction, margin, inner_width, inner_height, measured)
+local function cross_axis_layout(parent_style, child_style, direction, margin, inner_width, inner_height, measured, main)
   local align = child_style.alignSelf or parent_style.alignItems or "stretch"
   local available
   local explicit
@@ -398,9 +425,16 @@ local function cross_axis_layout(parent_style, child_style, direction, margin, i
 
   local size
   local available_without_margin = clamp_size(available - before - after)
+  local ratio = aspect_ratio(child_style)
 
   if explicit ~= nil then
     size = clamp_size(explicit)
+  elseif ratio and type(main) == "number" then
+    if direction == "row" then
+      size = clamp_size(main / ratio)
+    else
+      size = clamp_size(main * ratio)
+    end
   elseif align == "stretch" then
     size = available_without_margin
   else
@@ -529,6 +563,15 @@ function layout_node(node, left, top, available_width, available_height, owner_w
     or resolve_value(style.height, owner_height)
     or available_height
     or (measured_size and measured_size.height)
+  local ratio = aspect_ratio(style)
+
+  if ratio then
+    if width ~= nil and height == nil then
+      height = width / ratio
+    elseif height ~= nil and width == nil then
+      width = height * ratio
+    end
+  end
 
   node.layout.left = left
   node.layout.top = top
@@ -561,7 +604,7 @@ function layout_node(node, left, top, available_width, available_height, owner_w
 
       if direction == "row" then
         local child_height, cross_offset =
-          cross_axis_layout(style, child_style, direction, margin, inner_width, inner_height, spec.measured)
+          cross_axis_layout(style, child_style, direction, margin, inner_width, inner_height, spec.measured, spec.main)
         child_left = child_left + leading + cursor + margin.left
         child_top = child_top + cross_offset
         layout_node(
@@ -580,7 +623,7 @@ function layout_node(node, left, top, available_width, available_height, owner_w
         cursor = cursor + margin.left + child.layout.width + margin.right + between
       else
         local child_width, cross_offset =
-          cross_axis_layout(style, child_style, direction, margin, inner_width, inner_height, spec.measured)
+          cross_axis_layout(style, child_style, direction, margin, inner_width, inner_height, spec.measured, spec.main)
         child_left = child_left + cross_offset
         child_top = child_top + leading + cursor + margin.top
         layout_node(

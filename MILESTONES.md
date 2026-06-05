@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 140 tests, 31 skipped`
+- `lua tests/run.lua` -> `ok - 146 tests, 31 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -142,7 +142,7 @@ Status: partially complete.
 - [x] Love2D visual demo for `flexBasis`.
 - [ ] `flexWrap`.
 - [ ] `alignContent`.
-- [ ] `aspectRatio`.
+- [x] `aspectRatio`.
 - [ ] Rounding policy.
 - [ ] Baseline alignment.
 - [x] `gap` basic support.
