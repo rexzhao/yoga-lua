@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 350 tests, 2 skipped`
+- `lua tests/run.lua` -> `ok - 352 tests, 2 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -36,6 +36,7 @@ Status: complete.
 - [x] Love2D visual demo for direct `measure` callback.
 - [x] Fixture runner for layout trees.
 - [x] Basic local fixtures for fixed layout, spacing, and grow.
+- [x] Migrated complete `YGDimensionTest` set.
 - [x] Migrated basic `YGFlexDirectionTest` column/row/reverse subset.
 - [x] Migrated physical-edge `YGFlexDirectionTest` reverse margin/padding/border subset.
 - [x] Migrated physical-position `YGFlexDirectionTest` reverse subset.
