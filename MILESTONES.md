@@ -129,7 +129,7 @@ Known skipped cases:
 - [ ] `aspect_ratio_does_not_stretch_cross_axis_dim`: skipped because upstream generated test is disabled.
 - [ ] `wrap_column`: skipped because upstream generated test is disabled.
 
-Status: complete for the supported Milestone 3 scope; upstream-disabled skipped fixtures remain tracked under known skipped cases.
+Status: complete for the supported Milestone 3 scope; two upstream-disabled Yoga fixtures remain tracked as known skipped cases instead of being counted as implemented.
 
 ## Milestone 4: Advanced Flex Behavior
 
@@ -181,7 +181,9 @@ Status: complete for the supported Milestone 3 scope; upstream-disabled skipped 
 - [x] Migrate supported `YGAspectRatioTest` subset.
 - [x] Migrate supported `YGRoundingTest` subset.
 
-Status: complete for the supported Milestone 4 scope; upstream-disabled skipped fixtures remain tracked under known skipped cases.
+Known skipped cases: none.
+
+Status: complete for the supported Milestone 4 scope.
 
 ## Milestone 5: Runtime Polish
 
