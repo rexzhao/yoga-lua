@@ -706,11 +706,46 @@ local function child_measure_constraints(parent_style, child_style, direction, i
   return measure_width, measure_height, width_mode, height_mode
 end
 
+local function flow_child_count(children)
+  local count = 0
+
+  for _, child in ipairs(children) do
+    if not is_display_none(child) and not is_absolute_position(child) then
+      count = count + 1
+    end
+  end
+
+  return count
+end
+
+local function can_skip_single_flexible_measure(
+  parent_style,
+  child_style,
+  visible_flow_count,
+  inner_width,
+  inner_height
+)
+  if visible_flow_count ~= 1 or flex_grow(child_style) <= 0 or flex_shrink(child_style) <= 0 then
+    return false
+  end
+
+  local align = child_style.alignSelf or parent_style.alignItems or "stretch"
+  if align ~= "stretch" or aspect_ratio(child_style) then
+    return false
+  end
+
+  return inner_width > 0
+    and inner_height > 0
+    and resolve_value(child_style.width, inner_width) == nil
+    and resolve_value(child_style.height, inner_height) == nil
+end
+
 local function build_child_specs(children, parent_style, direction, gap, inner_width, inner_height, layout_direction)
   local specs = {}
   local total_grow = 0
   local used_main = 0
   local visible_count = 0
+  local visible_flow_count = flow_child_count(children)
   local available_main = is_row_direction(direction) and inner_width or inner_height
 
   for index, child in ipairs(children) do
@@ -734,8 +769,13 @@ local function build_child_specs(children, parent_style, direction, gap, inner_w
       local auto_margin = resolve_auto_edges(style, "margin", layout_direction)
       local grow = flex_grow(style)
       local shrink = flex_shrink(style)
-      local measured = locked_min_max_measure(style, inner_width, inner_height)
-      if measured == nil then
+      local skip_measure =
+        can_skip_single_flexible_measure(parent_style, style, visible_flow_count, inner_width, inner_height)
+      local measured
+      if not skip_measure then
+        measured = locked_min_max_measure(style, inner_width, inner_height)
+      end
+      if measured == nil and not skip_measure then
         local measure_width, measure_height, width_mode, height_mode =
           child_measure_constraints(parent_style, style, direction, inner_width, inner_height)
         measured = measure_node(child, measure_width, measure_height, width_mode, height_mode)
@@ -754,6 +794,7 @@ local function build_child_specs(children, parent_style, direction, gap, inner_w
         auto_main = has_auto_main_size(style, direction, available_main, available_cross, measured),
         auto_cross = has_auto_cross_size(style, direction, available_cross, measured),
         measured = measured,
+        skip_measure = skip_measure,
       }
 
       if visible_count > 0 then
@@ -1828,7 +1869,7 @@ function layout_node(node, left, top, available_width, available_height, owner_w
   local style = node.style or {}
   local measured_size = measured
     or locked_min_max_measure(style, owner_width, owner_height)
-    or measure_node(node, available_width, available_height)
+    or (not options.skipMeasure and measure_node(node, available_width, available_height))
   local explicit_width = resolve_value(style.width, owner_width)
   local explicit_height = resolve_value(style.height, owner_height)
   local width = options.useAvailableWidth and available_width
@@ -1971,7 +2012,7 @@ function layout_node(node, left, top, available_width, available_height, owner_w
           inner_width,
           inner_height,
           spec.measured,
-          { useAvailableWidth = not child_auto_main },
+          { useAvailableWidth = not child_auto_main, skipMeasure = spec.skip_measure },
           layout_direction
         )
         if child_auto_main then
@@ -2018,7 +2059,7 @@ function layout_node(node, left, top, available_width, available_height, owner_w
           inner_width,
           inner_height,
           spec.measured,
-          { useAvailableHeight = not child_auto_main },
+          { useAvailableHeight = not child_auto_main, skipMeasure = spec.skip_measure },
           layout_direction
         )
         if child_auto_main then

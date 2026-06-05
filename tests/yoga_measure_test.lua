@@ -47,6 +47,22 @@ local function measure_wrapping_text(width, width_mode)
 end
 
 return function(runner, helper)
+  runner:test("single grow/shrink child does not need measure", function()
+    local calls = { count = 0 }
+    local child = yoga.node(with_measure({
+      flexGrow = 1,
+      flexShrink = 1,
+    }, calls))
+    local root = yoga.node({ width = 100, height = 100 }, {
+      child,
+    })
+
+    yoga.calculateLayout(root)
+
+    helper.assert_equal(calls.count, 0, "measure count")
+    helper.assert_layout(child, { left = 0, top = 0, width = 100, height = 100 }, "flexible child")
+  end, source("dont_measure_single_grow_shrink_child"))
+
   assert_locked_min_max_case(runner, helper, "dont_measure_when_min_equals_max", {
     minWidth = 10,
     maxWidth = 10,
