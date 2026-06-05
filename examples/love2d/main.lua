@@ -73,11 +73,13 @@ local layout_modules = {
 local cases = {}
 local layout_ctx
 local menu_layout
+local overlay_layout
 
 local function layout_context()
   return {
     ui = ui,
     palette = palette,
+    chrome = chrome,
     with_styles = with_styles,
     label = label,
     unpack = unpack,
@@ -87,6 +89,7 @@ end
 local function load_cases()
   layout_ctx = layout_context()
   menu_layout = require("layouts.menu")
+  overlay_layout = require("layouts.overlay")
   cases = {}
 
   for _, module_name in ipairs(layout_modules) do
@@ -203,12 +206,12 @@ local function set_color(color)
   love.graphics.setColor(color[1], color[2], color[3], color[4] or 1.0)
 end
 
-local function draw_label(text, x, y, max_width)
+local function draw_label(text, x, y, max_width, color)
   if not text or text == "" then
     return
   end
 
-  set_color(palette.text)
+  set_color(color or palette.text)
   love.graphics.setFont(fonts.small)
   love.graphics.printf(text, x, y, max_width or 220, "left")
 end
@@ -236,7 +239,8 @@ local function draw_node_label(node)
   end
 
   local layout = node.layout
-  draw_label(label, layout.left + 8, layout.top + 7, math.max(20, layout.width - 16))
+  local props = node.props or {}
+  draw_label(label, layout.left + 8, layout.top + 7, math.max(20, layout.width - 16), props.textColor)
 end
 
 local function hover_label(node)
@@ -254,10 +258,12 @@ local function draw_node(node, depth)
     love.graphics.rectangle("fill", layout.left, layout.top, layout.width, layout.height, radius, radius)
   end
 
-  local line = node == hovered and palette.hover or palette.line
-  set_color(line)
-  love.graphics.setLineWidth(node == hovered and 3 or 1)
-  love.graphics.rectangle("line", layout.left, layout.top, layout.width, layout.height, radius, radius)
+  if props.stroke ~= false then
+    local line = node == hovered and palette.hover or palette.line
+    set_color(line)
+    love.graphics.setLineWidth(node == hovered and 3 or 1)
+    love.graphics.rectangle("line", layout.left, layout.top, layout.width, layout.height, radius, radius)
+  end
 
   draw_node_label(node)
 
@@ -271,22 +277,12 @@ local function draw_overlay()
   local height = love.graphics.getHeight()
   local title = mode == "menu" and "Select UI" or cases[current_case].name
   local hint = mode == "menu" and "Click, 1-3, Up/Down, Enter" or "Esc to menu"
-
-  set_color({ 0.05, 0.06, 0.07, 0.88 })
-  love.graphics.rectangle("fill", 0, 0, width, 34)
-
-  set_color(palette.text)
-  love.graphics.setFont(fonts.normal)
-  love.graphics.print("yoga-lua / Love2D visualizer - " .. title, 12, 8)
-
-  set_color(palette.muted)
-  love.graphics.setFont(fonts.small)
-  love.graphics.print(hint, width - 210, 10)
+  local hover_text = ""
 
   if hovered then
     local layout = hovered.layout
     local name = hover_label(hovered)
-    local text = string.format(
+    hover_text = string.format(
       "%s  x=%d y=%d w=%d h=%d",
       name,
       layout.left,
@@ -294,13 +290,16 @@ local function draw_overlay()
       layout.width,
       layout.height
     )
-
-    local bottom_y = height - chrome.bottom
-    set_color({ 0.05, 0.06, 0.07, 0.92 })
-    love.graphics.rectangle("fill", 12, bottom_y + 6, width - 24, 26, 6, 6)
-    set_color(palette.text)
-    love.graphics.print(text, 22, bottom_y + 12)
   end
+
+  local overlay = overlay_layout.build(layout_ctx, width, height, {
+    title = title,
+    hint = hint,
+    hoverText = hover_text,
+  })
+
+  yoga.calculateLayout(overlay, width, height)
+  draw_node(overlay, 0)
 end
 
 function love.load(args)
