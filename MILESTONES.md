@@ -85,6 +85,7 @@ Status: mostly complete; explicit tests/examples for function components and eve
 - [x] `position = "absolute"`.
 - [x] Love2D visual demo for `position = "absolute"`.
 - [x] Relative position offsets.
+- [x] Love2D visual demo for relative position offsets.
 - [x] `display = "none"`.
 - [x] Love2D visual demo for `display = "none"`.
 - [x] Migrated supported subset of `YGJustifyContentTest`.

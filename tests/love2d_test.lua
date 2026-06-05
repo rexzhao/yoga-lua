@@ -13,6 +13,7 @@ return function(runner)
     assert(loadfile("examples/love2d/layouts/minmax.lua"))
     assert(loadfile("examples/love2d/layouts/display.lua"))
     assert(loadfile("examples/love2d/layouts/absolute.lua"))
+    assert(loadfile("examples/love2d/layouts/relative.lua"))
     assert(loadfile("examples/love2d/layouts/overlay.lua"))
   end)
 end
