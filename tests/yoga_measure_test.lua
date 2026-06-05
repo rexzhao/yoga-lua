@@ -472,4 +472,28 @@ return function(runner, helper)
     helper.assert_layout(child, { left = 0, top = 0, width = 100, height = 50 }, "min width child")
     helper.assert_layout(grandchild, { left = 0, top = 0, width = 100, height = 50 }, "min width grandchild")
   end, source("min_width_larger_than_width_propagates_to_auto_parent"))
+
+  runner:skip(
+    "fixture cannot_add_child_to_node_with_measure_func [cannot_add_child_to_node_with_measure_func]",
+    "Lua API does not enforce Yoga's measure-node leaf invariant yet",
+    source("cannot_add_child_to_node_with_measure_func")
+  )
+
+  runner:skip(
+    "fixture cannot_add_nonnull_measure_func_to_non_leaf_node [cannot_add_nonnull_measure_func_to_non_leaf_node]",
+    "Lua API does not enforce Yoga's measure-node leaf invariant yet",
+    source("cannot_add_nonnull_measure_func_to_non_leaf_node")
+  )
+
+  runner:skip(
+    "fixture measure_content_box [measure_content_box]",
+    "boxSizing = content-box is not implemented yet",
+    source("measure_content_box")
+  )
+
+  runner:skip(
+    "fixture measure_border_box [measure_border_box]",
+    "boxSizing style support is not implemented yet",
+    source("measure_border_box")
+  )
 end

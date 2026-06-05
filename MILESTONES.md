@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 468 tests, 2 skipped`
+- `lua tests/run.lua` -> `ok - 468 tests, 6 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 - `lua benchmarks/run.lua` -> records 100, 1,000, and 5,000 node layout timings in `BENCHMARKS.md`
 
@@ -204,7 +204,7 @@ Status: complete for the supported Milestone 4 scope; upstream-disabled skipped 
 - [x] Cross-axis auto margins keep measured size instead of stretch.
 - [x] Percent padding contributes to measured child border-box size.
 - [x] Migrated supported `YGMeasureTest` negative constraint, percent text, nullable measure, and min-width propagation subset.
-- [ ] Broader upstream `YGMeasureTest` migration.
+- [x] Broader upstream `YGMeasureTest` migration.
 - [x] Measure cache tests.
 - [x] Overflow and scroll-container measure mode tests.
 - [x] `hadOverflow` behavior tests.
@@ -213,4 +213,11 @@ Status: complete for the supported Milestone 4 scope; upstream-disabled skipped 
 - [x] Benchmarks for 5,000 nodes.
 - [x] Virtualized list scroll and jump benchmark.
 
-Status: in progress; dirty marking, layout/measure caching, hadOverflow, scroll measure modes, layout benchmarks, UI virtualized lists, supported non-flex measure modes, and several upstream measure subsets are implemented, while full overflow semantics and broader upstream measure migration remain.
+Known skipped cases:
+
+- [ ] `cannot_add_child_to_node_with_measure_func`: skipped because the Lua API does not enforce Yoga's measure-node leaf invariant yet.
+- [ ] `cannot_add_nonnull_measure_func_to_non_leaf_node`: skipped because the Lua API does not enforce Yoga's measure-node leaf invariant yet.
+- [ ] `measure_content_box`: skipped because `boxSizing = "content-box"` is not implemented yet.
+- [ ] `measure_border_box`: skipped because `boxSizing` style support is not implemented yet.
+
+Status: in progress; dirty marking, layout/measure caching, hadOverflow, scroll measure modes, layout benchmarks, UI virtualized lists, supported non-flex measure modes, and upstream `YGMeasureTest` migration are implemented, while full overflow semantics and the known skipped measure cases remain.
