@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 359 tests, 2 skipped`
+- `lua tests/run.lua` -> `ok - 371 tests, 24 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -38,6 +38,7 @@ Status: complete.
 - [x] Fixture runner for layout trees.
 - [x] Basic local fixtures for fixed layout, spacing, and grow.
 - [x] Migrated complete `YGDimensionTest` set.
+- [x] Migrated supported non-auto `YGMarginTest` subset.
 - [x] Migrated complete `YGPaddingTest` set.
 - [x] Migrated basic `YGFlexDirectionTest` column/row/reverse subset.
 - [x] Migrated physical-edge `YGFlexDirectionTest` reverse margin/padding/border subset.
@@ -48,7 +49,11 @@ Status: complete.
 - [x] Migrated complete `YGFlexDirectionTest` set.
 - [ ] Broader Yoga dimension/flex-direction/margin/padding fixture migration.
 
-Status: mostly complete; broader Yoga fixture migration remains.
+Known skipped cases:
+
+- [ ] `YGMarginTest` auto margin subset: 22 fixtures skipped pending auto margin support.
+
+Status: mostly complete; broader Yoga fixture migration and auto margins remain.
 
 ## Milestone 2: Web-Like Component API
 
