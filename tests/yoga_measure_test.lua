@@ -140,6 +140,56 @@ return function(runner, helper)
     helper.assert_equal(calls.count, 1, "absolute measure count")
   end, source("measure_absolute_child_with_no_constraints"))
 
+  runner:test("measure callback is not called with negative vertical constraints", function()
+    local calls = 0
+    local child = yoga.node({
+      marginTop = 20,
+      measure = function(width, _, height)
+        calls = calls + 1
+        helper.assert_equal((width or 0) >= 0, true, "measure width is non-negative")
+        helper.assert_equal((height or 0) >= 0, true, "measure height is non-negative")
+        return { width = 0, height = 0 }
+      end,
+    })
+    local root = yoga.node({ flexDirection = "column", width = 50, height = 10 }, {
+      child,
+    })
+
+    yoga.calculateLayout(root)
+
+    helper.assert_equal(calls, 1, "measure call count")
+  end, source("cant_call_negative_measure"))
+
+  runner:test("measure callback is not called with negative horizontal constraints", function()
+    local calls = 0
+    local child = yoga.node({
+      marginStart = 20,
+      measure = function(width, _, height)
+        calls = calls + 1
+        helper.assert_equal((width or 0) >= 0, true, "measure width is non-negative")
+        helper.assert_equal((height or 0) >= 0, true, "measure height is non-negative")
+        return { width = 0, height = 0 }
+      end,
+    })
+    local root = yoga.node({ flexDirection = "row", width = 10, height = 20 }, {
+      child,
+    })
+
+    yoga.calculateLayout(root)
+
+    helper.assert_equal(calls, 1, "measure call count")
+  end, source("cant_call_negative_measure_horizontal"))
+
+  runner:test("measure function can be cleared from a non-leaf node", function()
+    local root = yoga.node({}, {
+      yoga.node({}),
+    })
+
+    yoga.setStyle(root, { measure = nil })
+
+    helper.assert_equal(root.measure, nil, "measure function")
+  end, source("can_nullify_measure_func_on_any_node"))
+
   runner:test("cross-axis auto margin keeps measured size instead of stretch", function()
     local child = yoga.node({
       marginLeft = "auto",
@@ -328,6 +378,33 @@ return function(runner, helper)
     helper.assert_layout(fourth, { left = 300, top = 100, width = 100, height = 100 }, "percent margin fourth")
   end, source("percent_margin_with_measure_func"))
 
+  runner:test("percent max width and percent padding apply to measured text", function()
+    local spacer = yoga.node({})
+    local text = yoga.node({
+      maxWidth = "50%",
+      paddingTop = "50%",
+      measure = function()
+        return { width = 90, height = 10 }
+      end,
+    })
+    local root = yoga.node({
+      flexDirection = "row",
+      justifyContent = "space-between",
+      alignItems = "center",
+      width = 100,
+      height = 80,
+    }, {
+      spacer,
+      text,
+    })
+
+    yoga.calculateLayout(root)
+
+    helper.assert_layout(root, { left = 0, top = 0, width = 100, height = 80 }, "percent text root")
+    helper.assert_layout(spacer, { left = 0, top = 40, width = 0, height = 0 }, "percent text spacer")
+    helper.assert_layout(text, { left = 50, top = 10, width = 50, height = 60 }, "percent text")
+  end, source("percent_with_text_node"))
+
   runner:test("percent padding contributes to measured child size", function()
     local first = yoga.node({ width = 100, height = 100, paddingTop = 0, measure = measure_100 })
     local second = yoga.node({ width = 100, height = 100, paddingTop = 100, measure = measure_100 })
@@ -379,4 +456,20 @@ return function(runner, helper)
     helper.assert_layout(third, { left = 200, top = 50, width = 100, height = 150 }, "percent padding margin third")
     helper.assert_layout(fourth, { left = 300, top = 100, width = 100, height = 200 }, "percent padding margin fourth")
   end, source("percent_padding_and_percent_margin_with_measure_func"))
+
+  runner:test("min width larger than width propagates to auto parent", function()
+    local grandchild = yoga.node({ width = 50, minWidth = 100, height = 50 })
+    local child = yoga.node({ flexDirection = "row", height = 50 }, {
+      grandchild,
+    })
+    local root = yoga.node({}, {
+      child,
+    })
+
+    yoga.calculateLayout(root)
+
+    helper.assert_layout(root, { left = 0, top = 0, width = 100, height = 50 }, "min width root")
+    helper.assert_layout(child, { left = 0, top = 0, width = 100, height = 50 }, "min width child")
+    helper.assert_layout(grandchild, { left = 0, top = 0, width = 100, height = 50 }, "min width grandchild")
+  end, source("min_width_larger_than_width_propagates_to_auto_parent"))
 end
