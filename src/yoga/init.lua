@@ -166,7 +166,7 @@ local function justify_offsets(style, specs, direction, gap, inner_width, inner_
 end
 
 local function cross_axis_layout(parent_style, child_style, direction, margin, inner_width, inner_height)
-  local align = parent_style.alignItems or "stretch"
+  local align = child_style.alignSelf or parent_style.alignItems or "stretch"
   local available
   local explicit
   local before
