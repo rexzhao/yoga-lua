@@ -107,15 +107,15 @@ return {
       }),
       demo_row("explicit width clamp", styles.stage, {
         with_styles(styles, "fixed", { debugName = "fixed 96", fill = palette.panel_alt }),
-        with_styles(styles, "wide_min", { debugName = "width 64 minWidth 132", fill = palette.accent }),
-        with_styles(styles, "narrow_max", { debugName = "width 180 maxWidth 96", fill = palette.green }),
+        with_styles(styles, "wide_min", { debugName = "w64 minW132", fill = palette.accent }),
+        with_styles(styles, "narrow_max", { debugName = "w180 maxW96", fill = palette.green }),
       }),
       demo_row("explicit height clamp", styles.stage, {
-        with_styles(styles, "tall_min", { debugName = "height 32 minHeight 70", fill = palette.gold }),
-        with_styles(styles, "short_max", { debugName = "height 86 maxHeight 44", fill = palette.red }),
+        with_styles(styles, "tall_min", { debugName = "h32 minH70", fill = palette.gold }),
+        with_styles(styles, "short_max", { debugName = "h86 maxH44", fill = palette.red }),
       }),
       demo_row("stretch capped by maxHeight", styles.stretch_stage, {
-        with_styles(styles, "stretch_cap", { debugName = "stretch maxHeight 54", fill = palette.accent }),
+        with_styles(styles, "stretch_cap", { debugName = "stretch maxH54", fill = palette.accent }),
         ui.div({ style = { width = 120 }, debugName = "normal stretch", fill = palette.green }),
       }),
       demo_row("percentage min/max", styles.stage, {

@@ -24,7 +24,7 @@ return {
         paddingVertical = 8,
       },
       row = {
-        height = 116,
+        height = 96,
         flexDirection = "row",
         alignItems = "flex-start",
         paddingHorizontal = 12,
@@ -33,11 +33,11 @@ return {
       },
       label = {
         width = 190,
-        height = 88,
+        height = 68,
       },
       stage = {
         flex = 1,
-        height = 88,
+        height = 68,
         flexDirection = "row",
         alignItems = "flex-start",
         paddingHorizontal = 10,
@@ -46,7 +46,7 @@ return {
       },
       center_stage = {
         flex = 1,
-        height = 88,
+        height = 68,
         flexDirection = "column",
         alignItems = "center",
         justifyContent = "center",
@@ -55,11 +55,11 @@ return {
       },
       flex_box = {
         flex = 1,
-        height = 56,
+        height = 48,
       },
       fixed_box = {
         width = 116,
-        height = 56,
+        height = 48,
       },
       absolute_badge = {
         position = "absolute",
@@ -121,8 +121,8 @@ return {
       }),
       demo_row("out of flow", styles.stage, {
         with_styles(styles, "flex_box", { debugName = "flow A", fill = palette.accent }),
-        with_styles(styles, "absolute_badge", { debugName = "absolute badge", fill = palette.red }),
         with_styles(styles, "flex_box", { debugName = "flow B", fill = palette.green }),
+        with_styles(styles, "absolute_badge", { debugName = "absolute badge", fill = palette.red }),
       }),
       demo_row("edge anchors", styles.stage, {
         with_styles(styles, "top_left", { debugName = "left top", fill = palette.accent }),
