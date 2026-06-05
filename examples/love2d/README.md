@@ -20,7 +20,7 @@ Controls:
 - Click a UI option to open it.
 - `Up` / `Down`: move the selected option.
 - `Enter` / `Space`: open the selected option.
-- `1`, `2`, `3`: open a UI option directly from the selection screen.
+- Number keys open matching UI options directly from the selection screen.
 - `Esc`: return from a UI screen to the selection screen.
 - Move the mouse over a rectangle to inspect its computed layout.
 

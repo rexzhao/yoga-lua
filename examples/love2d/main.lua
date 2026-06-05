@@ -68,6 +68,7 @@ local layout_modules = {
   "layouts.inventory",
   "layouts.settings",
   "layouts.flex_spacing",
+  "layouts.justify",
 }
 
 local cases = {}
@@ -276,7 +277,7 @@ local function draw_overlay()
   local width = love.graphics.getWidth()
   local height = love.graphics.getHeight()
   local title = mode == "menu" and "Select UI" or cases[current_case].name
-  local hint = mode == "menu" and "Click, 1-3, Up/Down, Enter" or "Esc to menu"
+  local hint = mode == "menu" and "Click, number, Up/Down, Enter" or "Esc to menu"
   local hover_text = ""
 
   if hovered then
@@ -344,7 +345,7 @@ function love.keypressed(key)
     select_next(-1)
   elseif mode == "menu" and (key == "return" or key == "kpenter" or key == "space") then
     open_case(current_case)
-  elseif mode == "menu" and (key == "1" or key == "2" or key == "3") then
+  elseif mode == "menu" and tonumber(key) then
     local index = tonumber(key)
     open_case(index)
   elseif mode == "case" and key == "escape" then

@@ -6,6 +6,7 @@ return function(runner)
     assert(loadfile("examples/love2d/layouts/inventory.lua"))
     assert(loadfile("examples/love2d/layouts/settings.lua"))
     assert(loadfile("examples/love2d/layouts/flex_spacing.lua"))
+    assert(loadfile("examples/love2d/layouts/justify.lua"))
     assert(loadfile("examples/love2d/layouts/overlay.lua"))
   end)
 end

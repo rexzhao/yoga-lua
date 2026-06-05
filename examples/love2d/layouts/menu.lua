@@ -47,7 +47,7 @@ return {
     local children = {
       with_styles(styles, "title", { debugName = "selection title", fill = palette.panel }, {
         label("Select a UI layout", { style = { height = 22 }, fill = { 0, 0, 0, 0 } }),
-        label("Click an item, press 1-3, or use Up/Down + Enter.", {
+        label("Click an item, press its number, or use Up/Down + Enter.", {
           style = { height = 18 },
           fill = { 0, 0, 0, 0 },
         }),
@@ -92,4 +92,3 @@ return {
     return with_styles(styles, "screen", { debugName = "selection screen", fill = palette.background }, children)
   end,
 }
-
