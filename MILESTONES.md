@@ -49,11 +49,11 @@ Status: complete.
 - [x] Migrated inner absolute-spacing `YGFlexDirectionTest` reverse subset.
 - [x] Migrated auto-size and percent `YGFlexDirectionTest` subset.
 - [x] Migrated complete `YGFlexDirectionTest` set.
-- [ ] Broader Yoga dimension/flex-direction/margin/padding fixture migration.
+- [x] Broader Yoga dimension/flex-direction/margin/padding fixture migration.
 
 Known skipped cases: none.
 
-Status: mostly complete; broader Yoga fixture migration remains.
+Status: complete.
 
 ## Milestone 2: Web-Like Component API
 
