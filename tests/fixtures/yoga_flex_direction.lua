@@ -185,6 +185,43 @@ local function inner_absolute_position(name, direction, position_style, absolute
   }
 end
 
+local function inner_absolute_spacing(name, direction, spacing_style, absolute_left, absolute_top, flow_lefts, flow_top)
+  local absolute_style = {
+    position = "absolute",
+    width = 10,
+    height = 10,
+  }
+
+  for key, value in pairs(spacing_style) do
+    absolute_style[key] = value
+  end
+
+  return {
+    name = name,
+    source = source(name),
+    root = {
+      style = { position = "absolute", width = 100, height = 100 },
+      children = {
+        {
+          style = { width = 100, height = 100, flexDirection = direction },
+          children = {
+            { style = absolute_style },
+            { style = { width = 10 } },
+            { style = { width = 10 } },
+          },
+        },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 100, height = 100 },
+      { left = 0, top = 0, width = 100, height = 100 },
+      { left = absolute_left, top = absolute_top, width = 10, height = 10 },
+      { left = flow_lefts[1], top = flow_top, width = 10, height = direction == "row-reverse" and 100 or 0 },
+      { left = flow_lefts[2], top = flow_top, width = 10, height = direction == "row-reverse" and 100 or 0 },
+    },
+  }
+end
+
 return {
   column_case("flex_direction_column", nil, { 0, 10, 20 }),
   row_case("flex_direction_row", "row", { 0, 10, 20 }),
@@ -226,4 +263,16 @@ return {
     { 0, 0 },
     100
   ),
+  inner_absolute_spacing("flex_direction_row_reverse_inner_margin_left", "row-reverse", { marginLeft = 10 }, 90, 0, { 90, 80 }, 0),
+  inner_absolute_spacing("flex_direction_row_reverse_inner_margin_right", "row-reverse", { marginRight = 10 }, 80, 0, { 90, 80 }, 0),
+  inner_absolute_spacing("flex_direction_col_reverse_inner_margin_top", "column-reverse", { marginTop = 10 }, 0, 90, { 0, 0 }, 100),
+  inner_absolute_spacing("flex_direction_col_reverse_inner_margin_bottom", "column-reverse", { marginBottom = 10 }, 0, 80, { 0, 0 }, 100),
+  inner_absolute_spacing("flex_direction_row_reverse_inner_border_left", "row-reverse", { borderLeft = 10 }, 90, 0, { 90, 80 }, 0),
+  inner_absolute_spacing("flex_direction_row_reverse_inner_border_right", "row-reverse", { borderRight = 10 }, 90, 0, { 90, 80 }, 0),
+  inner_absolute_spacing("flex_direction_col_reverse_inner_border_top", "column-reverse", { borderTop = 10 }, 0, 90, { 0, 0 }, 100),
+  inner_absolute_spacing("flex_direction_col_reverse_inner_border_bottom", "column-reverse", { borderBottom = 10 }, 0, 90, { 0, 0 }, 100),
+  inner_absolute_spacing("flex_direction_row_reverse_inner_padding_left", "row-reverse", { paddingLeft = 10 }, 90, 0, { 90, 80 }, 0),
+  inner_absolute_spacing("flex_direction_row_reverse_inner_padding_right", "row-reverse", { paddingRight = 10 }, 90, 0, { 90, 80 }, 0),
+  inner_absolute_spacing("flex_direction_col_reverse_inner_padding_top", "column-reverse", { paddingTop = 10 }, 0, 90, { 0, 0 }, 100),
+  inner_absolute_spacing("flex_direction_col_reverse_inner_padding_bottom", "column-reverse", { paddingBottom = 10 }, 0, 90, { 0, 0 }, 100),
 }
