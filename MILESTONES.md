@@ -58,6 +58,7 @@ Status: mostly complete; broader Yoga fixture migration remains.
 - [x] Love2D selection screen supports scrollable overflow.
 - [x] Love2D overlay is rendered through Yoga.
 - [x] Love2D visualizer can start a named UI with `--case`.
+- [x] Love2D visualizer can save a screenshot with `--screenshot`.
 
 Status: mostly complete; explicit tests/examples for function components and event props remain.
 

@@ -9,6 +9,8 @@ local mode = "menu"
 local hovered
 local menu_scroll = 0
 local menu_scroll_max = 0
+local screenshot_path
+local screenshot_requested = false
 local fonts = {}
 
 local palette = {
@@ -234,6 +236,8 @@ end
 
 local function apply_startup_args(args)
   local requested_case = arg_value(args, "--case") or arg_value(args, "--ui")
+  screenshot_path = arg_value(args, "--screenshot")
+
   if not requested_case then
     return
   end
@@ -245,6 +249,15 @@ local function apply_startup_args(args)
 
   current_case = index
   mode = "case"
+end
+
+local function save_screenshot(path, image_data)
+  local file_data = image_data:encode("png")
+  local file = assert(io.open(path, "wb"))
+  file:write(file_data:getString())
+  file:close()
+  print("ok - love2d screenshot saved " .. path)
+  love.event.quit(0)
 end
 
 local function inside(node, x, y)
@@ -525,6 +538,13 @@ function love.draw()
   end
 
   draw_overlay()
+
+  if screenshot_path and not screenshot_requested then
+    screenshot_requested = true
+    love.graphics.captureScreenshot(function(image_data)
+      save_screenshot(screenshot_path, image_data)
+    end)
+  end
 end
 
 function love.resize()
