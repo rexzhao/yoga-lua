@@ -129,6 +129,7 @@ Status: partially complete.
 
 - [ ] `flexShrink`.
 - [x] `flexBasis`.
+- [x] Love2D visual demo for `flexBasis`.
 - [ ] `flexWrap`.
 - [ ] `alignContent`.
 - [ ] `aspectRatio`.
