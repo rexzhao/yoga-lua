@@ -44,9 +44,15 @@ local function test_component_style_merge()
   assert_equal(root.children[2].layout.left, 76, "second component left")
 end
 
+local function test_love2d_example_syntax()
+  assert(loadfile("examples/love2d/conf.lua"))
+  assert(loadfile("examples/love2d/main.lua"))
+end
+
 local tests = {
   test_core_fixed_layout,
   test_component_style_merge,
+  test_love2d_example_syntax,
 }
 
 for _, test in ipairs(tests) do
@@ -54,4 +60,3 @@ for _, test in ipairs(tests) do
 end
 
 print(string.format("ok - %d tests", #tests))
-
