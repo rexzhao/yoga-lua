@@ -148,6 +148,43 @@ local function reverse_position(name, direction, position_style, child_left, chi
   }
 end
 
+local function inner_absolute_position(name, direction, position_style, absolute_left, absolute_top, flow_lefts, flow_top)
+  local absolute_style = {
+    position = "absolute",
+    width = 10,
+    height = 10,
+  }
+
+  for key, value in pairs(position_style) do
+    absolute_style[key] = value
+  end
+
+  return {
+    name = name,
+    source = source(name),
+    root = {
+      style = { position = "absolute", width = 100, height = 100 },
+      children = {
+        {
+          style = { width = 100, height = 100, flexDirection = direction },
+          children = {
+            { style = absolute_style },
+            { style = { width = 10 } },
+            { style = { width = 10 } },
+          },
+        },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 100, height = 100 },
+      { left = 0, top = 0, width = 100, height = 100 },
+      { left = absolute_left, top = absolute_top, width = 10, height = 10 },
+      { left = flow_lefts[1], top = flow_top, width = 10, height = direction == "row-reverse" and 100 or 0 },
+      { left = flow_lefts[2], top = flow_top, width = 10, height = direction == "row-reverse" and 100 or 0 },
+    },
+  }
+end
+
 return {
   column_case("flex_direction_column", nil, { 0, 10, 20 }),
   row_case("flex_direction_row", "row", { 0, 10, 20 }),
@@ -175,6 +212,18 @@ return {
     0,
     -100,
     { 0, 0, 0 },
+    100
+  ),
+  inner_absolute_position("flex_direction_row_reverse_inner_pos_left", "row-reverse", { left = 10 }, 10, 0, { 90, 80 }, 0),
+  inner_absolute_position("flex_direction_row_reverse_inner_pos_right", "row-reverse", { right = 10 }, 80, 0, { 90, 80 }, 0),
+  inner_absolute_position("flex_direction_col_reverse_inner_pos_top", "column-reverse", { top = 10 }, 0, 10, { 0, 0 }, 100),
+  inner_absolute_position(
+    "flex_direction_col_reverse_inner_pos_bottom",
+    "column-reverse",
+    { bottom = 10 },
+    0,
+    80,
+    { 0, 0 },
     100
   ),
 }
