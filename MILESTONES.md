@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 500 tests, 2 skipped`
+- `lua tests/run.lua` -> `ok - 502 tests, 1 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 - `lua benchmarks/run.lua` -> records 100, 1,000, and 5,000 node layout timings in `BENCHMARKS.md`
 
@@ -127,9 +127,8 @@ Status: complete.
 Known skipped cases:
 
 - [ ] `aspect_ratio_does_not_stretch_cross_axis_dim`: skipped because upstream generated test is disabled.
-- [ ] `wrap_column`: skipped because upstream generated test is disabled.
 
-Status: complete for the supported Milestone 3 scope; two upstream-disabled Yoga fixtures remain tracked as known skipped cases instead of being counted as implemented.
+Status: complete for the supported Milestone 3 scope; one upstream-disabled Yoga fixture remains tracked as a known skipped case instead of being counted as implemented.
 
 ## Milestone 4: Advanced Flex Behavior
 
@@ -143,6 +142,7 @@ Status: complete for the supported Milestone 3 scope; two upstream-disabled Yoga
 - [x] `flexWrap` supported row and wrap-reverse behavior.
 - [x] Basic row `flexWrap = "wrap"` without `alignContent`.
 - [x] `flexWrap = "wrap-reverse"` cross-axis placement.
+- [x] Column-direction wrap can overflow extra columns without expanding auto cross-size.
 - [x] Nested wrapped children contribute to auto content size.
 - [x] Love2D visual demo for basic row `flexWrap`.
 - [x] Love2D visual demo for `flexWrap = "wrap-reverse"`.

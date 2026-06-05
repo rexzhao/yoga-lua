@@ -1678,6 +1678,16 @@ local function used_line_cross_size(lines, gap)
   return used
 end
 
+local function max_line_cross_size(lines)
+  local size = 0
+
+  for _, line in ipairs(lines) do
+    size = math.max(size, line.cross)
+  end
+
+  return size
+end
+
 local function align_content_offsets(style, lines, gap, available_cross, auto_cross_size)
   local raw_remaining = auto_cross_size and 0 or available_cross - used_line_cross_size(lines, gap)
   local remaining = math.max(0, raw_remaining)
@@ -1800,8 +1810,10 @@ local function layout_wrapped_children(
   local cross_leading, cross_between =
     align_content_offsets(style, lines, line_gap, available_cross, auto_cross_size)
   local used_cross = used_line_cross_size(lines, cross_between)
-  local cross_extent = auto_cross_size and used_cross or available_cross
-  cross_cursor = wrap_reverse and cross_extent - cross_leading or cross_leading
+  local auto_cross_extent = is_row_direction(direction) and used_cross or max_line_cross_size(lines)
+  local cross_extent = auto_cross_size and auto_cross_extent or available_cross
+  local rtl_column_lines = not is_row_direction(direction) and is_rtl(layout_direction) and not wrap_reverse
+  cross_cursor = (wrap_reverse or rtl_column_lines) and cross_extent - cross_leading or cross_leading
 
   for _, line in ipairs(lines) do
     local leading, between = justify_offsets(style, line.items, direction, gap, inner_width, inner_height)
@@ -1809,6 +1821,8 @@ local function layout_wrapped_children(
     local line_cross_start = cross_cursor
 
     if wrap_reverse then
+      line_cross_start = cross_cursor - line.cross
+    elseif rtl_column_lines then
       line_cross_start = cross_cursor - line.cross
     end
 
@@ -1879,6 +1893,8 @@ local function layout_wrapped_children(
 
     if wrap_reverse then
       cross_cursor = line_cross_start - cross_between
+    elseif rtl_column_lines then
+      cross_cursor = line_cross_start - cross_between
     else
       cross_cursor = cross_cursor + line.cross + cross_between
     end
@@ -1903,7 +1919,7 @@ local function layout_wrapped_children(
       local height = border.top + padding.top + used_cross + padding.bottom + border.bottom
       node.layout.height = constrain_size(height, style, "height", owner_height)
     else
-      local width = border.left + padding.left + used_cross + padding.right + border.right
+      local width = border.left + padding.left + auto_cross_extent + padding.right + border.right
       node.layout.width = constrain_size(width, style, "width", owner_width)
     end
   end

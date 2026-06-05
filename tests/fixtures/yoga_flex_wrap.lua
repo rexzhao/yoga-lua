@@ -41,10 +41,45 @@ end
 
 return {
   {
-    name = "wrap_column",
+    name = "wrap_column_ltr",
     source = source("wrap_column"),
-    skip = true,
-    unsupportedReason = "upstream generated test is disabled",
+    root = {
+      style = { position = "absolute", height = 100, flexWrap = "wrap" },
+      children = {
+        box(30, 30),
+        box(30, 30),
+        box(30, 30),
+        box(30, 30),
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 30, height = 100 },
+      { left = 0, top = 0, width = 30, height = 30 },
+      { left = 0, top = 30, width = 30, height = 30 },
+      { left = 0, top = 60, width = 30, height = 30 },
+      { left = 30, top = 0, width = 30, height = 30 },
+    },
+  },
+  {
+    name = "wrap_column_rtl",
+    source = source("wrap_column"),
+    direction = "rtl",
+    root = {
+      style = { position = "absolute", height = 100, flexWrap = "wrap" },
+      children = {
+        box(30, 30),
+        box(30, 30),
+        box(30, 30),
+        box(30, 30),
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 30, height = 100 },
+      { left = 0, top = 0, width = 30, height = 30 },
+      { left = 0, top = 30, width = 30, height = 30 },
+      { left = 0, top = 60, width = 30, height = 30 },
+      { left = -30, top = 0, width = 30, height = 30 },
+    },
   },
   {
     name = "wrap_row",
