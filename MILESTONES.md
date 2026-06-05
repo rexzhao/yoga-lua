@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 244 tests, 3 skipped`
+- `lua tests/run.lua` -> `ok - 247 tests, 3 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -137,6 +137,7 @@ Status: partially complete.
 - [x] `alignContent: stretch` line sizing respects child min/max cross-axis constraints.
 - [x] Wrapped auto cross-size respects container min/max cross-axis constraints.
 - [x] Wrapped auto cross-size min/max constraints account for border and padding.
+- [x] `alignContent` line distribution composes with per-line `alignItems`.
 - [x] Migrated supported `YGGapTest` row-wrap `alignContent` subset.
 - [x] `aspectRatio`.
 - [x] Love2D visual demo for `aspectRatio`.

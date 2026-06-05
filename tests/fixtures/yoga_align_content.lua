@@ -93,6 +93,35 @@ local function root_cross_axis_case(name, align_content, cross_style, root_heigh
   }
 end
 
+local function space_around_align_items(name, align_items, first_top, second_top, third_top)
+  return {
+    name = name,
+    source = source(name),
+    root = {
+      style = {
+        position = "absolute",
+        width = 300,
+        height = 300,
+        flexDirection = "row",
+        flexWrap = "wrap",
+        alignContent = "space-around",
+        alignItems = align_items,
+      },
+      children = {
+        { style = { width = 150, height = 50 } },
+        { style = { width = 120, height = 100 } },
+        { style = { width = 120, height = 50 } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 300, height = 300 },
+      { left = 0, top = first_top, width = 150, height = 50 },
+      { left = 150, top = second_top, width = 120, height = 100 },
+      { left = 0, top = third_top, width = 120, height = 50 },
+    },
+  }
+end
+
 return {
   align_content_wrap("align_content_flex_start_wrap", "flex-start", { 0, 10, 20 }),
   align_content_wrap("align_content_flex_end_wrap", "flex-end", { 90, 100, 110 }),
@@ -229,5 +258,14 @@ return {
     7,
     207,
     7
+  ),
+  space_around_align_items("align_content_space_around_and_align_items_flex_end_with_flex_wrap", "flex-end", 88, 38, 213),
+  space_around_align_items("align_content_space_around_and_align_items_center_with_flex_wrap", "center", 63, 38, 213),
+  space_around_align_items(
+    "align_content_space_around_and_align_items_flex_start_with_flex_wrap",
+    "flex-start",
+    38,
+    38,
+    213
   ),
 }
