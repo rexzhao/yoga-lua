@@ -70,6 +70,7 @@ local layout_modules = {
   "layouts.flex_spacing",
   "layouts.justify",
   "layouts.align",
+  "layouts.percent",
 }
 
 local cases = {}
