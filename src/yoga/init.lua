@@ -663,21 +663,30 @@ end
 local function absolute_default_offset(parent_style, child_style, direction, axis, available, size)
   local offset
   local is_cross_axis
+  local is_main_axis
 
   if axis == "horizontal" then
-    if direction == "row" then
+    if direction == "row" or direction == "row-reverse" then
       offset = main_axis_offset(parent_style, available, size)
       is_cross_axis = false
+      is_main_axis = true
     else
       offset = cross_axis_offset(parent_style, child_style, available, size)
       is_cross_axis = true
+      is_main_axis = false
     end
-  elseif direction == "row" then
+  elseif direction == "row" or direction == "row-reverse" then
     offset = cross_axis_offset(parent_style, child_style, available, size)
     is_cross_axis = true
+    is_main_axis = false
   else
     offset = main_axis_offset(parent_style, available, size)
     is_cross_axis = false
+    is_main_axis = true
+  end
+
+  if is_main_axis and (direction == "row-reverse" or direction == "column-reverse") then
+    return available - offset - size
   end
 
   if is_cross_axis and parent_style.flexWrap == "wrap-reverse" then

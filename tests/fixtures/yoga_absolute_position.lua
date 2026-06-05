@@ -507,7 +507,27 @@ return {
   {
     name = "absolute_layout_column_reverse_margin_border",
     source = source("absolute_layout_column_reverse_margin_border"),
-    skip = true,
-    unsupportedReason = "column-reverse is not implemented",
+    root = {
+      style = { position = "absolute", width = 200, height = 200, flexDirection = "column-reverse" },
+      children = {
+        {
+          style = {
+            position = "absolute",
+            width = 50,
+            height = 50,
+            left = 5,
+            right = 3,
+            marginRight = 4,
+            marginLeft = 3,
+            borderRight = 7,
+            borderLeft = 1,
+          },
+        },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 200, height = 200 },
+      { left = 8, top = 150, width = 50, height = 50 },
+    },
   },
 }

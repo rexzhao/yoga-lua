@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 222 tests, 4 skipped`
+- `lua tests/run.lua` -> `ok - 223 tests, 3 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -109,7 +109,6 @@ Status: complete.
 Known skipped cases:
 
 - [ ] `position_root_with_rtl_should_position_withoutdirection`: skipped pending RTL direction support.
-- [ ] `absolute_layout_column_reverse_margin_border`: skipped pending column-reverse support.
 - [ ] `aspect_ratio_does_not_stretch_cross_axis_dim`: skipped because upstream generated test is disabled.
 - [ ] `wrap_column`: skipped because upstream generated test is disabled.
 
