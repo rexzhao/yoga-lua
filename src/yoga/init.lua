@@ -68,6 +68,57 @@ local function clamp_size(value)
   return math.max(0, number_or_zero(value))
 end
 
+local function flex_grow(style)
+  return number_or_zero(style.flexGrow or style.flex)
+end
+
+local function main_size(style, direction)
+  if direction == "row" then
+    return number_or_zero(style.width)
+  end
+
+  return number_or_zero(style.height)
+end
+
+local function build_child_specs(children, direction, gap, inner_width, inner_height)
+  local specs = {}
+  local total_grow = 0
+  local used_main = math.max(0, #children - 1) * gap
+  local available_main = direction == "row" and inner_width or inner_height
+
+  for index, child in ipairs(children) do
+    local style = child.style or {}
+    local margin = resolve_edges(style, "margin")
+    local grow = flex_grow(style)
+    local base_main = main_size(style, direction)
+
+    specs[index] = {
+      margin = margin,
+      grow = grow,
+      base_main = base_main,
+    }
+
+    if direction == "row" then
+      used_main = used_main + margin.left + base_main + margin.right
+    else
+      used_main = used_main + margin.top + base_main + margin.bottom
+    end
+
+    total_grow = total_grow + grow
+  end
+
+  local remaining = math.max(0, available_main - used_main)
+
+  for _, spec in ipairs(specs) do
+    spec.main = spec.base_main
+    if total_grow > 0 and spec.grow > 0 then
+      spec.main = spec.main + remaining * spec.grow / total_grow
+    end
+  end
+
+  return specs
+end
+
 local function layout_node(node, left, top, available_width, available_height)
   local style = node.style or {}
   local width = style.width or available_width
@@ -85,10 +136,13 @@ local function layout_node(node, left, top, available_width, available_height)
   local cursor = 0
   local inner_width = clamp_size(node.layout.width - padding.left - padding.right)
   local inner_height = clamp_size(node.layout.height - padding.top - padding.bottom)
+  local children = node.children or {}
+  local specs = build_child_specs(children, direction, gap, inner_width, inner_height)
 
-  for _, child in ipairs(node.children or {}) do
+  for index, child in ipairs(children) do
     local child_style = child.style or {}
-    local margin = resolve_edges(child_style, "margin")
+    local spec = specs[index]
+    local margin = spec.margin
     local child_left = left + padding.left + margin.left
     local child_top = top + padding.top + margin.top
 
@@ -98,7 +152,7 @@ local function layout_node(node, left, top, available_width, available_height)
         child,
         child_left,
         child_top,
-        child_style.width or 0,
+        spec.main,
         child_style.height or inner_height - margin.top - margin.bottom
       )
       cursor = cursor + margin.left + child.layout.width + margin.right + gap
@@ -109,7 +163,7 @@ local function layout_node(node, left, top, available_width, available_height)
         child_left,
         child_top,
         child_style.width or inner_width - margin.left - margin.right,
-        child_style.height or 0
+        spec.main
       )
       cursor = cursor + margin.top + child.layout.height + margin.bottom + gap
     end
