@@ -37,6 +37,46 @@ local function row_gap_justify(name, justify, expected_lefts)
   }
 end
 
+local function fixed_wrap_align_content(name, align_content, first_line_top, second_line_top)
+  local style = {
+    width = 100,
+    height = 100,
+    flexDirection = "row",
+    flexWrap = "wrap",
+    columnGap = 10,
+    rowGap = 20,
+  }
+
+  if align_content then
+    style.alignContent = align_content
+  end
+
+  return {
+    name = name,
+    source = source(name),
+    root = {
+      style = style,
+      children = {
+        { style = { width = 20, height = 20 } },
+        { style = { width = 20, height = 20 } },
+        { style = { width = 20, height = 20 } },
+        { style = { width = 20, height = 20 } },
+        { style = { width = 20, height = 20 } },
+        { style = { width = 20, height = 20 } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 100, height = 100 },
+      { left = 0, top = first_line_top, width = 20, height = 20 },
+      { left = 30, top = first_line_top, width = 20, height = 20 },
+      { left = 60, top = first_line_top, width = 20, height = 20 },
+      { left = 0, top = second_line_top, width = 20, height = 20 },
+      { left = 30, top = second_line_top, width = 20, height = 20 },
+      { left = 60, top = second_line_top, width = 20, height = 20 },
+    },
+  }
+end
+
 return {
   {
     name = "column_gap_flexible",
@@ -171,11 +211,87 @@ return {
     unsupportedReason = "rounding policy is not implemented",
   },
   row_gap_justify("column_gap_justify_space_evenly", "space-evenly", { 5, 40, 75 }),
+  fixed_wrap_align_content("column_gap_wrap_align_flex_start", nil, 0, 40),
+  fixed_wrap_align_content("column_gap_wrap_align_center", "center", 20, 60),
+  fixed_wrap_align_content("column_gap_wrap_align_flex_end", "flex-end", 40, 80),
+  fixed_wrap_align_content("column_gap_wrap_align_space_between", "space-between", 0, 80),
+  fixed_wrap_align_content("column_gap_wrap_align_space_around", "space-around", 10, 70),
+  {
+    name = "column_gap_wrap_align_stretch",
+    source = source("column_gap_wrap_align_stretch"),
+    skip = true,
+    unsupportedReason = "rounding policy for stretched flex-grow lines is not implemented",
+  },
   {
     name = "column_gap_determines_parent_width",
     source = source("column_gap_determines_parent_width"),
     skip = true,
     unsupportedReason = "auto main-size from children is not implemented",
+  },
+  {
+    name = "row_gap_align_items_stretch",
+    source = source("row_gap_align_items_stretch"),
+    root = {
+      style = {
+        width = 100,
+        height = 200,
+        flexDirection = "row",
+        flexWrap = "wrap",
+        alignItems = "stretch",
+        alignContent = "stretch",
+        columnGap = 10,
+        rowGap = 20,
+      },
+      children = {
+        { style = { width = 20 } },
+        { style = { width = 20 } },
+        { style = { width = 20 } },
+        { style = { width = 20 } },
+        { style = { width = 20 } },
+        { style = { width = 20 } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 100, height = 200 },
+      { left = 0, top = 0, width = 20, height = 90 },
+      { left = 30, top = 0, width = 20, height = 90 },
+      { left = 60, top = 0, width = 20, height = 90 },
+      { left = 0, top = 110, width = 20, height = 90 },
+      { left = 30, top = 110, width = 20, height = 90 },
+      { left = 60, top = 110, width = 20, height = 90 },
+    },
+  },
+  {
+    name = "row_gap_align_items_end",
+    source = source("row_gap_align_items_end"),
+    root = {
+      style = {
+        width = 100,
+        height = 200,
+        flexDirection = "row",
+        flexWrap = "wrap",
+        alignItems = "flex-end",
+        columnGap = 10,
+        rowGap = 20,
+      },
+      children = {
+        { style = { width = 20 } },
+        { style = { width = 20 } },
+        { style = { width = 20 } },
+        { style = { width = 20 } },
+        { style = { width = 20 } },
+        { style = { width = 20 } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 100, height = 200 },
+      { left = 0, top = 0, width = 20, height = 0 },
+      { left = 30, top = 0, width = 20, height = 0 },
+      { left = 60, top = 0, width = 20, height = 0 },
+      { left = 0, top = 20, width = 20, height = 0 },
+      { left = 30, top = 20, width = 20, height = 0 },
+      { left = 60, top = 20, width = 20, height = 0 },
+    },
   },
   {
     name = "row_gap_column_child_margins",
