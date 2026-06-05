@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 472 tests, 2 skipped`
+- `lua tests/run.lua` -> `ok - 475 tests, 2 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 - `lua benchmarks/run.lua` -> records 100, 1,000, and 5,000 node layout timings in `BENCHMARKS.md`
 
@@ -190,6 +190,8 @@ Status: complete for the supported Milestone 4 scope; upstream-disabled skipped 
 - [x] Measure caching.
 - [ ] Yoga-compatible `overflow = "hidden" | "scroll"` style semantics.
 - [x] Scroll-container measure behavior matches upstream Yoga on the scroll axis.
+- [x] Container flex items derive auto main size from content and can overflow definite parents.
+- [x] Migrated supported `YGFlexBasisFitContentTest` container overflow subset.
 - [x] Love2D renderer clips children for `overflow = "hidden" | "scroll"`.
 - [x] Layout results expose Yoga-compatible `hadOverflow`.
 - [x] UI-level virtualized scroll list builds visible rows, overscan rows, and spacer nodes only.
@@ -218,4 +220,4 @@ Status: complete for the supported Milestone 4 scope; upstream-disabled skipped 
 
 Known skipped cases: none.
 
-Status: in progress; dirty marking, layout/measure caching, hadOverflow, scroll measure modes, Love2D overflow clipping, layout benchmarks, UI virtualized lists, supported non-flex measure modes, and upstream `YGMeasureTest` migration are implemented, while full layout-level overflow semantics remain.
+Status: in progress; dirty marking, layout/measure caching, hadOverflow, scroll measure modes, Love2D overflow clipping, container flex-item overflow sizing, layout benchmarks, UI virtualized lists, supported non-flex measure modes, and upstream `YGMeasureTest` migration are implemented, while full layout-level overflow semantics remain.

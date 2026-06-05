@@ -774,6 +774,8 @@ local function can_skip_single_flexible_measure(
     and resolve_value(child_style.height, inner_height) == nil
 end
 
+local intrinsic_main_size_from_child
+
 local function build_child_specs(children, parent_style, direction, gap, inner_width, inner_height, layout_direction)
   local specs = {}
   local total_grow = 0
@@ -815,7 +817,15 @@ local function build_child_specs(children, parent_style, direction, gap, inner_w
         measured = measure_node(child, measure_width, measure_height, width_mode, height_mode)
       end
       local available_cross = is_row_direction(direction) and inner_height or inner_width
+      local auto_main = has_auto_main_size(style, direction, available_main, available_cross, measured)
       local base_main = main_size(style, direction, available_main, available_cross, measured, layout_direction)
+      local intrinsic_main = auto_main
+        and intrinsic_main_size_from_child
+        and intrinsic_main_size_from_child(child, direction, inner_width, inner_height, layout_direction)
+
+      if type(intrinsic_main) == "number" then
+        base_main = constrain_size(intrinsic_main, style, is_row_direction(direction) and "width" or "height", available_main)
+      end
 
       specs[index] = {
         child = child,
@@ -825,7 +835,7 @@ local function build_child_specs(children, parent_style, direction, gap, inner_w
         grow = grow,
         shrink = shrink,
         base_main = base_main,
-        auto_main = has_auto_main_size(style, direction, available_main, available_cross, measured),
+        auto_main = auto_main,
         auto_cross = has_auto_cross_size(style, direction, available_cross, measured),
         measured = measured,
         skip_measure = skip_measure,
@@ -1150,6 +1160,24 @@ local function cross_axis_layout(
 end
 
 local layout_node
+
+intrinsic_main_size_from_child = function(child, parent_direction, owner_width, owner_height, layout_direction)
+  if #(child.children or {}) == 0 or type(child.measure) == "function" then
+    return nil
+  end
+
+  if is_row_direction(parent_direction) then
+    layout_node(child, 0, 0, nil, owner_height, owner_width, owner_height, nil, {
+      useAvailableHeight = true,
+    }, layout_direction)
+    return child.layout.width
+  end
+
+  layout_node(child, 0, 0, owner_width, nil, owner_width, owner_height, nil, {
+    useAvailableWidth = true,
+  }, layout_direction)
+  return child.layout.height
+end
 
 local function main_axis_offset(style, available, size)
   local justify = style.justifyContent or "flex-start"
