@@ -50,6 +50,46 @@ local function offset_layout_tree(node, dx, dy)
   end
 end
 
+local function round_to_pixel_grid(value)
+  local rounded
+
+  if value >= 0 then
+    rounded = math.floor(value + 0.5)
+  else
+    rounded = math.ceil(value - 0.5)
+  end
+
+  if rounded == 0 then
+    return 0
+  end
+
+  return rounded
+end
+
+local function round_layout_tree(node, absolute_left, absolute_top)
+  local raw_left = node.layout.left
+  local raw_top = node.layout.top
+  local raw_width = node.layout.width
+  local raw_height = node.layout.height
+  local node_absolute_left = absolute_left + raw_left
+  local node_absolute_top = absolute_top + raw_top
+  local rounded_parent_left = round_to_pixel_grid(absolute_left)
+  local rounded_parent_top = round_to_pixel_grid(absolute_top)
+  local rounded_left = round_to_pixel_grid(node_absolute_left)
+  local rounded_top = round_to_pixel_grid(node_absolute_top)
+  local rounded_right = round_to_pixel_grid(node_absolute_left + raw_width)
+  local rounded_bottom = round_to_pixel_grid(node_absolute_top + raw_height)
+
+  node.layout.left = rounded_left - rounded_parent_left
+  node.layout.top = rounded_top - rounded_parent_top
+  node.layout.width = math.max(0, rounded_right - rounded_left)
+  node.layout.height = math.max(0, rounded_bottom - rounded_top)
+
+  for _, child in ipairs(node.children or {}) do
+    round_layout_tree(child, node_absolute_left, node_absolute_top)
+  end
+end
+
 function yoga.node(style, children)
   local node_style = shallow_copy(style)
   local measure = node_style.measure
@@ -978,7 +1018,9 @@ function layout_node(node, left, top, available_width, available_height, owner_w
 end
 
 function yoga.calculateLayout(root, width, height)
-  return layout_node(root, 0, 0, width, height, width, height)
+  layout_node(root, 0, 0, width, height, width, height)
+  round_layout_tree(root, 0, 0)
+  return root
 end
 
 return yoga

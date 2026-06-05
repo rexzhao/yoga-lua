@@ -35,8 +35,8 @@ return function(runner, helper)
 
     yoga.calculateLayout(root)
 
-    helper.assert_layout(root.children[1], { left = 0, top = 0, width = 133.33333333333, height = 40 }, "large shrink child")
-    helper.assert_layout(root.children[2], { left = 133.33333333333, top = 0, width = 66.666666666667, height = 40 }, "small shrink child")
+    helper.assert_layout(root.children[1], { left = 0, top = 0, width = 133, height = 40 }, "large shrink child")
+    helper.assert_layout(root.children[2], { left = 133, top = 0, width = 67, height = 40 }, "small shrink child")
   end)
 
   runner:test("flex shrink uses flex basis as base size", function()

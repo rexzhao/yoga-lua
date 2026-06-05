@@ -51,9 +51,8 @@ return {
     expect = {
       { left = 0, top = 0, width = 300, height = 80 },
       { left = 10, top = 10, width = 50, height = 60 },
-      { left = 65, top = 10, width = 73.333333333333, height = 60 },
-      { left = 143.33333333333, top = 10, width = 146.66666666667, height = 60 },
+      { left = 65, top = 10, width = 73, height = 60 },
+      { left = 143, top = 10, width = 147, height = 60 },
     },
   },
 }
-

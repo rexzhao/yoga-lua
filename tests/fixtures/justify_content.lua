@@ -70,8 +70,8 @@ return {
     },
     expect = {
       { left = 0, top = 0, width = 100, height = 20 },
-      { left = 26.666666666667, top = 0, width = 10, height = 10 },
-      { left = 63.333333333333, top = 0, width = 10, height = 10 },
+      { left = 27, top = 0, width = 10, height = 10 },
+      { left = 63, top = 0, width = 10, height = 10 },
     },
   },
   {
@@ -90,4 +90,3 @@ return {
     },
   },
 }
-

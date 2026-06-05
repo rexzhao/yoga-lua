@@ -37,8 +37,19 @@ return {
   {
     name = "justify_content_row_space_evenly",
     source = source("justify_content_row_space_evenly"),
-    skip = true,
-    unsupportedReason = "Yoga generated output depends on rounding policy not implemented yet",
+    root = {
+      style = { width = 102, height = 102, flexDirection = "row", justifyContent = "space-evenly" },
+      children = {
+        { style = { height = 10 } },
+        { style = { height = 10 } },
+        { style = { height = 10 } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 102, height = 102 },
+      { left = 26, top = 0, width = 0, height = 10 },
+      { left = 51, top = 0, width = 0, height = 10 },
+      { left = 77, top = 0, width = 0, height = 10 },
+    },
   },
 }
-

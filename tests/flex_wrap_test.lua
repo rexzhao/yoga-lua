@@ -76,7 +76,7 @@ return function(runner, helper)
       { alignContent = "center", first_line = 35, second_line = 65 },
       { alignContent = "flex-end", first_line = 70, second_line = 100 },
       { alignContent = "space-between", first_line = 0, second_line = 100 },
-      { alignContent = "space-around", first_line = 17.5, second_line = 82.5 },
+      { alignContent = "space-around", first_line = 18, second_line = 83 },
     }
 
     for _, case in ipairs(cases) do

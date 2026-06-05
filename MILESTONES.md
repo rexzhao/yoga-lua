@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 170 tests, 34 skipped`
+- `lua tests/run.lua` -> `ok - 173 tests, 31 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -100,7 +100,6 @@ Status: complete.
 
 Known skipped cases:
 
-- [ ] `justify_content_row_space_evenly`: skipped pending rounding policy.
 - [ ] `align_baseline`: skipped pending baseline alignment.
 - [ ] `align_self_baseline`: skipped pending baseline alignment.
 - [ ] `display_contents`: skipped pending `display = "contents"`.
@@ -126,8 +125,6 @@ Known skipped cases:
 - [ ] `absolute_layout_column_reverse_margin_border`: skipped pending column-reverse and border support.
 - [ ] `flex_shrink_to_zero`: skipped pending auto cross-size from children.
 - [ ] `flex_grow_less_than_factor_one`: skipped pending partial remaining-space distribution for total `flexGrow` below 1.
-- [ ] `column_gap_justify_space_around`: skipped pending rounding policy.
-- [ ] `column_gap_wrap_align_stretch`: skipped pending rounding policy for stretched flex-grow lines.
 - [ ] `column_gap_determines_parent_width`: skipped pending auto main-size from children.
 - [ ] `row_gap_determines_parent_height`: skipped pending auto main-size from children.
 - [ ] `aspect_ratio_does_not_stretch_cross_axis_dim`: skipped because upstream generated test is disabled.
@@ -152,7 +149,7 @@ Status: partially complete.
 - [x] Migrated supported `YGGapTest` row-wrap `alignContent` subset.
 - [x] `aspectRatio`.
 - [x] Love2D visual demo for `aspectRatio`.
-- [ ] Rounding policy.
+- [x] Rounding policy.
 - [ ] Baseline alignment.
 - [x] `gap` basic support.
 - [x] `rowGap` and `columnGap` main-axis support without wrapping.

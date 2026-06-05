@@ -204,12 +204,7 @@ return {
   row_gap_justify("column_gap_justify_center", "center", { 10, 40, 70 }),
   row_gap_justify("column_gap_justify_flex_end", "flex-end", { 20, 50, 80 }),
   row_gap_justify("column_gap_justify_space_between", "space-between", { 0, 40, 80 }),
-  {
-    name = "column_gap_justify_space_around",
-    source = source("column_gap_justify_space_around"),
-    skip = true,
-    unsupportedReason = "rounding policy is not implemented",
-  },
+  row_gap_justify("column_gap_justify_space_around", "space-around", { 3, 40, 77 }),
   row_gap_justify("column_gap_justify_space_evenly", "space-evenly", { 5, 40, 75 }),
   fixed_wrap_align_content("column_gap_wrap_align_flex_start", nil, 0, 40),
   fixed_wrap_align_content("column_gap_wrap_align_center", "center", 20, 60),
@@ -219,8 +214,24 @@ return {
   {
     name = "column_gap_wrap_align_stretch",
     source = source("column_gap_wrap_align_stretch"),
-    skip = true,
-    unsupportedReason = "rounding policy for stretched flex-grow lines is not implemented",
+    root = {
+      style = { width = 300, height = 300, flexDirection = "row", flexWrap = "wrap", columnGap = 5, alignContent = "stretch" },
+      children = {
+        { style = { minWidth = 60, flexGrow = 1 } },
+        { style = { minWidth = 60, flexGrow = 1 } },
+        { style = { minWidth = 60, flexGrow = 1 } },
+        { style = { minWidth = 60, flexGrow = 1 } },
+        { style = { minWidth = 60, flexGrow = 1 } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 300, height = 300 },
+      { left = 0, top = 0, width = 71, height = 150 },
+      { left = 76, top = 0, width = 72, height = 150 },
+      { left = 153, top = 0, width = 71, height = 150 },
+      { left = 229, top = 0, width = 71, height = 150 },
+      { left = 0, top = 150, width = 300, height = 150 },
+    },
   },
   {
     name = "column_gap_determines_parent_width",

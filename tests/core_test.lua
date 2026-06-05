@@ -45,8 +45,8 @@ return function(runner, helper)
     yoga.calculateLayout(root)
 
     helper.assert_layout(root.children[1], { left = 10, top = 10, width = 50, height = 60 }, "fixed child")
-    helper.assert_layout(root.children[2], { left = 65, top = 10, width = 73.333333333333, height = 60 }, "grow child")
-    helper.assert_layout(root.children[3], { left = 143.33333333333, top = 10, width = 146.66666666667, height = 60 }, "double grow child")
+    helper.assert_layout(root.children[2], { left = 65, top = 10, width = 73, height = 60 }, "grow child")
+    helper.assert_layout(root.children[3], { left = 143, top = 10, width = 147, height = 60 }, "double grow child")
   end)
 
   runner:test("column flex grow distributes remaining height", function()
