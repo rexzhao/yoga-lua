@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 461 tests, 2 skipped`
+- `lua tests/run.lua` -> `ok - 463 tests, 2 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 - `lua benchmarks/run.lua` -> records 100, 1,000, and 5,000 node layout timings in `BENCHMARKS.md`
 
@@ -202,6 +202,7 @@ Status: complete for the supported Milestone 4 scope; upstream-disabled skipped 
 - [x] Single grow/shrink measured child can skip unnecessary measure.
 - [x] Migrated supported `YGMeasureTest` direction, padding, fixed-size, flex-shrink, and percent-margin subset.
 - [x] Cross-axis auto margins keep measured size instead of stretch.
+- [x] Percent padding contributes to measured child border-box size.
 - [ ] Broader upstream `YGMeasureTest` migration.
 - [x] Measure cache tests.
 - [x] Overflow and scroll-container measure mode tests.

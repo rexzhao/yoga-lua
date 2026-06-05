@@ -494,6 +494,17 @@ local function constrain_size(value, style, dimension, owner_size)
   return math.max(0, value)
 end
 
+local function padding_border_axis(style, axis, owner_width, layout_direction)
+  local padding = resolve_edges(style, "padding", owner_width, layout_direction)
+  local border = resolve_edges(style, "border", owner_width, layout_direction)
+
+  if axis == "row" then
+    return padding.left + padding.right + border.left + border.right
+  end
+
+  return padding.top + padding.bottom + border.top + border.bottom
+end
+
 local function locked_min_max_measure(style, owner_width, owner_height)
   local min_width = resolve_value(style.minWidth, owner_width)
   local max_width = resolve_value(style.maxWidth, owner_width)
@@ -601,7 +612,7 @@ local function measure_node(node, available_width, available_height, width_mode,
   return measured
 end
 
-local function main_size(style, direction, owner_size, cross_owner_size, measured)
+local function main_size(style, direction, owner_size, cross_owner_size, measured, layout_direction)
   local ratio = aspect_ratio(style)
 
   if is_row_direction(direction) then
@@ -618,7 +629,11 @@ local function main_size(style, direction, owner_size, cross_owner_size, measure
       end
     end
 
-    width = width or number_or_zero(measured and measured.width)
+    if width == nil and measured and measured.width ~= nil then
+      width = measured.width + padding_border_axis(style, "row", owner_size, layout_direction)
+    end
+
+    width = width or 0
     return constrain_size(width, style, "width", owner_size)
   end
 
@@ -635,7 +650,11 @@ local function main_size(style, direction, owner_size, cross_owner_size, measure
     end
   end
 
-  height = height or number_or_zero(measured and measured.height)
+  if height == nil and measured and measured.height ~= nil then
+    height = measured.height + padding_border_axis(style, "column", cross_owner_size, layout_direction)
+  end
+
+  height = height or 0
   return constrain_size(height, style, "height", owner_size)
 end
 
@@ -781,7 +800,7 @@ local function build_child_specs(children, parent_style, direction, gap, inner_w
         measured = measure_node(child, measure_width, measure_height, width_mode, height_mode)
       end
       local available_cross = is_row_direction(direction) and inner_height or inner_width
-      local base_main = main_size(style, direction, available_main, available_cross, measured)
+      local base_main = main_size(style, direction, available_main, available_cross, measured, layout_direction)
 
       specs[index] = {
         child = child,
@@ -1047,7 +1066,9 @@ local function cross_axis_layout(
     explicit = resolve_value(child_style.height, inner_height)
     before = margin.top
     after = margin.bottom
-    measured_size = measured and measured.height
+    if measured and measured.height ~= nil then
+      measured_size = measured.height + padding_border_axis(child_style, "column", inner_width, layout_direction)
+    end
     dimension = "height"
     before_auto = auto_margin and auto_margin.top
     after_auto = auto_margin and auto_margin.bottom
@@ -1056,7 +1077,9 @@ local function cross_axis_layout(
     explicit = resolve_value(child_style.width, inner_width)
     before = margin.left
     after = margin.right
-    measured_size = measured and measured.width
+    if measured and measured.width ~= nil then
+      measured_size = measured.width + padding_border_axis(child_style, "row", inner_width, layout_direction)
+    end
     dimension = "width"
     before_auto = auto_margin and auto_margin.left
     after_auto = auto_margin and auto_margin.right
@@ -1689,7 +1712,7 @@ local function layout_wrapped_children(
           child_measure_constraints(style, child_style, direction, inner_width, inner_height)
         measured = measure_node(child, measure_width, measure_height, width_mode, height_mode)
       end
-      local base_main = main_size(child_style, direction, available_main, available_cross, measured)
+      local base_main = main_size(child_style, direction, available_main, available_cross, measured, layout_direction)
       local spec = {
         child = child,
         style = child_style,
@@ -1898,8 +1921,9 @@ function layout_node(node, left, top, available_width, available_height, owner_w
   node.layout.height = constrain_size(height, style, "height", owner_height)
   node.dirty = false
 
-  local border = resolve_edges(style, "border", node.layout.width, layout_direction)
-  local padding = resolve_edges(style, "padding", node.layout.width, layout_direction)
+  local edge_owner_width = owner_width or node.layout.width
+  local border = resolve_edges(style, "border", edge_owner_width, layout_direction)
+  local padding = resolve_edges(style, "padding", edge_owner_width, layout_direction)
   if width_unspecified then
     node.layout.width = constrain_size(border.left + padding.left + padding.right + border.right, style, "width", owner_width)
   end

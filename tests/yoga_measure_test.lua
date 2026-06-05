@@ -327,4 +327,56 @@ return function(runner, helper)
     helper.assert_layout(third, { left = 200, top = 50, width = 100, height = 100 }, "percent margin third")
     helper.assert_layout(fourth, { left = 300, top = 100, width = 100, height = 100 }, "percent margin fourth")
   end, source("percent_margin_with_measure_func"))
+
+  runner:test("percent padding contributes to measured child size", function()
+    local first = yoga.node({ width = 100, height = 100, paddingTop = 0, measure = measure_100 })
+    local second = yoga.node({ width = 100, height = 100, paddingTop = 100, measure = measure_100 })
+    local third = yoga.node({ paddingTop = "10%", measure = measure_100 })
+    local fourth = yoga.node({ paddingTop = "20%", measure = measure_100 })
+    local root = yoga.node({
+      flexDirection = "row",
+      alignItems = "flex-start",
+      alignContent = "flex-start",
+      width = 500,
+      height = 500,
+    }, {
+      first,
+      second,
+      third,
+      fourth,
+    })
+
+    yoga.calculateLayout(root)
+
+    helper.assert_layout(first, { left = 0, top = 0, width = 100, height = 100 }, "percent padding first")
+    helper.assert_layout(second, { left = 100, top = 0, width = 100, height = 100 }, "percent padding second")
+    helper.assert_layout(third, { left = 200, top = 0, width = 100, height = 150 }, "percent padding third")
+    helper.assert_layout(fourth, { left = 300, top = 0, width = 100, height = 200 }, "percent padding fourth")
+  end, source("percent_padding_with_measure_func"))
+
+  runner:test("percent padding and margin compose on measured children", function()
+    local first = yoga.node({ width = 100, height = 100, paddingTop = 0, measure = measure_100 })
+    local second = yoga.node({ width = 100, height = 100, paddingTop = 100, measure = measure_100 })
+    local third = yoga.node({ paddingTop = "10%", marginTop = "10%", measure = measure_100 })
+    local fourth = yoga.node({ paddingTop = "20%", marginTop = "20%", measure = measure_100 })
+    local root = yoga.node({
+      flexDirection = "row",
+      alignItems = "flex-start",
+      alignContent = "flex-start",
+      width = 500,
+      height = 500,
+    }, {
+      first,
+      second,
+      third,
+      fourth,
+    })
+
+    yoga.calculateLayout(root)
+
+    helper.assert_layout(first, { left = 0, top = 0, width = 100, height = 100 }, "percent padding margin first")
+    helper.assert_layout(second, { left = 100, top = 0, width = 100, height = 100 }, "percent padding margin second")
+    helper.assert_layout(third, { left = 200, top = 50, width = 100, height = 150 }, "percent padding margin third")
+    helper.assert_layout(fourth, { left = 300, top = 100, width = 100, height = 200 }, "percent padding margin fourth")
+  end, source("percent_padding_and_percent_margin_with_measure_func"))
 end
