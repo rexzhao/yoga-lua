@@ -95,15 +95,13 @@ local function round_layout_tree(node, absolute_left, absolute_top)
   local raw_height = node.layout.height
   local node_absolute_left = absolute_left + raw_left
   local node_absolute_top = absolute_top + raw_top
-  local rounded_parent_left = round_to_pixel_grid(absolute_left)
-  local rounded_parent_top = round_to_pixel_grid(absolute_top)
   local rounded_left = round_to_pixel_grid(node_absolute_left)
   local rounded_top = round_to_pixel_grid(node_absolute_top)
   local rounded_right = round_to_pixel_grid(node_absolute_left + raw_width)
   local rounded_bottom = round_to_pixel_grid(node_absolute_top + raw_height)
 
-  node.layout.left = rounded_left - rounded_parent_left
-  node.layout.top = rounded_top - rounded_parent_top
+  node.layout.left = round_to_pixel_grid(raw_left)
+  node.layout.top = round_to_pixel_grid(raw_top)
   node.layout.width = math.max(0, rounded_right - rounded_left)
   node.layout.height = math.max(0, rounded_bottom - rounded_top)
 
@@ -1151,8 +1149,39 @@ function layout_node(node, left, top, available_width, available_height, owner_w
   return node
 end
 
+local function root_absolute_axis_offset(style, start_key, end_key, owner_size, size)
+  local start = resolve_value(style[start_key], owner_size)
+  if start ~= nil then
+    return start
+  end
+
+  local ending = resolve_value(style[end_key], owner_size)
+  if ending ~= nil then
+    if owner_size ~= nil and size ~= nil then
+      return owner_size - ending - size
+    end
+
+    return -ending
+  end
+
+  return 0
+end
+
+local function root_offsets(root, owner_width, owner_height)
+  local style = root.style or {}
+
+  if is_absolute_position(root) then
+    return root_absolute_axis_offset(style, "left", "right", owner_width, root.layout.width),
+      root_absolute_axis_offset(style, "top", "bottom", owner_height, root.layout.height)
+  end
+
+  return relative_offsets(style, owner_width, owner_height)
+end
+
 function yoga.calculateLayout(root, width, height)
   layout_node(root, 0, 0, width, height, width, height)
+  local root_left, root_top = root_offsets(root, width, height)
+  offset_layout_box(root, root_left, root_top)
   round_layout_tree(root)
   return root
 end

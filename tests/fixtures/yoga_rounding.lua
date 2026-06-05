@@ -171,14 +171,38 @@ return {
   {
     name = "rounding_fractial_input_3",
     source = source("rounding_fractial_input_3"),
-    skip = true,
-    unsupportedReason = "root top offset is not implemented",
+    root = {
+      style = { position = "absolute", top = 0.3, width = 100, height = 113.4 },
+      children = {
+        { style = { height = 20, flexGrow = 1, flexBasis = 50 } },
+        { style = { height = 10, flexGrow = 1 } },
+        { style = { height = 10, flexGrow = 1 } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 100, height = 114 },
+      { left = 0, top = 0, width = 100, height = 65 },
+      { left = 0, top = 64, width = 100, height = 24 },
+      { left = 0, top = 89, width = 100, height = 25 },
+    },
   },
   {
     name = "rounding_fractial_input_4",
     source = source("rounding_fractial_input_4"),
-    skip = true,
-    unsupportedReason = "root top offset is not implemented",
+    root = {
+      style = { position = "absolute", top = 0.7, width = 100, height = 113.4 },
+      children = {
+        { style = { height = 20, flexGrow = 1, flexBasis = 50 } },
+        { style = { height = 10, flexGrow = 1 } },
+        { style = { height = 10, flexGrow = 1 } },
+      },
+    },
+    expect = {
+      { left = 0, top = 1, width = 100, height = 113 },
+      { left = 0, top = 0, width = 100, height = 64 },
+      { left = 0, top = 64, width = 100, height = 25 },
+      { left = 0, top = 89, width = 100, height = 24 },
+    },
   },
   {
     name = "rounding_inner_node_controversy_horizontal",

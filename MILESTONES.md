@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 209 tests, 17 skipped`
+- `lua tests/run.lua` -> `ok - 211 tests, 15 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -120,8 +120,7 @@ Known skipped cases:
 - [ ] `wrap_column`: skipped because upstream generated test is disabled.
 - [ ] `flex_wrap_wrap_to_child_height`: skipped pending auto content sizing from nested wrapped children.
 - [ ] `wrap_reverse_row_align_content_flex_start`: skipped pending wrap-reverse.
-- [ ] `rounding_fractial_input_3`: skipped pending root top offset support.
-- [ ] `rounding_fractial_input_4`: skipped pending root top offset support.
+
 Status: partially complete.
 
 ## Milestone 4: Advanced Flex Behavior
@@ -144,6 +143,7 @@ Status: partially complete.
 - [x] Love2D visual demo for `aspectRatio`.
 - [x] Rounding policy.
 - [x] Nested rounding preserves Yoga parent-relative layout semantics.
+- [x] Root position offsets participate in pixel-grid rounding.
 - [x] Baseline alignment.
 - [x] Love2D visual demo for baseline alignment.
 - [x] `gap` basic support.
