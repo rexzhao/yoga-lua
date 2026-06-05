@@ -69,6 +69,7 @@ local layout_modules = {
   "layouts.settings",
   "layouts.flex_spacing",
   "layouts.justify",
+  "layouts.align",
 }
 
 local cases = {}
