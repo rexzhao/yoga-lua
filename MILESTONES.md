@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 216 tests, 10 skipped`
+- `lua tests/run.lua` -> `ok - 218 tests, 8 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -94,6 +94,7 @@ Status: complete.
 - [x] Love2D visual demo for `display = "none"`.
 - [x] `display = "contents"`.
 - [x] Love2D visual demo for `display = "contents"`.
+- [x] Numeric `border`/`border*` layout insets.
 - [x] Migrated supported subset of `YGJustifyContentTest`.
 - [x] Migrated supported subset of `YGAlignItemsTest`.
 - [x] Migrated supported subset of `YGAlignSelfTest`.
@@ -105,13 +106,11 @@ Status: complete.
 
 Known skipped cases:
 
-- [ ] `absolute_layout_within_border`: skipped pending border support.
 - [ ] `position_root_with_rtl_should_position_withoutdirection`: skipped pending RTL direction support.
 - [ ] `percent_absolute_position_infinite_height`: skipped pending undefined-height percentage handling.
-- [ ] `absolute_layout_percentage_height_based_on_padded_parent`: skipped pending border support.
-- [ ] `absolute_layout_percentage_height_based_on_padded_parent_and_align_items_center`: skipped pending border support.
-- [ ] `absolute_layout_border`: skipped pending border support.
-- [ ] `absolute_layout_column_reverse_margin_border`: skipped pending column-reverse and border support.
+- [ ] `absolute_layout_percentage_height_based_on_padded_parent`: skipped pending absolute percentage sizing with padding/border.
+- [ ] `absolute_layout_percentage_height_based_on_padded_parent_and_align_items_center`: skipped pending absolute percentage sizing with padding.
+- [ ] `absolute_layout_column_reverse_margin_border`: skipped pending column-reverse support.
 - [ ] `aspect_ratio_does_not_stretch_cross_axis_dim`: skipped because upstream generated test is disabled.
 - [ ] `wrap_column`: skipped because upstream generated test is disabled.
 - [ ] `flex_wrap_wrap_to_child_height`: skipped pending auto content sizing from nested wrapped children.

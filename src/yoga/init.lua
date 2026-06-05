@@ -429,14 +429,14 @@ local function used_main_size(specs, direction, gap)
   return used
 end
 
-local function child_main_extent(specs, direction, gap, padding)
+local function child_main_extent(specs, direction, gap, padding, border)
   local main = used_main_size(specs, direction, gap)
 
   if direction == "row" then
-    return padding.left + main + padding.right
+    return border.left + padding.left + main + padding.right + border.right
   end
 
-  return padding.top + main + padding.bottom
+  return border.top + padding.top + main + padding.bottom + border.bottom
 end
 
 local function node_baseline(node)
@@ -602,15 +602,17 @@ local function cross_axis_offset(parent_style, child_style, available, size)
   return 0
 end
 
-local function absolute_axis_size(style, dimension, owner_size, start_offset, end_offset, measured_size)
+local function absolute_axis_size(style, dimension, owner_size, start_offset, end_offset, measured_size, start_margin, end_margin)
   local explicit = dimension == "width" and resolve_value(style.width, owner_size) or resolve_value(style.height, owner_size)
+  start_margin = start_margin or 0
+  end_margin = end_margin or 0
 
   if explicit ~= nil then
     return constrain_size(explicit, style, dimension, owner_size)
   end
 
   if start_offset ~= nil and end_offset ~= nil then
-    return constrain_size(owner_size - start_offset - end_offset, style, dimension, owner_size)
+    return constrain_size(owner_size - start_offset - end_offset - start_margin - end_margin, style, dimension, owner_size)
   end
 
   if measured_size ~= nil then
@@ -647,34 +649,103 @@ local function absolute_default_offset(parent_style, child_style, direction, axi
   return offset
 end
 
-local function absolute_axis_position(parent_style, child_style, direction, axis, origin, available, size, start_offset, end_offset)
+local function absolute_axis_position(
+  parent_style,
+  child_style,
+  direction,
+  axis,
+  explicit_origin,
+  default_origin,
+  explicit_available,
+  default_available,
+  size,
+  start_offset,
+  end_offset,
+  start_margin,
+  end_margin
+)
+  start_margin = start_margin or 0
+  end_margin = end_margin or 0
+
   if start_offset ~= nil then
-    return origin + start_offset
+    return explicit_origin + start_offset + start_margin
   end
 
   if end_offset ~= nil then
-    return origin + available - end_offset - (size or 0)
+    return explicit_origin + explicit_available - end_offset - end_margin - (size or 0)
   end
 
-  return origin + absolute_default_offset(parent_style, child_style, direction, axis, available, size or 0)
+  local available_without_margin = clamp_size(default_available - start_margin - end_margin)
+  return default_origin
+    + start_margin
+    + absolute_default_offset(parent_style, child_style, direction, axis, available_without_margin, size or 0)
 end
 
-local function layout_absolute_node(child, parent_style, padding, inner_width, inner_height)
+local function layout_absolute_node(child, parent_style, padding, border, parent_width, parent_height, inner_width, inner_height)
   local style = child.style or {}
   local measured = measure_node(child, inner_width, inner_height)
+  local margin = resolve_edges(style, "margin", inner_width)
   local left_offset = resolve_value(style.left, inner_width)
   local right_offset = resolve_value(style.right, inner_width)
   local top_offset = resolve_value(style.top, inner_height)
   local bottom_offset = resolve_value(style.bottom, inner_height)
-  local width = absolute_axis_size(style, "width", inner_width, left_offset, right_offset, measured and measured.width)
-  local height = absolute_axis_size(style, "height", inner_height, top_offset, bottom_offset, measured and measured.height)
+  local explicit_width_available = clamp_size(parent_width - border.left - border.right)
+  local explicit_height_available = clamp_size(parent_height - border.top - border.bottom)
+  local width = absolute_axis_size(
+    style,
+    "width",
+    inner_width,
+    left_offset,
+    right_offset,
+    measured and measured.width,
+    margin.left,
+    margin.right
+  )
+  local height = absolute_axis_size(
+    style,
+    "height",
+    inner_height,
+    top_offset,
+    bottom_offset,
+    measured and measured.height,
+    margin.top,
+    margin.bottom
+  )
   local direction = parent_style.flexDirection or "column"
-  local origin_left = padding.left
-  local origin_top = padding.top
-  local child_left =
-    absolute_axis_position(parent_style, style, direction, "horizontal", origin_left, inner_width, width, left_offset, right_offset)
-  local child_top =
-    absolute_axis_position(parent_style, style, direction, "vertical", origin_top, inner_height, height, top_offset, bottom_offset)
+  local explicit_origin_left = border.left
+  local explicit_origin_top = border.top
+  local default_origin_left = border.left + padding.left
+  local default_origin_top = border.top + padding.top
+  local child_left = absolute_axis_position(
+    parent_style,
+    style,
+    direction,
+    "horizontal",
+    explicit_origin_left,
+    default_origin_left,
+    explicit_width_available,
+    inner_width,
+    width,
+    left_offset,
+    right_offset,
+    margin.left,
+    margin.right
+  )
+  local child_top = absolute_axis_position(
+    parent_style,
+    style,
+    direction,
+    "vertical",
+    explicit_origin_top,
+    default_origin_top,
+    explicit_height_available,
+    inner_height,
+    height,
+    top_offset,
+    bottom_offset,
+    margin.top,
+    margin.bottom
+  )
 
   layout_node(child, child_left, child_top, width, height, inner_width, inner_height, measured)
 end
@@ -801,7 +872,7 @@ local function line_cross_size(line, direction)
   return cross
 end
 
-local function child_cross_extent(specs, direction, padding)
+local function child_cross_extent(specs, direction, padding, border)
   local cross = 0
 
   for _, spec in ipairs(specs) do
@@ -818,10 +889,10 @@ local function child_cross_extent(specs, direction, padding)
   end
 
   if direction == "row" then
-    return padding.top + cross + padding.bottom
+    return border.top + padding.top + cross + padding.bottom + border.bottom
   end
 
-  return padding.left + cross + padding.right
+  return border.left + padding.left + cross + padding.right + border.right
 end
 
 local function used_line_cross_size(lines, gap)
@@ -874,7 +945,7 @@ local function cross_axis_layout_in_line(parent_style, child_style, direction, m
   return cross_axis_layout(parent_style, child_style, direction, margin, line_cross, line_cross, measured, main)
 end
 
-local function layout_wrapped_children(node, padding, inner_width, inner_height, auto_cross_size)
+local function layout_wrapped_children(node, padding, border, inner_width, inner_height, auto_cross_size)
   local style = node.style or {}
   local direction = style.flexDirection or "column"
   local wrap_reverse = style.flexWrap == "wrap-reverse"
@@ -957,8 +1028,8 @@ local function layout_wrapped_children(node, padding, inner_width, inner_height,
       local child = spec.child
       local child_style = child.style or {}
       local margin = spec.margin
-      local child_left = padding.left
-      local child_top = padding.top
+      local child_left = border.left + padding.left
+      local child_top = border.top + padding.top
 
       if direction == "row" then
         local child_height, cross_offset =
@@ -1023,15 +1094,15 @@ local function layout_wrapped_children(node, padding, inner_width, inner_height,
     if spec and spec.hidden then
       zero_layout_tree(child)
     elseif spec and spec.absolute then
-      layout_absolute_node(child, style, padding, inner_width, inner_height)
+      layout_absolute_node(child, style, padding, border, node.layout.width, node.layout.height, inner_width, inner_height)
     end
   end
 
   if auto_cross_size then
     if direction == "row" then
-      node.layout.height = padding.top + used_cross + padding.bottom
+      node.layout.height = border.top + padding.top + used_cross + padding.bottom + border.bottom
     else
-      node.layout.width = padding.left + used_cross + padding.right
+      node.layout.width = border.left + padding.left + used_cross + padding.right + border.right
     end
   end
 end
@@ -1072,18 +1143,19 @@ function layout_node(node, left, top, available_width, available_height, owner_w
   node.layout.height = constrain_size(height, style, "height", owner_height)
   node.dirty = false
 
+  local border = resolve_edges(style, "border", node.layout.width)
   local padding = resolve_edges(style, "padding", node.layout.width)
   local direction = style.flexDirection or "column"
   local gap = main_axis_gap(style, direction)
   local cursor = 0
-  local inner_width = clamp_size(node.layout.width - padding.left - padding.right)
-  local inner_height = clamp_size(node.layout.height - padding.top - padding.bottom)
+  local inner_width = clamp_size(node.layout.width - border.left - padding.left - padding.right - border.right)
+  local inner_height = clamp_size(node.layout.height - border.top - padding.top - padding.bottom - border.bottom)
   local children = node.children or {}
 
   if style.flexWrap == "wrap" or style.flexWrap == "wrap-reverse" then
     local auto_cross_size = (direction == "row" and explicit_height == nil and available_height == nil and not options.useAvailableHeight)
       or (direction == "column" and explicit_width == nil and available_width == nil and not options.useAvailableWidth)
-    layout_wrapped_children(node, padding, inner_width, inner_height, auto_cross_size)
+    layout_wrapped_children(node, padding, border, inner_width, inner_height, auto_cross_size)
     return node
   end
 
@@ -1109,11 +1181,11 @@ function layout_node(node, left, top, available_width, available_height, owner_w
     if spec.hidden then
       zero_layout_tree(child)
     elseif spec.absolute then
-      layout_absolute_node(child, style, padding, inner_width, inner_height)
+      layout_absolute_node(child, style, padding, border, node.layout.width, node.layout.height, inner_width, inner_height)
     else
       local margin = spec.margin
-      local child_left = padding.left
-      local child_top = padding.top
+      local child_left = border.left + padding.left
+      local child_top = border.top + padding.top
 
       if direction == "row" then
         local child_height, cross_offset =
@@ -1161,17 +1233,17 @@ function layout_node(node, left, top, available_width, available_height, owner_w
 
   if auto_main_size then
     if direction == "row" then
-      node.layout.width = constrain_size(child_main_extent(specs, direction, gap, padding), style, "width", owner_width)
+      node.layout.width = constrain_size(child_main_extent(specs, direction, gap, padding, border), style, "width", owner_width)
     else
-      node.layout.height = constrain_size(child_main_extent(specs, direction, gap, padding), style, "height", owner_height)
+      node.layout.height = constrain_size(child_main_extent(specs, direction, gap, padding, border), style, "height", owner_height)
     end
   end
 
   if auto_cross_size then
     if direction == "row" then
-      node.layout.height = constrain_size(child_cross_extent(specs, direction, padding), style, "height", owner_height)
+      node.layout.height = constrain_size(child_cross_extent(specs, direction, padding, border), style, "height", owner_height)
     else
-      node.layout.width = constrain_size(child_cross_extent(specs, direction, padding), style, "width", owner_width)
+      node.layout.width = constrain_size(child_cross_extent(specs, direction, padding, border), style, "width", owner_width)
     end
   end
 
@@ -1198,13 +1270,18 @@ end
 
 local function root_offsets(root, owner_width, owner_height)
   local style = root.style or {}
+  local margin = resolve_edges(style, "margin", owner_width or root.layout.width)
+  local left
+  local top
 
   if is_absolute_position(root) then
-    return root_absolute_axis_offset(style, "left", "right", owner_width, root.layout.width),
-      root_absolute_axis_offset(style, "top", "bottom", owner_height, root.layout.height)
+    left = root_absolute_axis_offset(style, "left", "right", owner_width, root.layout.width)
+    top = root_absolute_axis_offset(style, "top", "bottom", owner_height, root.layout.height)
+  else
+    left, top = relative_offsets(style, owner_width, owner_height)
   end
 
-  return relative_offsets(style, owner_width, owner_height)
+  return left + margin.left, top + margin.top
 end
 
 function yoga.calculateLayout(root, width, height)

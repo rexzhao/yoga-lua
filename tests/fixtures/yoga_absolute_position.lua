@@ -129,8 +129,22 @@ return {
   {
     name = "absolute_layout_within_border",
     source = source("absolute_layout_within_border"),
-    skip = true,
-    unsupportedReason = "border is not implemented",
+    root = {
+      style = { position = "absolute", width = 100, height = 100, border = 10, margin = 10, padding = 10 },
+      children = {
+        { style = { position = "absolute", left = 0, top = 0, width = 50, height = 50 } },
+        { style = { position = "absolute", right = 0, bottom = 0, width = 50, height = 50 } },
+        { style = { position = "absolute", left = 0, top = 0, margin = 10, width = 50, height = 50 } },
+        { style = { position = "absolute", right = 0, bottom = 0, margin = 10, width = 50, height = 50 } },
+      },
+    },
+    expect = {
+      { left = 10, top = 10, width = 100, height = 100 },
+      { left = 10, top = 10, width = 50, height = 50 },
+      { left = 40, top = 40, width = 50, height = 50 },
+      { left = 20, top = 20, width = 50, height = 50 },
+      { left = 30, top = 30, width = 50, height = 50 },
+    },
   },
   {
     name = "absolute_layout_align_items_and_justify_content_center",
@@ -348,13 +362,13 @@ return {
     name = "absolute_layout_percentage_height_based_on_padded_parent",
     source = source("absolute_layout_percentage_height_based_on_padded_parent"),
     skip = true,
-    unsupportedReason = "border is not implemented",
+    unsupportedReason = "absolute percentage sizing with padding/border is not implemented",
   },
   {
     name = "absolute_layout_percentage_height_based_on_padded_parent_and_align_items_center",
     source = source("absolute_layout_percentage_height_based_on_padded_parent_and_align_items_center"),
     skip = true,
-    unsupportedReason = "border is not implemented",
+    unsupportedReason = "absolute percentage sizing with padding is not implemented",
   },
   {
     name = "absolute_layout_padding_left",
@@ -441,13 +455,33 @@ return {
   {
     name = "absolute_layout_border",
     source = source("absolute_layout_border"),
-    skip = true,
-    unsupportedReason = "border is not implemented",
+    root = {
+      style = {},
+      children = {
+        {
+          style = { width = 200, height = 200, margin = 10, position = "relative" },
+          children = {
+            {
+              style = { position = "static", width = 200, height = 200, border = 10 },
+              children = {
+                { style = { position = "absolute", width = 50, height = 50 } },
+              },
+            },
+          },
+        },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 220, height = 220 },
+      { left = 10, top = 10, width = 200, height = 200 },
+      { left = 0, top = 0, width = 200, height = 200 },
+      { left = 10, top = 10, width = 50, height = 50 },
+    },
   },
   {
     name = "absolute_layout_column_reverse_margin_border",
     source = source("absolute_layout_column_reverse_margin_border"),
     skip = true,
-    unsupportedReason = "column-reverse and border are not implemented",
+    unsupportedReason = "column-reverse is not implemented",
   },
 }
