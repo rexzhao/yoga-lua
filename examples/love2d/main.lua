@@ -76,6 +76,7 @@ local layout_modules = {
   "layouts.flex_basis",
   "layouts.flex_shrink",
   "layouts.flex_wrap",
+  "layouts.align_content",
   "layouts.aspect_ratio",
   "layouts.justify",
   "layouts.align",

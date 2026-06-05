@@ -148,6 +148,7 @@ Status: partially complete.
 - [x] Love2D visual demo for basic row `flexWrap`.
 - [ ] `alignContent`.
 - [x] Basic row-wrap `alignContent` values.
+- [x] Love2D visual demo for `alignContent`.
 - [x] Migrated supported `YGGapTest` row-wrap `alignContent` subset.
 - [x] `aspectRatio`.
 - [x] Love2D visual demo for `aspectRatio`.
