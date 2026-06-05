@@ -648,12 +648,25 @@ local function has_auto_cross_size(style, direction, cross_owner_size, measured)
     and not ratio
 end
 
-local function build_child_specs(children, direction, gap, inner_width, inner_height, layout_direction)
+local function child_measure_available(parent_style, direction, inner_width, inner_height)
+  if parent_style.overflow ~= "scroll" then
+    return inner_width, inner_height
+  end
+
+  if is_row_direction(direction) then
+    return nil, inner_height
+  end
+
+  return inner_width, nil
+end
+
+local function build_child_specs(children, parent_style, direction, gap, inner_width, inner_height, layout_direction)
   local specs = {}
   local total_grow = 0
   local used_main = 0
   local visible_count = 0
   local available_main = is_row_direction(direction) and inner_width or inner_height
+  local measure_width, measure_height = child_measure_available(parent_style, direction, inner_width, inner_height)
 
   for index, child in ipairs(children) do
     if is_display_none(child) then
@@ -676,7 +689,7 @@ local function build_child_specs(children, direction, gap, inner_width, inner_he
       local auto_margin = resolve_auto_edges(style, "margin", layout_direction)
       local grow = flex_grow(style)
       local shrink = flex_shrink(style)
-      local measured = measure_node(child, inner_width, inner_height)
+      local measured = measure_node(child, measure_width, measure_height)
       local available_cross = is_row_direction(direction) and inner_height or inner_width
       local base_main = main_size(style, direction, available_main, available_cross, measured)
 
@@ -1129,7 +1142,9 @@ end
 
 local function layout_absolute_node(child, parent_style, padding, border, parent_width, parent_height, inner_width, inner_height, layout_direction)
   local style = child.style or {}
-  local measured = measure_node(child, inner_width, inner_height)
+  local parent_direction = parent_style.flexDirection or "column"
+  local measure_width, measure_height = child_measure_available(parent_style, parent_direction, inner_width, inner_height)
+  local measured = measure_node(child, measure_width, measure_height)
   local margin = resolve_edges(style, "margin", inner_width, layout_direction)
   local left_offset, right_offset = resolve_horizontal_position_offsets(style, inner_width, layout_direction)
   local top_offset = resolve_value(style.top, inner_height)
@@ -1555,6 +1570,7 @@ local function layout_wrapped_children(
   local line_gap = cross_axis_gap(style, direction)
   local available_main = is_row_direction(direction) and inner_width or inner_height
   local available_cross = is_row_direction(direction) and inner_height or inner_width
+  local measure_width, measure_height = child_measure_available(style, direction, inner_width, inner_height)
   local lines = {}
   local current_line = { items = {}, used_main = 0 }
   local specs = {}
@@ -1576,7 +1592,7 @@ local function layout_wrapped_children(
     else
       local child_style = child.style or {}
       local margin = resolve_edges(child_style, "margin", inner_width, layout_direction)
-      local measured = measure_node(child, inner_width, inner_height)
+      local measured = measure_node(child, measure_width, measure_height)
       local base_main = main_size(child_style, direction, available_main, available_cross, measured)
       local spec = {
         child = child,
@@ -1830,7 +1846,7 @@ function layout_node(node, left, top, available_width, available_height, owner_w
   end
 
   local layout_items = collect_layout_items(children)
-  local specs = build_child_specs(layout_items, direction, gap, inner_width, inner_height, layout_direction)
+  local specs = build_child_specs(layout_items, style, direction, gap, inner_width, inner_height, layout_direction)
   distribute_auto_main_margins(specs, direction, gap, inner_width, inner_height)
   local leading, between = justify_offsets(style, specs, direction, gap, inner_width, inner_height)
   local has_auto_children = visible_spec_count(specs) > 0
