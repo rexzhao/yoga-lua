@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 201 tests, 24 skipped`
+- `lua tests/run.lua` -> `ok - 203 tests, 22 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -102,8 +102,6 @@ Status: complete.
 
 Known skipped cases:
 
-- [ ] `align_baseline`: skipped pending baseline alignment.
-- [ ] `align_self_baseline`: skipped pending baseline alignment.
 - [ ] `do_not_clamp_height_of_absolute_node_to_height_of_its_overflow_hidden_parent`: skipped pending absolute auto-size from children.
 - [ ] `absolute_layout_within_border`: skipped pending border support.
 - [ ] `position_root_with_rtl_should_position_withoutdirection`: skipped pending RTL direction support.
@@ -149,7 +147,8 @@ Status: partially complete.
 - [x] Love2D visual demo for `aspectRatio`.
 - [x] Rounding policy.
 - [x] Nested rounding preserves project absolute-coordinate layout semantics.
-- [ ] Baseline alignment.
+- [x] Baseline alignment.
+- [x] Love2D visual demo for baseline alignment.
 - [x] `gap` basic support.
 - [x] `rowGap` and `columnGap` main-axis support without wrapping.
 - [x] Love2D visual demo for `rowGap` and `columnGap`.

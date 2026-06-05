@@ -80,6 +80,7 @@ local layout_modules = {
   "layouts.aspect_ratio",
   "layouts.justify",
   "layouts.align",
+  "layouts.baseline",
   "layouts.percent",
   "layouts.measure",
   "layouts.minmax",

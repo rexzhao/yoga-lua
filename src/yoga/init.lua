@@ -438,6 +438,45 @@ local function child_main_extent(specs, direction, gap, padding)
   return padding.top + main + padding.bottom
 end
 
+local function node_baseline(node)
+  for _, child in ipairs(node.children or {}) do
+    if not is_display_none(child) then
+      return child.layout.top - node.layout.top + node_baseline(child)
+    end
+  end
+
+  return node.layout.height
+end
+
+local function baseline_align_children(parent_style, specs, direction)
+  if direction ~= "row" then
+    return
+  end
+
+  local max_baseline
+
+  for _, spec in ipairs(specs) do
+    if not spec.hidden and not spec.absolute then
+      local align = spec.style.alignSelf or parent_style.alignItems or "stretch"
+      if align == "baseline" then
+        local baseline = node_baseline(spec.child)
+        max_baseline = math.max(max_baseline or baseline, baseline)
+        spec.baseline = baseline
+      end
+    end
+  end
+
+  if not max_baseline then
+    return
+  end
+
+  for _, spec in ipairs(specs) do
+    if spec.baseline then
+      offset_layout_tree(spec.child, 0, max_baseline - spec.baseline)
+    end
+  end
+end
+
 local function visible_spec_count(specs)
   local count = 0
 
@@ -1083,6 +1122,8 @@ function layout_node(node, left, top, available_width, available_height, owner_w
       end
     end
   end
+
+  baseline_align_children(style, specs, direction)
 
   if auto_main_size then
     if direction == "row" then

@@ -37,7 +37,17 @@ return {
   {
     name = "align_baseline",
     source = source("align_baseline"),
-    skip = true,
-    unsupportedReason = "baseline alignment is not implemented",
+    root = {
+      style = { width = 100, height = 100, flexDirection = "row", alignItems = "baseline" },
+      children = {
+        { style = { width = 50, height = 50 } },
+        { style = { width = 50, height = 20 } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 100, height = 100 },
+      { left = 0, top = 0, width = 50, height = 50 },
+      { left = 50, top = 30, width = 50, height = 20 },
+    },
   },
 }
