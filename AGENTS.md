@@ -80,6 +80,7 @@ These rules capture lessons from the `yoga-lua` implementation so far.
 
 ### Fixture migration
 
+- Use the ignored local upstream checkout at `.upstream/facebook-yoga/` for Yoga fixture and generated-test source when it exists.
 - Local layout fixtures should include `source = { repo = "local", test = "..." }`.
 - Migrated Yoga fixtures should include `source.repo`, `source.fixture`, `source.generated`, and `source.test`.
 - If a relevant Yoga case cannot run yet, add it with `skip = true` and a specific `unsupportedReason`; do not silently omit important neighboring cases.
