@@ -1136,8 +1136,8 @@ local function layout_wrapped_children(
         local child_height, cross_offset =
           cross_axis_layout_in_line(style, child_style, direction, margin, line.cross, spec.measured, spec.main)
         if spec.auto_cross then
-          child_height = auto_cross_size_from_child(spec, direction, inner_width, inner_height)
-            or clamp_size(line.cross - margin.top - margin.bottom)
+          local line_height = clamp_size(line.cross - margin.top - margin.bottom)
+          child_height = math.max(auto_cross_size_from_child(spec, direction, inner_width, inner_height) or 0, line_height)
           cross_offset = margin.top
         end
         if wrap_reverse then
@@ -1161,8 +1161,8 @@ local function layout_wrapped_children(
         local child_width, cross_offset =
           cross_axis_layout_in_line(style, child_style, direction, margin, line.cross, spec.measured, spec.main)
         if spec.auto_cross then
-          child_width = auto_cross_size_from_child(spec, direction, inner_width, inner_height)
-            or clamp_size(line.cross - margin.left - margin.right)
+          local line_width = clamp_size(line.cross - margin.left - margin.right)
+          child_width = math.max(auto_cross_size_from_child(spec, direction, inner_width, inner_height) or 0, line_width)
           cross_offset = margin.left
         end
         if wrap_reverse then

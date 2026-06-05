@@ -122,6 +122,43 @@ local function space_around_align_items(name, align_items, first_top, second_top
   }
 end
 
+local function stretch_column()
+  return {
+    name = "align_content_stretch_column",
+    source = source("align_content_stretch_column"),
+    root = {
+      style = {
+        position = "absolute",
+        width = 100,
+        height = 150,
+        flexWrap = "wrap",
+        alignContent = "stretch",
+      },
+      children = {
+        {
+          style = { height = 50 },
+          children = {
+            { style = { flexGrow = 1, flexShrink = 1, flexBasis = "0%" } },
+          },
+        },
+        { style = { height = 50, flexGrow = 1, flexShrink = 1, flexBasis = "0%" } },
+        { style = { height = 50 } },
+        { style = { height = 50 } },
+        { style = { height = 50 } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 100, height = 150 },
+      { left = 0, top = 0, width = 50, height = 50 },
+      { left = 0, top = 0, width = 50, height = 50 },
+      { left = 0, top = 50, width = 50, height = 0 },
+      { left = 0, top = 50, width = 50, height = 50 },
+      { left = 0, top = 100, width = 50, height = 50 },
+      { left = 50, top = 0, width = 50, height = 50 },
+    },
+  }
+end
+
 return {
   align_content_wrap("align_content_flex_start_wrap", "flex-start", { 0, 10, 20 }),
   align_content_wrap("align_content_flex_end_wrap", "flex-end", { 90, 100, 110 }),
@@ -268,4 +305,5 @@ return {
     38,
     213
   ),
+  stretch_column(),
 }
