@@ -72,4 +72,73 @@ return function(runner, helper)
 
     helper.assert_equal(clicked, true, "event callback remains callable")
   end)
+
+  runner:test("virtualList builds visible rows with spacer nodes", function()
+    local rendered = {}
+    local list = ui.virtualList({
+      itemCount = 100,
+      itemHeight = 20,
+      viewportHeight = 60,
+      scrollOffset = 40,
+      overscan = 1,
+      renderItem = function(index)
+        rendered[#rendered + 1] = index
+        return ui.div({ itemIndex = index, style = { height = 20 } })
+      end,
+    })
+
+    yoga.calculateLayout(list)
+
+    helper.assert_equal(list.type, "virtualList", "virtual list type")
+    helper.assert_equal(list.virtual.visibleStart, 2, "visible start")
+    helper.assert_equal(list.virtual.visibleEnd, 6, "visible end")
+    helper.assert_equal(#rendered, 5, "rendered count")
+    helper.assert_equal(rendered[1], 2, "first rendered")
+    helper.assert_equal(rendered[#rendered], 6, "last rendered")
+    helper.assert_equal(#list.children, 7, "children include spacers")
+    helper.assert_equal(list.children[1].props.spacer, "top", "top spacer")
+    helper.assert_equal(list.children[1].style.height, 20, "top spacer height")
+    helper.assert_equal(list.children[7].props.spacer, "bottom", "bottom spacer")
+    helper.assert_equal(list.children[7].style.height, 1880, "bottom spacer height")
+    helper.assert_layout(list.children[2], { left = 0, top = 20, width = 0, height = 20 }, "first virtual row")
+  end)
+
+  runner:test("virtualList clamps direct jumps without rendering skipped rows", function()
+    local rendered = {}
+    local list = ui.virtualList({
+      itemCount = 1000,
+      itemHeight = 10,
+      viewportHeight = 40,
+      scrollOffset = 7000,
+      overscan = 0,
+      renderItem = function(index)
+        rendered[#rendered + 1] = index
+        return ui.div({ itemIndex = index, style = { height = 10 } })
+      end,
+    })
+
+    helper.assert_equal(list.virtual.scrollOffset, 7000, "scroll offset")
+    helper.assert_equal(list.virtual.visibleStart, 701, "visible start")
+    helper.assert_equal(list.virtual.visibleEnd, 704, "visible end")
+    helper.assert_equal(#rendered, 4, "direct jump rendered count")
+    helper.assert_equal(rendered[1], 701, "first direct jump row")
+    helper.assert_equal(rendered[#rendered], 704, "last direct jump row")
+    helper.assert_equal(list.children[1].style.height, 7000, "direct jump top spacer")
+  end)
+
+  runner:test("virtualList clamps scroll offset to content bounds", function()
+    local list = ui.virtualList({
+      itemCount = 10,
+      itemHeight = 10,
+      viewportHeight = 40,
+      scrollOffset = 1000,
+      renderItem = function(index)
+        return ui.div({ itemIndex = index, style = { height = 10 } })
+      end,
+    })
+
+    helper.assert_equal(list.virtual.scrollOffset, 60, "clamped scroll offset")
+    helper.assert_equal(list.virtual.visibleStart, 7, "clamped visible start")
+    helper.assert_equal(list.virtual.visibleEnd, 10, "clamped visible end")
+  end)
 end

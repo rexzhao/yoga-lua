@@ -95,4 +95,74 @@ function ui.button(label, props)
   return attach_measure(node, props)
 end
 
+function ui.virtualList(props)
+  props = props or {}
+
+  local item_count = math.max(0, math.floor(tonumber(props.itemCount) or 0))
+  local item_height = math.max(0, tonumber(props.itemHeight) or 0)
+  local viewport_height = math.max(0, tonumber(props.viewportHeight) or 0)
+  local scroll_offset = math.max(0, tonumber(props.scrollOffset) or 0)
+  local overscan = math.max(0, math.floor(tonumber(props.overscan) or 0))
+  local render_item = props.renderItem
+  local content_height = item_count * item_height
+  local max_scroll = math.max(0, content_height - viewport_height)
+
+  scroll_offset = math.min(scroll_offset, max_scroll)
+
+  local visible_start = 1
+  local visible_end = 0
+
+  if item_count > 0 and item_height > 0 and viewport_height > 0 then
+    visible_start = math.max(1, math.floor(scroll_offset / item_height) + 1 - overscan)
+    visible_end = math.min(item_count, math.ceil((scroll_offset + viewport_height) / item_height) + overscan)
+  end
+
+  local top_height = (visible_start - 1) * item_height
+  local bottom_height = math.max(0, content_height - top_height - (visible_end - visible_start + 1) * item_height)
+  local children = {}
+
+  children[#children + 1] = ui.div({
+    role = "virtual-spacer",
+    spacer = "top",
+    style = { height = top_height },
+  })
+
+  if type(render_item) == "function" then
+    for index = visible_start, visible_end do
+      local item = render_item(index)
+      if item then
+        children[#children + 1] = item
+      end
+    end
+  end
+
+  children[#children + 1] = ui.div({
+    role = "virtual-spacer",
+    spacer = "bottom",
+    style = { height = bottom_height },
+  })
+
+  local style = merge_style(props)
+  style.height = style.height or viewport_height
+  style.overflow = style.overflow or "scroll"
+  style.flexDirection = style.flexDirection or "column"
+
+  local node = yoga.node(style, children)
+  node.type = "virtualList"
+  node.props = props
+  node.virtual = {
+    itemCount = item_count,
+    itemHeight = item_height,
+    viewportHeight = viewport_height,
+    scrollOffset = scroll_offset,
+    maxScroll = max_scroll,
+    visibleStart = visible_start,
+    visibleEnd = visible_end,
+    topSpacerHeight = top_height,
+    bottomSpacerHeight = bottom_height,
+  }
+
+  return attach_measure(node, props)
+end
+
 return ui

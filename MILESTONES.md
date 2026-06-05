@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 434 tests, 2 skipped`
+- `lua tests/run.lua` -> `ok - 437 tests, 2 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 - `lua benchmarks/run.lua` -> records 100, 1,000, and 5,000 node layout timings in `BENCHMARKS.md`
 
@@ -191,8 +191,8 @@ Status: complete for the supported Milestone 4 scope; upstream-disabled skipped 
 - [ ] Yoga-compatible `overflow = "hidden" | "scroll"` style semantics.
 - [x] Scroll-container measure behavior matches upstream Yoga on the scroll axis.
 - [x] Layout results expose Yoga-compatible `hadOverflow`.
-- [ ] UI-level virtualized scroll list builds visible rows, overscan rows, and spacer nodes only.
-- [ ] Fixed-height virtualized list supports direct jumps without laying out skipped rows.
+- [x] UI-level virtualized scroll list builds visible rows, overscan rows, and spacer nodes only.
+- [x] Fixed-height virtualized list supports direct jumps without laying out skipped rows.
 - [ ] Love2D visual demo for a large virtualized scroll list.
 - [x] Relayout behavior tests.
 - [x] Dirty marking tests.
@@ -205,4 +205,4 @@ Status: complete for the supported Milestone 4 scope; upstream-disabled skipped 
 - [x] Benchmarks for 5,000 nodes.
 - [ ] Virtualized list scroll and jump benchmark.
 
-Status: in progress; dirty marking, layout/measure caching, hadOverflow, scroll measure modes, and layout benchmarks are implemented, while full overflow semantics and virtualization remain.
+Status: in progress; dirty marking, layout/measure caching, hadOverflow, scroll measure modes, layout benchmarks, and UI virtualized lists are implemented, while full overflow semantics and Love2D/benchmark coverage for virtualization remain.
