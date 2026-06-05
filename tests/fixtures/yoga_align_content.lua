@@ -62,6 +62,37 @@ local function stretch_row(name, children, expected)
   }
 end
 
+local function root_cross_axis_case(name, align_content, cross_style, root_height, first_top, second_top)
+  local style = {
+    position = "absolute",
+    width = 500,
+    flexDirection = "row",
+    flexWrap = "wrap",
+    alignContent = align_content,
+  }
+
+  for key, value in pairs(cross_style) do
+    style[key] = value
+  end
+
+  return {
+    name = name,
+    source = source(name),
+    root = {
+      style = style,
+      children = {
+        { style = { width = 400, height = 200 } },
+        { style = { width = 400, height = 200 } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 500, height = root_height },
+      { left = 0, top = first_top, width = 400, height = 200 },
+      { left = 0, top = second_top, width = 400, height = 200 },
+    },
+  }
+end
+
 return {
   align_content_wrap("align_content_flex_start_wrap", "flex-start", { 0, 10, 20 }),
   align_content_wrap("align_content_flex_end_wrap", "flex-end", { 90, 100, 110 }),
@@ -161,4 +192,24 @@ return {
     { left = 0, top = 90, width = 50, height = 10 },
     { left = 50, top = 90, width = 50, height = 10 },
   }),
+  root_cross_axis_case("align_content_stretch_with_min_cross_axis", "stretch", { minHeight = 500 }, 500, 0, 250),
+  root_cross_axis_case("align_content_stretch_with_max_cross_axis", "stretch", { maxHeight = 500 }, 400, 0, 200),
+  root_cross_axis_case(
+    "align_content_stretch_with_max_cross_axis_violated",
+    "stretch",
+    { maxHeight = 300 },
+    300,
+    0,
+    200
+  ),
+  root_cross_axis_case("align_content_space_evenly_with_min_cross_axis", "space-evenly", { minHeight = 500 }, 500, 33, 267),
+  root_cross_axis_case("align_content_space_evenly_with_max_cross_axis", "space-evenly", { maxHeight = 500 }, 400, 0, 200),
+  root_cross_axis_case(
+    "align_content_space_evenly_with_max_cross_axis_violated",
+    "space-evenly",
+    { maxHeight = 300 },
+    300,
+    0,
+    200
+  ),
 }

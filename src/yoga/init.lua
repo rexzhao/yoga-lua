@@ -1034,7 +1034,17 @@ local function cross_axis_layout_in_line(parent_style, child_style, direction, m
   return cross_axis_layout(parent_style, child_style, direction, margin, line_cross, line_cross, measured, main)
 end
 
-local function layout_wrapped_children(node, padding, border, inner_width, inner_height, auto_main_size, auto_cross_size)
+local function layout_wrapped_children(
+  node,
+  padding,
+  border,
+  inner_width,
+  inner_height,
+  owner_width,
+  owner_height,
+  auto_main_size,
+  auto_cross_size
+)
   local style = node.style or {}
   local direction = style.flexDirection or "column"
   local wrap_reverse = style.flexWrap == "wrap-reverse"
@@ -1201,9 +1211,11 @@ local function layout_wrapped_children(node, padding, border, inner_width, inner
 
   if auto_cross_size then
     if direction == "row" then
-      node.layout.height = border.top + padding.top + used_cross + padding.bottom + border.bottom
+      local height = border.top + padding.top + used_cross + padding.bottom + border.bottom
+      node.layout.height = constrain_size(height, style, "height", owner_height)
     else
-      node.layout.width = border.left + padding.left + used_cross + padding.right + border.right
+      local width = border.left + padding.left + used_cross + padding.right + border.right
+      node.layout.width = constrain_size(width, style, "width", owner_width)
     end
   end
 
@@ -1215,9 +1227,11 @@ local function layout_wrapped_children(node, padding, border, inner_width, inner
     end
 
     if direction == "row" then
-      node.layout.width = border.left + padding.left + used_main + padding.right + border.right
+      local width = border.left + padding.left + used_main + padding.right + border.right
+      node.layout.width = constrain_size(width, style, "width", owner_width)
     else
-      node.layout.height = border.top + padding.top + used_main + padding.bottom + border.bottom
+      local height = border.top + padding.top + used_main + padding.bottom + border.bottom
+      node.layout.height = constrain_size(height, style, "height", owner_height)
     end
   end
 
@@ -1281,7 +1295,17 @@ function layout_node(node, left, top, available_width, available_height, owner_w
         (direction == "row" and explicit_height == nil and available_height == nil and not options.useAvailableHeight)
         or (direction == "column" and explicit_width == nil and available_width == nil and not options.useAvailableWidth)
       )
-    layout_wrapped_children(node, padding, border, inner_width, inner_height, auto_main_size, auto_cross_size)
+    layout_wrapped_children(
+      node,
+      padding,
+      border,
+      inner_width,
+      inner_height,
+      owner_width,
+      owner_height,
+      auto_main_size,
+      auto_cross_size
+    )
     return node
   end
 
