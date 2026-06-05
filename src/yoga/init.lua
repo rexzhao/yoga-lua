@@ -168,6 +168,14 @@ local function flex_shrink(style)
   return number_or_zero(style.flexShrink)
 end
 
+local function main_axis_gap(style, direction)
+  if direction == "row" then
+    return number_or_zero(style.columnGap or style.gap)
+  end
+
+  return number_or_zero(style.rowGap or style.gap)
+end
+
 local function measure_node(node, available_width, available_height)
   if type(node.measure) ~= "function" then
     return nil
@@ -529,8 +537,8 @@ function layout_node(node, left, top, available_width, available_height, owner_w
   node.dirty = false
 
   local padding = resolve_edges(style, "padding", node.layout.width)
-  local gap = number_or_zero(style.gap)
   local direction = style.flexDirection or "column"
+  local gap = main_axis_gap(style, direction)
   local cursor = 0
   local inner_width = clamp_size(node.layout.width - padding.left - padding.right)
   local inner_height = clamp_size(node.layout.height - padding.top - padding.bottom)

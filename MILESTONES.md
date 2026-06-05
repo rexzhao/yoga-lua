@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 127 tests, 26 skipped`
+- `lua tests/run.lua` -> `ok - 130 tests, 26 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -141,6 +141,7 @@ Status: partially complete.
 - [ ] Rounding policy.
 - [ ] Baseline alignment.
 - [x] `gap` basic support.
+- [x] `rowGap` and `columnGap` main-axis support without wrapping.
 - [x] Migrated supported subset of `YGFlexTest`.
 - [ ] Migrate supported `YGFlexWrapTest` subset.
 - [ ] Migrate supported `YGGapTest` subset.
