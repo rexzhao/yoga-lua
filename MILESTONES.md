@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 352 tests, 2 skipped`
+- `lua tests/run.lua` -> `ok - 359 tests, 2 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -27,6 +27,7 @@ Status: complete.
 - [x] `flexDirection = "column"`.
 - [x] Uniform `padding`.
 - [x] Edge/axis padding: `paddingLeft`, `paddingRight`, `paddingTop`, `paddingBottom`, `paddingHorizontal`, `paddingVertical`.
+- [x] Auto size includes border/padding when no content size is specified.
 - [x] Uniform `margin`.
 - [x] Edge/axis margin: `marginLeft`, `marginRight`, `marginTop`, `marginBottom`, `marginHorizontal`, `marginVertical`.
 - [x] `gap`.
@@ -37,6 +38,7 @@ Status: complete.
 - [x] Fixture runner for layout trees.
 - [x] Basic local fixtures for fixed layout, spacing, and grow.
 - [x] Migrated complete `YGDimensionTest` set.
+- [x] Migrated complete `YGPaddingTest` set.
 - [x] Migrated basic `YGFlexDirectionTest` column/row/reverse subset.
 - [x] Migrated physical-edge `YGFlexDirectionTest` reverse margin/padding/border subset.
 - [x] Migrated physical-position `YGFlexDirectionTest` reverse subset.

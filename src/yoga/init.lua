@@ -1417,6 +1417,8 @@ function layout_node(node, left, top, available_width, available_height, owner_w
     end
   end
 
+  local width_unspecified = width == nil
+  local height_unspecified = height == nil
   node.layout.left = left
   node.layout.top = top
   node.layout.width = constrain_size(width, style, "width", owner_width)
@@ -1425,6 +1427,12 @@ function layout_node(node, left, top, available_width, available_height, owner_w
 
   local border = resolve_edges(style, "border", node.layout.width, layout_direction)
   local padding = resolve_edges(style, "padding", node.layout.width, layout_direction)
+  if width_unspecified then
+    node.layout.width = constrain_size(border.left + padding.left + padding.right + border.right, style, "width", owner_width)
+  end
+  if height_unspecified then
+    node.layout.height = constrain_size(border.top + padding.top + padding.bottom + border.bottom, style, "height", owner_height)
+  end
   local direction = style.flexDirection or "column"
   local gap = main_axis_gap(style, direction)
   local cursor = 0
