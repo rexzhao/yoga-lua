@@ -165,6 +165,48 @@ local function justify_offsets(style, specs, direction, gap, inner_width, inner_
   return leading, between
 end
 
+local function cross_axis_layout(parent_style, child_style, direction, margin, inner_width, inner_height)
+  local align = parent_style.alignItems or "stretch"
+  local available
+  local explicit
+  local before
+  local after
+
+  if direction == "row" then
+    available = inner_height
+    explicit = child_style.height
+    before = margin.top
+    after = margin.bottom
+  else
+    available = inner_width
+    explicit = child_style.width
+    before = margin.left
+    after = margin.right
+  end
+
+  local size
+  local available_without_margin = clamp_size(available - before - after)
+
+  if type(explicit) == "number" then
+    size = clamp_size(explicit)
+  elseif align == "stretch" then
+    size = available_without_margin
+  else
+    size = 0
+  end
+
+  local remaining = clamp_size(available - before - size - after)
+  local offset = before
+
+  if align == "center" then
+    offset = before + remaining / 2
+  elseif align == "flex-end" then
+    offset = before + remaining
+  end
+
+  return size, offset
+end
+
 local function layout_node(node, left, top, available_width, available_height)
   local style = node.style or {}
   local width = style.width or available_width
@@ -190,26 +232,30 @@ local function layout_node(node, left, top, available_width, available_height)
     local child_style = child.style or {}
     local spec = specs[index]
     local margin = spec.margin
-    local child_left = left + padding.left + margin.left
-    local child_top = top + padding.top + margin.top
+    local child_left = left + padding.left
+    local child_top = top + padding.top
 
     if direction == "row" then
-      child_left = child_left + leading + cursor
+      local child_height, cross_offset = cross_axis_layout(style, child_style, direction, margin, inner_width, inner_height)
+      child_left = child_left + leading + cursor + margin.left
+      child_top = child_top + cross_offset
       layout_node(
         child,
         child_left,
         child_top,
         spec.main,
-        child_style.height or inner_height - margin.top - margin.bottom
+        child_height
       )
       cursor = cursor + margin.left + child.layout.width + margin.right + between
     else
-      child_top = child_top + leading + cursor
+      local child_width, cross_offset = cross_axis_layout(style, child_style, direction, margin, inner_width, inner_height)
+      child_left = child_left + cross_offset
+      child_top = child_top + leading + cursor + margin.top
       layout_node(
         child,
         child_left,
         child_top,
-        child_style.width or inner_width - margin.left - margin.right,
+        child_width,
         spec.main
       )
       cursor = cursor + margin.top + child.layout.height + margin.bottom + between
