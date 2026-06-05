@@ -295,6 +295,60 @@ local function stretch_align_items(name, align_items, first_align_self, first_to
   }
 end
 
+local function stretch_line_box_dim(name, align_content, wrapped_tops)
+  local child1_style = {
+    flexDirection = "row",
+    flexWrap = "wrap",
+    flexShrink = 1,
+    flexGrow = 1,
+  }
+
+  if align_content then
+    child1_style.alignContent = align_content
+  end
+
+  return {
+    name = name,
+    source = source(name),
+    root = {
+      style = {
+        position = "absolute",
+        width = 400,
+        flexDirection = "row",
+        paddingTop = 20,
+        paddingBottom = 20,
+        paddingLeft = 20,
+        paddingRight = 20,
+      },
+      children = {
+        { style = { width = 100, height = 100, marginRight = 20 } },
+        {
+          style = child1_style,
+          children = {
+            { style = { width = 30, height = 30, marginRight = 20 } },
+            { style = { width = 30, height = 30, marginRight = 20 } },
+            { style = { width = 30, height = 30, marginRight = 20 } },
+            { style = { width = 30, height = 30, marginRight = 20 } },
+            { style = { width = 30, height = 30, marginRight = 20 } },
+          },
+        },
+        { style = { width = 50, height = 50, marginLeft = 20 } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 400, height = 140 },
+      { left = 20, top = 20, width = 100, height = 100 },
+      { left = 140, top = 20, width = 170, height = 100 },
+      { left = 0, top = wrapped_tops[1], width = 30, height = 30 },
+      { left = 50, top = wrapped_tops[2], width = 30, height = 30 },
+      { left = 100, top = wrapped_tops[3], width = 30, height = 30 },
+      { left = 0, top = wrapped_tops[4], width = 30, height = 30 },
+      { left = 50, top = wrapped_tops[5], width = 30, height = 30 },
+      { left = 330, top = 20, width = 50, height = 50 },
+    },
+  }
+end
+
 local function stretch_column()
   return {
     name = "align_content_stretch_column",
@@ -590,5 +644,20 @@ return {
   ),
   stretch_align_items("align_content_stretch_and_align_items_center_with_flex_wrap", "center", "flex-end", 125, 38, 213),
   stretch_align_items("align_content_stretch_and_align_items_stretch_with_flex_wrap", nil, "flex-end", 125, 0, 175),
+  stretch_line_box_dim(
+    "align_content_flex_start_stretch_doesnt_influence_line_box_dim",
+    "flex-start",
+    { 0, 0, 0, 30, 30 }
+  ),
+  stretch_line_box_dim(
+    "align_content_stretch_stretch_does_influence_line_box_dim",
+    "stretch",
+    { 0, 0, 0, 50, 50 }
+  ),
+  stretch_line_box_dim(
+    "align_content_space_evenly_stretch_does_influence_line_box_dim",
+    "stretch",
+    { 0, 0, 0, 50, 50 }
+  ),
   stretch_column(),
 }

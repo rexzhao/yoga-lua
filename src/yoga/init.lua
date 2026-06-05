@@ -984,6 +984,62 @@ local function child_cross_extent(specs, direction, padding, border)
   return border.left + padding.left + cross + padding.right + border.right
 end
 
+local function relayout_stretched_auto_cross_children(node, specs, direction, padding, border)
+  local style = node.style or {}
+  local inner_width = clamp_size(node.layout.width - border.left - padding.left - padding.right - border.right)
+  local inner_height = clamp_size(node.layout.height - border.top - padding.top - padding.bottom - border.bottom)
+
+  for _, spec in ipairs(specs) do
+    if not spec.hidden and not spec.absolute and spec.auto_cross then
+      local child_style = spec.style
+      local align = child_style.alignSelf or style.alignItems or "stretch"
+
+      if align == "stretch" then
+        local child = spec.child
+        local margin = spec.margin
+
+        if direction == "row" then
+          local height = constrain_size(
+            clamp_size(inner_height - margin.top - margin.bottom),
+            child_style,
+            "height",
+            inner_height
+          )
+          layout_node(
+            child,
+            child.layout.left,
+            child.layout.top,
+            child.layout.width,
+            height,
+            inner_width,
+            inner_height,
+            spec.measured,
+            { useAvailableWidth = true }
+          )
+        else
+          local width = constrain_size(
+            clamp_size(inner_width - margin.left - margin.right),
+            child_style,
+            "width",
+            inner_width
+          )
+          layout_node(
+            child,
+            child.layout.left,
+            child.layout.top,
+            width,
+            child.layout.height,
+            inner_width,
+            inner_height,
+            spec.measured,
+            { useAvailableHeight = true }
+          )
+        end
+      end
+    end
+  end
+end
+
 local function used_line_cross_size(lines, gap)
   local used = 0
 
@@ -1422,6 +1478,8 @@ function layout_node(node, left, top, available_width, available_height, owner_w
     else
       node.layout.width = constrain_size(child_cross_extent(specs, direction, padding, border), style, "width", owner_width)
     end
+
+    relayout_stretched_auto_cross_children(node, specs, direction, padding, border)
   end
 
   return node
