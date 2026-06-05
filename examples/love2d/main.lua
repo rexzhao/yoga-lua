@@ -5,6 +5,7 @@ local unpack = table.unpack or unpack
 
 local root
 local current_case = 1
+local mode = "menu"
 local hovered
 local fonts = {}
 
@@ -70,6 +71,8 @@ local layout_modules = {
 }
 
 local cases = {}
+local layout_ctx
+local menu_layout
 
 local function layout_context()
   return {
@@ -82,7 +85,8 @@ local function layout_context()
 end
 
 local function load_cases()
-  local ctx = layout_context()
+  layout_ctx = layout_context()
+  menu_layout = require("layouts.menu")
   cases = {}
 
   for _, module_name in ipairs(layout_modules) do
@@ -91,7 +95,7 @@ local function load_cases()
       id = layout.id,
       name = layout.name,
       build = function(width, height)
-        return layout.build(ctx, width, height)
+        return layout.build(layout_ctx, width, height)
       end,
     }
   end
@@ -110,7 +114,12 @@ local function rebuild()
   local width, window_height = love.graphics.getDimensions()
   local layout_height = math.max(1, window_height - chrome.top - chrome.bottom)
 
-  root = cases[current_case].build(width, layout_height)
+  if mode == "menu" then
+    root = menu_layout.build(layout_ctx, width, layout_height, cases, current_case)
+  else
+    root = cases[current_case].build(width, layout_height)
+  end
+
   yoga.calculateLayout(root, width, layout_height)
   offset_layout(root, 0, chrome.top)
 end
@@ -152,6 +161,42 @@ local function find_deepest(node, x, y)
   end
 
   return node
+end
+
+local function find_case_at(node, x, y)
+  if not inside(node, x, y) then
+    return nil
+  end
+
+  for index = #(node.children or {}), 1, -1 do
+    local child_case = find_case_at(node.children[index], x, y)
+    if child_case then
+      return child_case
+    end
+  end
+
+  local props = node.props or {}
+  return props.caseIndex
+end
+
+local function select_next(delta)
+  current_case = (current_case + delta - 1) % #cases + 1
+  rebuild()
+end
+
+local function open_case(index)
+  if not cases[index] then
+    return
+  end
+
+  current_case = index
+  mode = "case"
+  rebuild()
+end
+
+local function show_menu()
+  mode = "menu"
+  rebuild()
 end
 
 local function set_color(color)
@@ -224,18 +269,19 @@ end
 local function draw_overlay()
   local width = love.graphics.getWidth()
   local height = love.graphics.getHeight()
-  local case = cases[current_case]
+  local title = mode == "menu" and "Select UI" or cases[current_case].name
+  local hint = mode == "menu" and "Click, 1-3, Up/Down, Enter" or "Esc to menu"
 
   set_color({ 0.05, 0.06, 0.07, 0.88 })
   love.graphics.rectangle("fill", 0, 0, width, 34)
 
   set_color(palette.text)
   love.graphics.setFont(fonts.normal)
-  love.graphics.print("yoga-lua / Love2D visualizer - " .. case.name, 12, 8)
+  love.graphics.print("yoga-lua / Love2D visualizer - " .. title, 12, 8)
 
   set_color(palette.muted)
   love.graphics.setFont(fonts.small)
-  love.graphics.print("Left/Right or 1-3", width - 145, 10)
+  love.graphics.print(hint, width - 210, 10)
 
   if hovered then
     local layout = hovered.layout
@@ -293,19 +339,29 @@ function love.resize()
 end
 
 function love.keypressed(key)
-  if key == "right" then
-    current_case = current_case % #cases + 1
-    rebuild()
-  elseif key == "left" then
-    current_case = (current_case - 2) % #cases + 1
-    rebuild()
-  elseif key == "1" or key == "2" or key == "3" then
+  if mode == "menu" and (key == "right" or key == "down") then
+    select_next(1)
+  elseif mode == "menu" and (key == "left" or key == "up") then
+    select_next(-1)
+  elseif mode == "menu" and (key == "return" or key == "kpenter" or key == "space") then
+    open_case(current_case)
+  elseif mode == "menu" and (key == "1" or key == "2" or key == "3") then
     local index = tonumber(key)
-    if cases[index] then
-      current_case = index
-      rebuild()
-    end
+    open_case(index)
+  elseif mode == "case" and key == "escape" then
+    show_menu()
   elseif key == "r" then
     rebuild()
+  end
+end
+
+function love.mousepressed(x, y, button)
+  if mode ~= "menu" or button ~= 1 then
+    return
+  end
+
+  local index = root and find_case_at(root, x, y)
+  if index then
+    open_case(index)
   end
 end
