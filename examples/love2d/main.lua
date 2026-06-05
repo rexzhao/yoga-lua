@@ -75,6 +75,7 @@ local layout_modules = {
   "layouts.percent",
   "layouts.measure",
   "layouts.minmax",
+  "layouts.display",
 }
 
 local cases = {}

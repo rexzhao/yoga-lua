@@ -85,6 +85,7 @@ Status: mostly complete; explicit tests/examples for function components and eve
 - [ ] `position = "absolute"`.
 - [ ] Relative position offsets.
 - [x] `display = "none"`.
+- [x] Love2D visual demo for `display = "none"`.
 - [x] Migrated supported subset of `YGJustifyContentTest`.
 - [x] Migrated supported subset of `YGAlignItemsTest`.
 - [x] Migrated supported subset of `YGAlignSelfTest`.
