@@ -101,6 +101,23 @@ local function stretch_row(name, children, expected)
   }
 end
 
+local function flex_start_column_case(name, height, children, expected)
+  return {
+    name = name,
+    source = source(name),
+    root = {
+      style = {
+        position = "absolute",
+        width = 100,
+        height = height,
+        flexWrap = "wrap",
+      },
+      children = children,
+    },
+    expect = expected,
+  }
+end
+
 local function root_cross_axis_case(name, align_content, cross_style, root_height, first_top, second_top, child_left)
   local style = {
     position = "absolute",
@@ -217,6 +234,34 @@ return {
   negative_space("align_content_space_between_wrapped_negative_space_gap", "space-between", { 0, 30, 60 }, 10),
   negative_space("align_content_space_around_wrapped_negative_space_gap", "space-around", { 0, 30, 60 }, 10),
   negative_space("align_content_space_evenly_wrapped_negative_space_gap", "space-evenly", { 0, 30, 60 }, 10),
+  flex_start_column_case("align_content_flex_start_without_height_on_children", 100, {
+    { style = { width = 50 } },
+    { style = { width = 50, height = 10 } },
+    { style = { width = 50 } },
+    { style = { width = 50, height = 10 } },
+    { style = { width = 50 } },
+  }, {
+    { left = 0, top = 0, width = 100, height = 100 },
+    { left = 0, top = 0, width = 50, height = 0 },
+    { left = 0, top = 0, width = 50, height = 10 },
+    { left = 0, top = 10, width = 50, height = 0 },
+    { left = 0, top = 10, width = 50, height = 10 },
+    { left = 0, top = 20, width = 50, height = 0 },
+  }),
+  flex_start_column_case("align_content_flex_start_with_flex", 120, {
+    { style = { width = 50, flexGrow = 1, flexBasis = "0%" } },
+    { style = { width = 50, height = 10, flexGrow = 1, flexBasis = "0%" } },
+    { style = { width = 50 } },
+    { style = { width = 50, flexGrow = 1, flexShrink = 1, flexBasis = "0%" } },
+    { style = { width = 50 } },
+  }, {
+    { left = 0, top = 0, width = 100, height = 120 },
+    { left = 0, top = 0, width = 50, height = 40 },
+    { left = 0, top = 40, width = 50, height = 40 },
+    { left = 0, top = 80, width = 50, height = 0 },
+    { left = 0, top = 80, width = 50, height = 40 },
+    { left = 0, top = 120, width = 50, height = 0 },
+  }),
   stretch_row("align_content_stretch_row", {
     { style = { width = 50 } },
     { style = { width = 50 } },
