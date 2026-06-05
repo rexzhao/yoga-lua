@@ -93,6 +93,25 @@ local function clamp_size(value, owner_size)
   return math.max(0, resolve_value(value, owner_size) or number_or_zero(value))
 end
 
+local function constrain_size(value, style, dimension, owner_size)
+  value = clamp_size(value)
+
+  local min_key = dimension == "width" and "minWidth" or "minHeight"
+  local max_key = dimension == "width" and "maxWidth" or "maxHeight"
+  local min_value = resolve_value(style[min_key], owner_size)
+  local max_value = resolve_value(style[max_key], owner_size)
+
+  if min_value ~= nil then
+    value = math.max(value, min_value)
+  end
+
+  if max_value ~= nil then
+    value = math.min(value, max_value)
+  end
+
+  return math.max(0, value)
+end
+
 local function flex_grow(style)
   return number_or_zero(style.flexGrow or style.flex)
 end
@@ -121,10 +140,12 @@ end
 
 local function main_size(style, direction, owner_size, measured)
   if direction == "row" then
-    return resolve_value(style.width, owner_size) or number_or_zero(measured and measured.width)
+    local width = resolve_value(style.width, owner_size) or number_or_zero(measured and measured.width)
+    return constrain_size(width, style, "width", owner_size)
   end
 
-  return resolve_value(style.height, owner_size) or number_or_zero(measured and measured.height)
+  local height = resolve_value(style.height, owner_size) or number_or_zero(measured and measured.height)
+  return constrain_size(height, style, "height", owner_size)
 end
 
 local function build_child_specs(children, direction, gap, inner_width, inner_height)
@@ -221,6 +242,7 @@ local function cross_axis_layout(parent_style, child_style, direction, margin, i
   local before
   local after
   local measured_size
+  local dimension
 
   if direction == "row" then
     available = inner_height
@@ -228,12 +250,14 @@ local function cross_axis_layout(parent_style, child_style, direction, margin, i
     before = margin.top
     after = margin.bottom
     measured_size = measured and measured.height
+    dimension = "height"
   else
     available = inner_width
     explicit = resolve_value(child_style.width, inner_width)
     before = margin.left
     after = margin.right
     measured_size = measured and measured.width
+    dimension = "width"
   end
 
   local size
@@ -246,6 +270,8 @@ local function cross_axis_layout(parent_style, child_style, direction, margin, i
   else
     size = clamp_size(measured_size)
   end
+
+  size = constrain_size(size, child_style, dimension, available)
 
   local remaining = clamp_size(available - before - size - after)
   local offset = before
@@ -267,8 +293,8 @@ local function layout_node(node, left, top, available_width, available_height, o
 
   node.layout.left = left
   node.layout.top = top
-  node.layout.width = clamp_size(width)
-  node.layout.height = clamp_size(height)
+  node.layout.width = constrain_size(width, style, "width", owner_width)
+  node.layout.height = constrain_size(height, style, "height", owner_height)
   node.dirty = false
 
   local padding = resolve_edges(style, "padding", node.layout.width)

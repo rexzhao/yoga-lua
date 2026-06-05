@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 48 tests, 7 skipped`
+- `lua tests/run.lua` -> `ok - 53 tests, 6 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -76,10 +76,10 @@ Status: mostly complete; explicit tests/examples for function components and eve
 - [x] Percentage `height`.
 - [x] Percentage `padding`.
 - [x] Percentage `margin`.
-- [ ] `minWidth`.
-- [ ] `maxWidth`.
-- [ ] `minHeight`.
-- [ ] `maxHeight`.
+- [x] `minWidth`.
+- [x] `maxWidth`.
+- [x] `minHeight`.
+- [x] `maxHeight`.
 - [ ] `position = "absolute"`.
 - [ ] Relative position offsets.
 - [ ] `display = "none"`.
@@ -98,7 +98,6 @@ Known skipped cases:
 - [ ] `percentage_position_left_top`: skipped pending relative position offsets.
 - [ ] `percentage_flex_basis`: skipped pending `flexBasis`.
 - [ ] `percentage_absolute_position`: skipped pending absolute positioning.
-- [ ] `percent_of_minmax_main`: skipped pending min/max constraints.
 
 Status: partially complete.
 

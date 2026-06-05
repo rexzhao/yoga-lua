@@ -83,8 +83,15 @@ return {
   {
     name = "percent_of_minmax_main",
     source = source("percent_of_minmax_main"),
-    skip = true,
-    unsupportedReason = "min/max constraints are not implemented",
+    root = {
+      style = { flexDirection = "row", minWidth = 60, maxWidth = 60, height = 50 },
+      children = {
+        { style = { width = "50%", height = 20 } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 60, height = 50 },
+      { left = 0, top = 0, width = 30, height = 20 },
+    },
   },
 }
-
