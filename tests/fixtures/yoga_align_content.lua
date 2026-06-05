@@ -62,7 +62,7 @@ local function stretch_row(name, children, expected)
   }
 end
 
-local function root_cross_axis_case(name, align_content, cross_style, root_height, first_top, second_top)
+local function root_cross_axis_case(name, align_content, cross_style, root_height, first_top, second_top, child_left)
   local style = {
     position = "absolute",
     width = 500,
@@ -87,8 +87,8 @@ local function root_cross_axis_case(name, align_content, cross_style, root_heigh
     },
     expect = {
       { left = 0, top = 0, width = 500, height = root_height },
-      { left = 0, top = first_top, width = 400, height = 200 },
-      { left = 0, top = second_top, width = 400, height = 200 },
+      { left = child_left or 0, top = first_top, width = 400, height = 200 },
+      { left = child_left or 0, top = second_top, width = 400, height = 200 },
     },
   }
 end
@@ -211,5 +211,23 @@ return {
     300,
     0,
     200
+  ),
+  root_cross_axis_case(
+    "align_content_stretch_with_max_cross_axis_and_border_padding",
+    "stretch",
+    { maxHeight = 500, border = 5, padding = 2 },
+    414,
+    7,
+    207,
+    7
+  ),
+  root_cross_axis_case(
+    "align_content_space_evenly_with_max_cross_axis_violated_padding_and_border",
+    "space-evenly",
+    { maxHeight = 300, border = 5, padding = 2 },
+    300,
+    7,
+    207,
+    7
   ),
 }
