@@ -147,6 +147,7 @@ Status: partially complete.
 - [ ] Baseline alignment.
 - [x] `gap` basic support.
 - [x] `rowGap` and `columnGap` main-axis support without wrapping.
+- [x] Love2D visual demo for `rowGap` and `columnGap`.
 - [x] Migrated supported subset of `YGFlexTest`.
 - [ ] Migrate supported `YGFlexWrapTest` subset.
 - [x] Migrate supported `YGGapTest` subset.
