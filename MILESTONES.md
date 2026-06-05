@@ -144,6 +144,7 @@ Status: partially complete.
 - [ ] `flexWrap`.
 - [ ] `alignContent`.
 - [x] `aspectRatio`.
+- [x] Love2D visual demo for `aspectRatio`.
 - [ ] Rounding policy.
 - [ ] Baseline alignment.
 - [x] `gap` basic support.

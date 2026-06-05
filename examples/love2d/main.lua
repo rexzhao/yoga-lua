@@ -75,6 +75,7 @@ local layout_modules = {
   "layouts.axis_gap",
   "layouts.flex_basis",
   "layouts.flex_shrink",
+  "layouts.aspect_ratio",
   "layouts.justify",
   "layouts.align",
   "layouts.percent",
