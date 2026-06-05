@@ -43,7 +43,7 @@ local function align_content_wrap(name, align_content, tops)
   }
 end
 
-local function negative_space(name, align_content, tops)
+local function negative_space(name, align_content, tops, gap)
   return {
     name = name,
     source = source(name),
@@ -62,6 +62,7 @@ local function negative_space(name, align_content, tops)
             alignContent = align_content,
             justifyContent = "center",
             height = 10,
+            gap = gap,
           },
           children = {
             { style = { width = "80%", height = 20 } },
@@ -210,6 +211,12 @@ return {
   negative_space("align_content_space_between_wrapped_negative_space", "space-between", { 0, 20, 40 }),
   negative_space("align_content_space_around_wrapped_negative_space", "space-around", { 0, 20, 40 }),
   negative_space("align_content_space_evenly_wrapped_negative_space", "space-evenly", { 0, 20, 40 }),
+  negative_space("align_content_flex_start_wrapped_negative_space_gap", "flex-start", { 0, 30, 60 }, 10),
+  negative_space("align_content_flex_end_wrapped_negative_space_gap", "flex-end", { -70, -40, -10 }, 10),
+  negative_space("align_content_center_wrapped_negative_space_gap", "center", { -35, -5, 25 }, 10),
+  negative_space("align_content_space_between_wrapped_negative_space_gap", "space-between", { 0, 30, 60 }, 10),
+  negative_space("align_content_space_around_wrapped_negative_space_gap", "space-around", { 0, 30, 60 }, 10),
+  negative_space("align_content_space_evenly_wrapped_negative_space_gap", "space-evenly", { 0, 30, 60 }, 10),
   stretch_row("align_content_stretch_row", {
     { style = { width = 50 } },
     { style = { width = 50 } },
