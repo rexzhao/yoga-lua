@@ -50,7 +50,8 @@ return {
         flex = 1,
         height = 78,
         flexDirection = "row",
-        padding = "5%",
+        paddingHorizontal = "5%",
+        paddingVertical = 14,
         gap = 8,
       },
       inner = {
@@ -86,9 +87,9 @@ return {
       }),
       with_styles(styles, "row", { debugName = "percentage padding row", fill = palette.panel }, {
         with_styles(styles, "label", { debugName = "padding label", fill = { 0, 0, 0, 0 } }, {
-          label("padding: 5%", { style = { height = 24 }, fill = { 0, 0, 0, 0 } }),
+          label("paddingHorizontal: 5%", { style = { height = 24 }, fill = { 0, 0, 0, 0 } }),
         }),
-        with_styles(styles, "padded", { debugName = "padding 5%", fill = palette.panel_alt }, {
+        with_styles(styles, "padded", { debugName = "paddingHorizontal 5%", fill = palette.panel_alt }, {
           with_styles(styles, "inner", { debugName = "inner 30% x 60%", fill = palette.gold }),
           with_styles(styles, "inner", { debugName = "inner 30% x 60%", fill = palette.green }),
         }),
@@ -108,4 +109,3 @@ return {
     })
   end,
 }
-
