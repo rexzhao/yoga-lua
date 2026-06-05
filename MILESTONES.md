@@ -33,6 +33,7 @@ Status: complete.
 - [x] Basic `flexGrow`.
 - [x] `flex` as grow shorthand.
 - [x] Direct `measure` callback support.
+- [x] Love2D visual demo for direct `measure` callback.
 - [x] Fixture runner for layout trees.
 - [x] Basic local fixtures for fixed layout, spacing, and grow.
 - [ ] Broader Yoga dimension/flex-direction/margin/padding fixture migration.

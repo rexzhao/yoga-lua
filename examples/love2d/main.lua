@@ -71,6 +71,7 @@ local layout_modules = {
   "layouts.justify",
   "layouts.align",
   "layouts.percent",
+  "layouts.measure",
 }
 
 local cases = {}
@@ -86,6 +87,10 @@ local function layout_context()
     with_styles = with_styles,
     label = label,
     unpack = unpack,
+    measureText = function(text)
+      local font = fonts.small
+      return font:getWidth(text) + 16, font:getHeight() + 14
+    end,
   }
 end
 
