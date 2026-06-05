@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 262 tests, 3 skipped`
+- `lua tests/run.lua` -> `ok - 267 tests, 3 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -142,6 +142,7 @@ Status: partially complete.
 - [x] `alignContent` handles negative cross-axis free space for wrapped rows.
 - [x] `alignContent` negative cross-axis free space composes with cross-axis gap.
 - [x] `alignContent` covers flex-start column wrap with zero-height and flexible children.
+- [x] `alignContent: stretch` composes with `alignItems` and `alignSelf`.
 - [x] Migrated supported `YGGapTest` row-wrap `alignContent` subset.
 - [x] `aspectRatio`.
 - [x] Love2D visual demo for `aspectRatio`.

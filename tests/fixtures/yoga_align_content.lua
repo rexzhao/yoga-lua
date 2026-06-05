@@ -178,6 +178,72 @@ local function space_around_align_items(name, align_items, first_top, second_top
   }
 end
 
+local function stretch_not_overriding_align_items()
+  return {
+    name = "align_content_stretch_is_not_overriding_align_items",
+    source = source("align_content_stretch_is_not_overriding_align_items"),
+    root = {
+      style = {
+        position = "absolute",
+        alignContent = "stretch",
+      },
+      children = {
+        {
+          style = {
+            width = 100,
+            height = 100,
+            alignItems = "center",
+            flexDirection = "row",
+            alignContent = "stretch",
+          },
+          children = {
+            { style = { width = 10, height = 10, alignContent = "stretch" } },
+          },
+        },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 100, height = 100 },
+      { left = 0, top = 0, width = 100, height = 100 },
+      { left = 0, top = 45, width = 10, height = 10 },
+    },
+  }
+end
+
+local function stretch_align_items(name, align_items, first_align_self, first_top, second_top, third_top)
+  local style = {
+    position = "absolute",
+    width = 300,
+    height = 300,
+    flexDirection = "row",
+    flexWrap = "wrap",
+    alignContent = "stretch",
+  }
+
+  if align_items then
+    style.alignItems = align_items
+  end
+
+  return {
+    name = name,
+    source = source(name),
+    root = {
+      style = style,
+      children = {
+        { style = { width = 150, height = 50, alignSelf = first_align_self } },
+        { style = { width = 120, height = 100 } },
+        { style = { width = 120, height = 50 } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 300, height = 300 },
+      { left = 0, top = first_top, width = 150, height = 50 },
+      { left = 150, top = second_top, width = 120, height = 100 },
+      { left = 0, top = third_top, width = 120, height = 50 },
+    },
+  }
+end
+
 local function stretch_column()
   return {
     name = "align_content_stretch_column",
@@ -401,5 +467,17 @@ return {
     38,
     213
   ),
+  stretch_not_overriding_align_items(),
+  stretch_align_items("align_content_stretch_and_align_items_flex_end_with_flex_wrap", "flex-end", "flex-start", 0, 75, 250),
+  stretch_align_items(
+    "align_content_stretch_and_align_items_flex_start_with_flex_wrap",
+    "flex-start",
+    "flex-end",
+    125,
+    0,
+    175
+  ),
+  stretch_align_items("align_content_stretch_and_align_items_center_with_flex_wrap", "center", "flex-end", 125, 38, 213),
+  stretch_align_items("align_content_stretch_and_align_items_stretch_with_flex_wrap", nil, "flex-end", 125, 0, 175),
   stretch_column(),
 }
