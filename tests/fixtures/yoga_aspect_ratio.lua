@@ -12,7 +12,7 @@ return {
     name = "aspect_ratio_does_not_stretch_cross_axis_dim",
     source = source("aspect_ratio_does_not_stretch_cross_axis_dim"),
     skip = true,
-    unsupportedReason = "upstream generated test is disabled",
+    unsupportedReason = "upstream generated test is disabled and conflicts with enabled Yoga aspect-ratio flexed-dimension behavior",
   },
   {
     name = "zero_aspect_ratio_behaves_like_auto",

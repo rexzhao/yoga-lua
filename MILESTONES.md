@@ -126,7 +126,7 @@ Status: complete.
 
 Known skipped cases:
 
-- [ ] `aspect_ratio_does_not_stretch_cross_axis_dim`: skipped because upstream generated test is disabled.
+- [ ] `aspect_ratio_does_not_stretch_cross_axis_dim`: skipped because upstream generated test is disabled and conflicts with enabled Yoga aspect-ratio flexed-dimension behavior.
 
 Status: complete for the supported Milestone 3 scope; one upstream-disabled Yoga fixture remains tracked as a known skipped case instead of being counted as implemented.
 
