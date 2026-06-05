@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 159 tests, 33 skipped`
+- `lua tests/run.lua` -> `ok - 161 tests, 33 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -51,8 +51,8 @@ Status: mostly complete; broader Yoga fixture migration remains.
 - [x] Inline `style` overrides class style.
 - [x] Props are preserved on nodes.
 - [x] Function components are usable as plain Lua functions returning nodes.
-- [ ] Function component behavior has explicit tests.
-- [ ] Event props such as `onClick` have explicit examples/tests.
+- [x] Function component behavior has explicit tests.
+- [x] Event props such as `onClick` have explicit examples/tests.
 - [x] Love2D demos are authored through reusable UI layout modules.
 - [x] Love2D selection screen is rendered through Yoga.
 - [x] Love2D selection screen supports scrollable overflow.
@@ -60,7 +60,7 @@ Status: mostly complete; broader Yoga fixture migration remains.
 - [x] Love2D visualizer can start a named UI with `--case`.
 - [x] Love2D visualizer can save a screenshot with `--screenshot`.
 
-Status: mostly complete; explicit tests/examples for function components and event props remain.
+Status: complete.
 
 ## Milestone 3: Yoga Compatibility Expansion
 
