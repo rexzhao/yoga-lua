@@ -66,8 +66,8 @@ return {
       shifted_negative = {
         width = 132,
         height = 44,
-        right = 32,
-        bottom = 12,
+        right = 8,
+        bottom = 8,
       },
       percent_box = {
         width = "36%",
@@ -110,7 +110,7 @@ return {
         with_styles(styles, "flow_box", { debugName = "next flow slot", fill = palette.green }),
       }),
       demo_row("right/bottom offset", styles.stage, {
-        with_styles(styles, "shifted_negative", { debugName = "right 32 bottom 12", fill = palette.gold }),
+        with_styles(styles, "shifted_negative", { debugName = "right 8 bottom 8", fill = palette.gold }),
         with_styles(styles, "flow_box", { debugName = "next flow slot", fill = palette.red }),
       }),
       demo_row("percent offset", styles.stage, {
