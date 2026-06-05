@@ -5,4 +5,7 @@ return function(runner, helper)
   fixture_runner.register(runner, helper, require("fixtures.justify_content"))
   fixture_runner.register(runner, helper, require("fixtures.align_items"))
   fixture_runner.register(runner, helper, require("fixtures.align_self"))
+  fixture_runner.register(runner, helper, require("fixtures.yoga_justify_content"))
+  fixture_runner.register(runner, helper, require("fixtures.yoga_align_items"))
+  fixture_runner.register(runner, helper, require("fixtures.yoga_align_self"))
 end
