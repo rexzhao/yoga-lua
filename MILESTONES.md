@@ -55,6 +55,7 @@ Status: mostly complete; broader Yoga fixture migration remains.
 - [ ] Event props such as `onClick` have explicit examples/tests.
 - [x] Love2D demos are authored through reusable UI layout modules.
 - [x] Love2D selection screen is rendered through Yoga.
+- [x] Love2D selection screen supports scrollable overflow.
 - [x] Love2D overlay is rendered through Yoga.
 
 Status: mostly complete; explicit tests/examples for function components and event props remain.

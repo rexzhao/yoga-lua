@@ -47,7 +47,7 @@ return {
     local children = {
       with_styles(styles, "title", { debugName = "selection title", fill = palette.panel }, {
         label("Select a UI layout", { style = { height = 22 }, fill = { 0, 0, 0, 0 } }),
-        label("Click an item, press its number, or use Up/Down + Enter.", {
+        label("Use mouse wheel, PageUp/PageDown, click, or Up/Down + Enter.", {
           style = { height = 18 },
           fill = { 0, 0, 0, 0 },
         }),
@@ -89,6 +89,10 @@ return {
       label("Esc returns here from any UI screen.", { style = { height = 20 }, fill = { 0, 0, 0, 0 } }),
     })
 
-    return with_styles(styles, "screen", { debugName = "selection screen", fill = palette.background }, children)
+    return with_styles(styles, "screen", {
+      debugName = "selection screen",
+      fill = palette.background,
+      clipChildren = true,
+    }, children)
   end,
 }

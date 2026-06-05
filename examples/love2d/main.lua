@@ -7,6 +7,8 @@ local root
 local current_case = 1
 local mode = "menu"
 local hovered
+local menu_scroll = 0
+local menu_scroll_max = 0
 local fonts = {}
 
 local palette = {
@@ -122,6 +124,32 @@ local function offset_layout(node, dx, dy)
   end
 end
 
+local function offset_children(node, dx, dy)
+  for _, child in ipairs(node.children or {}) do
+    offset_layout(child, dx, dy)
+  end
+end
+
+local function clamp_menu_scroll()
+  menu_scroll = math.max(0, math.min(menu_scroll, menu_scroll_max))
+end
+
+local function update_menu_scroll_limits()
+  if mode ~= "menu" or not root then
+    menu_scroll = 0
+    menu_scroll_max = 0
+    return
+  end
+
+  local content_bottom = root.layout.top
+  for _, child in ipairs(root.children or {}) do
+    content_bottom = math.max(content_bottom, child.layout.top + child.layout.height)
+  end
+
+  menu_scroll_max = math.max(0, content_bottom - (root.layout.top + root.layout.height))
+  clamp_menu_scroll()
+end
+
 local function rebuild()
   local width, window_height = love.graphics.getDimensions()
   local layout_height = math.max(1, window_height - chrome.top - chrome.bottom)
@@ -134,6 +162,11 @@ local function rebuild()
 
   yoga.calculateLayout(root, width, layout_height)
   offset_layout(root, 0, chrome.top)
+
+  if mode == "menu" then
+    update_menu_scroll_limits()
+    offset_children(root, 0, -menu_scroll)
+  end
 end
 
 local function has_flag(args, flag)
@@ -191,9 +224,69 @@ local function find_case_at(node, x, y)
   return props.caseIndex
 end
 
+local function selected_menu_node()
+  if mode ~= "menu" or not root then
+    return nil
+  end
+
+  for _, child in ipairs(root.children or {}) do
+    local props = child.props or {}
+    if props.caseIndex == current_case then
+      return child
+    end
+  end
+
+  return nil
+end
+
+local function ensure_current_case_visible()
+  local selected = selected_menu_node()
+  if not selected then
+    return
+  end
+
+  local padding = 8
+  local viewport_top = root.layout.top + padding
+  local viewport_bottom = root.layout.top + root.layout.height - padding
+  local item_top = selected.layout.top
+  local item_bottom = selected.layout.top + selected.layout.height
+  local next_scroll = menu_scroll
+
+  if item_top < viewport_top then
+    next_scroll = menu_scroll - (viewport_top - item_top)
+  elseif item_bottom > viewport_bottom then
+    next_scroll = menu_scroll + (item_bottom - viewport_bottom)
+  end
+
+  next_scroll = math.max(0, math.min(next_scroll, menu_scroll_max))
+  if next_scroll ~= menu_scroll then
+    menu_scroll = next_scroll
+    rebuild()
+  end
+end
+
 local function select_next(delta)
   current_case = (current_case + delta - 1) % #cases + 1
   rebuild()
+  ensure_current_case_visible()
+end
+
+local function jump_to_case(index)
+  current_case = math.max(1, math.min(index, #cases))
+  rebuild()
+  ensure_current_case_visible()
+end
+
+local function scroll_menu(delta)
+  if mode ~= "menu" then
+    return
+  end
+
+  local next_scroll = math.max(0, math.min(menu_scroll + delta, menu_scroll_max))
+  if next_scroll ~= menu_scroll then
+    menu_scroll = next_scroll
+    rebuild()
+  end
 end
 
 local function open_case(index)
@@ -276,8 +369,29 @@ local function draw_node(node, depth)
 
   draw_node_label(node)
 
+  local props_clip_children = props.clipChildren
+  local previous_x, previous_y, previous_width, previous_height
+
+  if props_clip_children then
+    previous_x, previous_y, previous_width, previous_height = love.graphics.getScissor()
+    love.graphics.setScissor(
+      math.floor(layout.left),
+      math.floor(layout.top),
+      math.ceil(layout.width),
+      math.ceil(layout.height)
+    )
+  end
+
   for _, child in ipairs(node.children or {}) do
     draw_node(child, depth + 1)
+  end
+
+  if props_clip_children then
+    if previous_x then
+      love.graphics.setScissor(previous_x, previous_y, previous_width, previous_height)
+    else
+      love.graphics.setScissor()
+    end
   end
 end
 
@@ -285,7 +399,7 @@ local function draw_overlay()
   local width = love.graphics.getWidth()
   local height = love.graphics.getHeight()
   local title = mode == "menu" and "Select UI" or cases[current_case].name
-  local hint = mode == "menu" and "Click, number, Up/Down, Enter" or "Esc to menu"
+  local hint = mode == "menu" and "Wheel, click, Up/Down, Enter" or "Esc to menu"
   local hover_text = ""
 
   if hovered then
@@ -351,6 +465,14 @@ function love.keypressed(key)
     select_next(1)
   elseif mode == "menu" and (key == "left" or key == "up") then
     select_next(-1)
+  elseif mode == "menu" and key == "pagedown" then
+    scroll_menu(240)
+  elseif mode == "menu" and key == "pageup" then
+    scroll_menu(-240)
+  elseif mode == "menu" and key == "home" then
+    jump_to_case(1)
+  elseif mode == "menu" and key == "end" then
+    jump_to_case(#cases)
   elseif mode == "menu" and (key == "return" or key == "kpenter" or key == "space") then
     open_case(current_case)
   elseif mode == "menu" and tonumber(key) then
@@ -361,6 +483,10 @@ function love.keypressed(key)
   elseif key == "r" then
     rebuild()
   end
+end
+
+function love.wheelmoved(_, y)
+  scroll_menu(-y * 64)
 end
 
 function love.mousepressed(x, y, button)
