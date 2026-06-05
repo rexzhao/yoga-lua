@@ -47,6 +47,14 @@ local function normalize_args(props, children)
   return props, children or {}
 end
 
+local function attach_measure(node, props)
+  if type(props.measure) == "function" then
+    node.measure = props.measure
+  end
+
+  return node
+end
+
 function ui.stylesheet(definitions)
   return definitions or {}
 end
@@ -56,7 +64,7 @@ function ui.div(props, children)
   local node = yoga.node(merge_style(props), children)
   node.type = "div"
   node.props = props
-  return node
+  return attach_measure(node, props)
 end
 
 function ui.text(value, props)
@@ -65,7 +73,7 @@ function ui.text(value, props)
   node.type = "text"
   node.text = value
   node.props = props
-  return node
+  return attach_measure(node, props)
 end
 
 function ui.image(props)
@@ -73,7 +81,7 @@ function ui.image(props)
   local node = yoga.node(merge_style(props), {})
   node.type = "image"
   node.props = props
-  return node
+  return attach_measure(node, props)
 end
 
 function ui.button(label, props)
@@ -84,8 +92,7 @@ function ui.button(label, props)
   node.type = "button"
   node.label = label
   node.props = props
-  return node
+  return attach_measure(node, props)
 end
 
 return ui
-

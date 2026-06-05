@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 44 tests, 7 skipped`
+- `lua tests/run.lua` -> `ok - 48 tests, 7 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -32,12 +32,12 @@ Status: complete.
 - [x] `gap`.
 - [x] Basic `flexGrow`.
 - [x] `flex` as grow shorthand.
-- [ ] Direct `measure` callback support.
+- [x] Direct `measure` callback support.
 - [x] Fixture runner for layout trees.
 - [x] Basic local fixtures for fixed layout, spacing, and grow.
 - [ ] Broader Yoga dimension/flex-direction/margin/padding fixture migration.
 
-Status: mostly complete; `measure` is the main missing core item.
+Status: mostly complete; broader Yoga fixture migration remains.
 
 ## Milestone 2: Web-Like Component API
 
@@ -133,4 +133,3 @@ Status: mostly not started.
 - [ ] Benchmarks for 5,000 nodes.
 
 Status: not started.
-

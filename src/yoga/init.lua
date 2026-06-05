@@ -1,5 +1,8 @@
 local yoga = {}
 
+yoga.MEASURE_MODE_UNDEFINED = "undefined"
+yoga.MEASURE_MODE_AT_MOST = "at-most"
+
 local function shallow_copy(source)
   local copy = {}
   if source then
@@ -19,8 +22,12 @@ local function normalize_children(children)
 end
 
 function yoga.node(style, children)
+  local node_style = shallow_copy(style)
+  local measure = node_style.measure
+  node_style.measure = nil
+
   return {
-    style = shallow_copy(style),
+    style = node_style,
     children = normalize_children(children),
     layout = {
       left = 0,
@@ -28,6 +35,7 @@ function yoga.node(style, children)
       width = 0,
       height = 0,
     },
+    measure = measure,
     dirty = true,
   }
 end
@@ -89,12 +97,34 @@ local function flex_grow(style)
   return number_or_zero(style.flexGrow or style.flex)
 end
 
-local function main_size(style, direction, owner_size)
-  if direction == "row" then
-    return resolve_value(style.width, owner_size) or 0
+local function measure_node(node, available_width, available_height)
+  if type(node.measure) ~= "function" then
+    return nil
   end
 
-  return resolve_value(style.height, owner_size) or 0
+  local width_mode = type(available_width) == "number" and yoga.MEASURE_MODE_AT_MOST or yoga.MEASURE_MODE_UNDEFINED
+  local height_mode = type(available_height) == "number" and yoga.MEASURE_MODE_AT_MOST or yoga.MEASURE_MODE_UNDEFINED
+  local width, height = node.measure(available_width, width_mode, available_height, height_mode, node)
+
+  if type(width) == "table" then
+    return {
+      width = width.width,
+      height = width.height,
+    }
+  end
+
+  return {
+    width = width,
+    height = height,
+  }
+end
+
+local function main_size(style, direction, owner_size, measured)
+  if direction == "row" then
+    return resolve_value(style.width, owner_size) or number_or_zero(measured and measured.width)
+  end
+
+  return resolve_value(style.height, owner_size) or number_or_zero(measured and measured.height)
 end
 
 local function build_child_specs(children, direction, gap, inner_width, inner_height)
@@ -107,12 +137,14 @@ local function build_child_specs(children, direction, gap, inner_width, inner_he
     local style = child.style or {}
     local margin = resolve_edges(style, "margin", inner_width)
     local grow = flex_grow(style)
-    local base_main = main_size(style, direction, available_main)
+    local measured = measure_node(child, inner_width, inner_height)
+    local base_main = main_size(style, direction, available_main, measured)
 
     specs[index] = {
       margin = margin,
       grow = grow,
       base_main = base_main,
+      measured = measured,
     }
 
     if direction == "row" then
@@ -182,23 +214,26 @@ local function justify_offsets(style, specs, direction, gap, inner_width, inner_
   return leading, between
 end
 
-local function cross_axis_layout(parent_style, child_style, direction, margin, inner_width, inner_height)
+local function cross_axis_layout(parent_style, child_style, direction, margin, inner_width, inner_height, measured)
   local align = child_style.alignSelf or parent_style.alignItems or "stretch"
   local available
   local explicit
   local before
   local after
+  local measured_size
 
   if direction == "row" then
     available = inner_height
     explicit = resolve_value(child_style.height, inner_height)
     before = margin.top
     after = margin.bottom
+    measured_size = measured and measured.height
   else
     available = inner_width
     explicit = resolve_value(child_style.width, inner_width)
     before = margin.left
     after = margin.right
+    measured_size = measured and measured.width
   end
 
   local size
@@ -209,7 +244,7 @@ local function cross_axis_layout(parent_style, child_style, direction, margin, i
   elseif align == "stretch" then
     size = available_without_margin
   else
-    size = 0
+    size = clamp_size(measured_size)
   end
 
   local remaining = clamp_size(available - before - size - after)
@@ -224,10 +259,11 @@ local function cross_axis_layout(parent_style, child_style, direction, margin, i
   return size, offset
 end
 
-local function layout_node(node, left, top, available_width, available_height, owner_width, owner_height)
+local function layout_node(node, left, top, available_width, available_height, owner_width, owner_height, measured)
   local style = node.style or {}
-  local width = resolve_value(style.width, owner_width) or available_width
-  local height = resolve_value(style.height, owner_height) or available_height
+  local measured_size = measured or measure_node(node, available_width, available_height)
+  local width = resolve_value(style.width, owner_width) or available_width or (measured_size and measured_size.width)
+  local height = resolve_value(style.height, owner_height) or available_height or (measured_size and measured_size.height)
 
   node.layout.left = left
   node.layout.top = top
@@ -253,7 +289,8 @@ local function layout_node(node, left, top, available_width, available_height, o
     local child_top = top + padding.top
 
     if direction == "row" then
-      local child_height, cross_offset = cross_axis_layout(style, child_style, direction, margin, inner_width, inner_height)
+      local child_height, cross_offset =
+        cross_axis_layout(style, child_style, direction, margin, inner_width, inner_height, spec.measured)
       child_left = child_left + leading + cursor + margin.left
       child_top = child_top + cross_offset
       layout_node(
@@ -263,11 +300,13 @@ local function layout_node(node, left, top, available_width, available_height, o
         spec.main,
         child_height,
         inner_width,
-        inner_height
+        inner_height,
+        spec.measured
       )
       cursor = cursor + margin.left + child.layout.width + margin.right + between
     else
-      local child_width, cross_offset = cross_axis_layout(style, child_style, direction, margin, inner_width, inner_height)
+      local child_width, cross_offset =
+        cross_axis_layout(style, child_style, direction, margin, inner_width, inner_height, spec.measured)
       child_left = child_left + cross_offset
       child_top = child_top + leading + cursor + margin.top
       layout_node(
@@ -277,7 +316,8 @@ local function layout_node(node, left, top, available_width, available_height, o
         child_width,
         spec.main,
         inner_width,
-        inner_height
+        inner_height,
+        spec.measured
       )
       cursor = cursor + margin.top + child.layout.height + margin.bottom + between
     end
@@ -287,7 +327,7 @@ local function layout_node(node, left, top, available_width, available_height, o
 end
 
 function yoga.calculateLayout(root, width, height)
-  return layout_node(root, 0, 0, width or 0, height or 0, width or 0, height or 0)
+  return layout_node(root, 0, 0, width, height, width, height)
 end
 
 return yoga
