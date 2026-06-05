@@ -116,6 +116,7 @@ local function zero_layout_box(node)
   node.layout.top = 0
   node.layout.width = 0
   node.layout.height = 0
+  node.layout.hadOverflow = false
   node.dirty = false
 end
 
@@ -205,6 +206,7 @@ function yoga.node(style, children)
       top = 0,
       width = 0,
       height = 0,
+      hadOverflow = false,
     },
     measure = measure,
     dirty = true,
@@ -305,6 +307,10 @@ function yoga.removeChild(parent, child_or_index)
   mark_dirty(parent)
 
   return child
+end
+
+function yoga.hadOverflow(node)
+  return node.layout.hadOverflow == true
 end
 
 local function number_or_zero(value)
@@ -1436,6 +1442,49 @@ local function relayout_stretched_auto_cross_children(node, specs, direction, pa
   end
 end
 
+local function child_overflows_content_box(child, padding, border, inner_width, inner_height, layout_direction)
+  if is_display_none(child) then
+    return false
+  end
+
+  local style = child.style or {}
+  local margin = resolve_edges(style, "margin", inner_width, layout_direction)
+  local content_left = border.left + padding.left
+  local content_top = border.top + padding.top
+  local content_right = content_left + inner_width
+  local content_bottom = content_top + inner_height
+  local child_left = child.layout.left - margin.left
+  local child_top = child.layout.top - margin.top
+  local child_right = child.layout.left + child.layout.width + margin.right
+  local child_bottom = child.layout.top + child.layout.height + margin.bottom
+
+  return child_left < content_left
+    or child_top < content_top
+    or child_right > content_right
+    or child_bottom > content_bottom
+end
+
+local function update_had_overflow(node, padding, border, inner_width, inner_height, layout_direction)
+  local had_overflow = false
+
+  for _, child in ipairs(node.children or {}) do
+    had_overflow = had_overflow or child.layout.hadOverflow == true
+
+    if is_display_contents(child) then
+      for _, grandchild in ipairs(child.children or {}) do
+        had_overflow = had_overflow or grandchild.layout.hadOverflow == true
+        if child_overflows_content_box(grandchild, padding, border, inner_width, inner_height, layout_direction) then
+          had_overflow = true
+        end
+      end
+    elseif child_overflows_content_box(child, padding, border, inner_width, inner_height, layout_direction) then
+      had_overflow = true
+    end
+  end
+
+  node.layout.hadOverflow = had_overflow
+end
+
 local function used_line_cross_size(lines, gap)
   local used = 0
 
@@ -1691,6 +1740,9 @@ local function layout_wrapped_children(
     end
   end
 
+  local final_inner_width = clamp_size(node.layout.width - border.left - padding.left - padding.right - border.right)
+  local final_inner_height = clamp_size(node.layout.height - border.top - padding.top - padding.bottom - border.bottom)
+  update_had_overflow(node, padding, border, final_inner_width, final_inner_height, layout_direction)
 end
 
 function layout_node(node, left, top, available_width, available_height, owner_width, owner_height, measured, options, layout_direction)
@@ -1925,6 +1977,10 @@ function layout_node(node, left, top, available_width, available_height, owner_w
 
     relayout_stretched_auto_cross_children(node, specs, direction, padding, border, layout_direction)
   end
+
+  local final_inner_width = clamp_size(node.layout.width - border.left - padding.left - padding.right - border.right)
+  local final_inner_height = clamp_size(node.layout.height - border.top - padding.top - padding.bottom - border.bottom)
+  update_had_overflow(node, padding, border, final_inner_width, final_inner_height, layout_direction)
 
   return node
 end
