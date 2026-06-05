@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 205 tests, 21 skipped`
+- `lua tests/run.lua` -> `ok - 206 tests, 20 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -112,7 +112,6 @@ Known skipped cases:
 - [ ] `percent_absolute_position_infinite_height`: skipped pending undefined-height percentage handling.
 - [ ] `absolute_layout_percentage_height_based_on_padded_parent`: skipped pending border support.
 - [ ] `absolute_layout_percentage_height_based_on_padded_parent_and_align_items_center`: skipped pending border support.
-- [ ] `absolute_layout_padding`: skipped pending auto-size parent layout.
 - [ ] `absolute_layout_border`: skipped pending border support.
 - [ ] `absolute_layout_column_reverse_margin_border`: skipped pending column-reverse and border support.
 - [ ] `aspect_ratio_does_not_stretch_cross_axis_dim`: skipped because upstream generated test is disabled.

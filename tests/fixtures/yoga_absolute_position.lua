@@ -383,8 +383,28 @@ return {
   {
     name = "absolute_layout_padding",
     source = source("absolute_layout_padding"),
-    skip = true,
-    unsupportedReason = "auto-size parent layout is not implemented",
+    root = {
+      style = {},
+      children = {
+        {
+          style = { width = 200, height = 200, margin = 10, position = "relative" },
+          children = {
+            {
+              style = { position = "static", width = 200, height = 200, padding = 50 },
+              children = {
+                { style = { position = "absolute", width = 50, height = 50 } },
+              },
+            },
+          },
+        },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 220, height = 220 },
+      { left = 10, top = 10, width = 200, height = 200 },
+      { left = 10, top = 10, width = 200, height = 200 },
+      { left = 60, top = 60, width = 50, height = 50 },
+    },
   },
   {
     name = "absolute_layout_border",
