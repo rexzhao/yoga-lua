@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 146 tests, 31 skipped`
+- `lua tests/run.lua` -> `ok - 147 tests, 32 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -131,6 +131,7 @@ Known skipped cases:
 - [ ] `column_gap_justify_space_around`: skipped pending rounding policy.
 - [ ] `column_gap_determines_parent_width`: skipped pending auto main-size from children.
 - [ ] `row_gap_determines_parent_height`: skipped pending auto main-size from children.
+- [ ] `aspect_ratio_does_not_stretch_cross_axis_dim`: skipped because upstream generated test is disabled.
 
 Status: partially complete.
 
@@ -151,7 +152,7 @@ Status: partially complete.
 - [x] Migrated supported subset of `YGFlexTest`.
 - [ ] Migrate supported `YGFlexWrapTest` subset.
 - [x] Migrate supported `YGGapTest` subset.
-- [ ] Migrate supported `YGAspectRatioTest` subset.
+- [x] Migrate supported `YGAspectRatioTest` subset.
 - [ ] Migrate supported `YGRoundingTest` subset.
 
 Status: mostly not started.

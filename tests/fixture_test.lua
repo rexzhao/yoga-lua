@@ -16,4 +16,5 @@ return function(runner, helper)
   fixture_runner.register(runner, helper, require("fixtures.yoga_display"))
   fixture_runner.register(runner, helper, require("fixtures.yoga_absolute_position"))
   fixture_runner.register(runner, helper, require("fixtures.yoga_gap"))
+  fixture_runner.register(runner, helper, require("fixtures.yoga_aspect_ratio"))
 end
