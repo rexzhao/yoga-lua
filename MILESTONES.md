@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 203 tests, 22 skipped`
+- `lua tests/run.lua` -> `ok - 205 tests, 21 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -86,6 +86,7 @@ Status: complete.
 - [x] Love2D visual demo for min/max constraints.
 - [x] `position = "absolute"`.
 - [x] Love2D visual demo for `position = "absolute"`.
+- [x] Absolute nodes can auto-size from children when width/height are not explicit.
 - [x] Relative position offsets.
 - [x] Love2D visual demo for relative position offsets.
 - [x] `display = "none"`.
@@ -102,7 +103,6 @@ Status: complete.
 
 Known skipped cases:
 
-- [ ] `do_not_clamp_height_of_absolute_node_to_height_of_its_overflow_hidden_parent`: skipped pending absolute auto-size from children.
 - [ ] `absolute_layout_within_border`: skipped pending border support.
 - [ ] `position_root_with_rtl_should_position_withoutdirection`: skipped pending RTL direction support.
 - [ ] `absolute_layout_in_wrap_reverse_column_container`: skipped pending wrap-reverse support.

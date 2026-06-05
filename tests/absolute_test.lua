@@ -74,4 +74,18 @@ return function(runner, helper)
 
     helper.assert_layout(child, { left = 10, top = 10, width = 20, height = 20 }, "padded absolute child")
   end)
+
+  runner:test("absolute child derives auto size from children", function()
+    local child = yoga.node({ position = "absolute", left = 0, top = 0 }, {
+      yoga.node({ width = 100, height = 100 }),
+    })
+    local root = yoga.node({ width = 50, height = 50, overflow = "hidden", flexDirection = "row" }, {
+      child,
+    })
+
+    yoga.calculateLayout(root)
+
+    helper.assert_layout(child, { left = 0, top = 0, width = 100, height = 100 }, "auto-sized absolute child")
+    helper.assert_layout(child.children[1], { left = 0, top = 0, width = 100, height = 100 }, "absolute grandchild")
+  end)
 end

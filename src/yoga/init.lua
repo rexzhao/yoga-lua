@@ -612,7 +612,11 @@ local function absolute_axis_size(style, dimension, owner_size, start_offset, en
     return constrain_size(owner_size - start_offset - end_offset, style, dimension, owner_size)
   end
 
-  return constrain_size(measured_size, style, dimension, owner_size)
+  if measured_size ~= nil then
+    return constrain_size(measured_size, style, dimension, owner_size)
+  end
+
+  return nil
 end
 
 local function absolute_default_offset(parent_style, child_style, direction, axis, available, size)
@@ -637,10 +641,10 @@ local function absolute_axis_position(parent_style, child_style, direction, axis
   end
 
   if end_offset ~= nil then
-    return origin + available - end_offset - size
+    return origin + available - end_offset - (size or 0)
   end
 
-  return origin + absolute_default_offset(parent_style, child_style, direction, axis, available, size)
+  return origin + absolute_default_offset(parent_style, child_style, direction, axis, available, size or 0)
 end
 
 local function layout_absolute_node(child, parent_style, parent_left, parent_top, padding, inner_width, inner_height)

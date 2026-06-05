@@ -109,8 +109,22 @@ return {
   {
     name = "do_not_clamp_height_of_absolute_node_to_height_of_its_overflow_hidden_parent",
     source = source("do_not_clamp_height_of_absolute_node_to_height_of_its_overflow_hidden_parent"),
-    skip = true,
-    unsupportedReason = "absolute auto-size from children is not implemented",
+    root = {
+      style = { width = 50, height = 50, overflow = "hidden", flexDirection = "row" },
+      children = {
+        {
+          style = { position = "absolute", left = 0, top = 0 },
+          children = {
+            { style = { width = 100, height = 100 } },
+          },
+        },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 50, height = 50 },
+      { left = 0, top = 0, width = 100, height = 100 },
+      { left = 0, top = 0, width = 100, height = 100 },
+    },
   },
   {
     name = "absolute_layout_within_border",
