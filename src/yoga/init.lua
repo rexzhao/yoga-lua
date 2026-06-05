@@ -1172,15 +1172,19 @@ intrinsic_main_size_from_child = function(child, parent_direction, owner_width, 
     return nil
   end
 
+  local style = child.style or {}
+
   if is_row_direction(parent_direction) then
-    layout_node(child, 0, 0, nil, owner_height, owner_width, owner_height, nil, {
-      useAvailableHeight = true,
+    local explicit_height = resolve_value(style.height, owner_height)
+    layout_node(child, 0, 0, nil, explicit_height or owner_height, owner_width, owner_height, nil, {
+      useAvailableHeight = explicit_height == nil,
     }, layout_direction)
     return child.layout.width
   end
 
-  layout_node(child, 0, 0, owner_width, nil, owner_width, owner_height, nil, {
-    useAvailableWidth = true,
+  local explicit_width = resolve_value(style.width, owner_width)
+  layout_node(child, 0, 0, explicit_width or owner_width, nil, owner_width, owner_height, nil, {
+    useAvailableWidth = explicit_width == nil,
   }, layout_direction)
   return child.layout.height
 end
@@ -1772,6 +1776,15 @@ local function layout_wrapped_children(
         measured = measure_node(child, measure_width, measure_height, width_mode, height_mode)
       end
       local base_main = main_size(child_style, direction, available_main, available_cross, measured, layout_direction)
+      local auto_main = has_auto_main_size(child_style, direction, available_main, available_cross, measured)
+      local intrinsic_main = auto_main
+        and intrinsic_main_size_from_child
+        and intrinsic_main_size_from_child(child, direction, inner_width, inner_height, layout_direction)
+
+      if type(intrinsic_main) == "number" then
+        base_main = constrain_size(intrinsic_main, child_style, is_row_direction(direction) and "width" or "height", available_main)
+      end
+
       local spec = {
         child = child,
         style = child_style,
@@ -1780,7 +1793,7 @@ local function layout_wrapped_children(
         shrink = flex_shrink(child_style),
         base_main = base_main,
         main = base_main,
-        auto_main = has_auto_main_size(child_style, direction, available_main, available_cross, measured),
+        auto_main = auto_main,
         auto_cross = has_auto_cross_size(child_style, direction, available_cross, measured),
         measured = measured,
       }
@@ -1844,7 +1857,11 @@ local function layout_wrapped_children(
         if wrap_reverse then
           cross_offset = line.cross - cross_offset - child_height
         end
-        child_left = child_left + leading + main_cursor + margin.left
+        if is_main_axis_reversed(direction, layout_direction) then
+          child_left = child_left + inner_width - leading - main_cursor - margin.right - spec.main
+        else
+          child_left = child_left + leading + main_cursor + margin.left
+        end
         child_top = child_top + line_cross_start + cross_offset
         layout_node(
           child,
@@ -1871,7 +1888,11 @@ local function layout_wrapped_children(
           cross_offset = line.cross - cross_offset - child_width
         end
         child_left = child_left + line_cross_start + cross_offset
-        child_top = child_top + leading + main_cursor + margin.top
+        if is_main_axis_reversed(direction, layout_direction) then
+          child_top = child_top + inner_height - leading - main_cursor - margin.bottom - spec.main
+        else
+          child_top = child_top + leading + main_cursor + margin.top
+        end
         layout_node(
           child,
           child_left,
@@ -2053,11 +2074,11 @@ function layout_node(node, left, top, available_width, available_height, owner_w
 
   local layout_items = collect_layout_items(children)
   local specs = build_child_specs(layout_items, style, direction, gap, inner_width, inner_height, layout_direction)
-  distribute_auto_main_margins(specs, direction, gap, inner_width, inner_height)
-  local leading, between = justify_offsets(style, specs, direction, gap, inner_width, inner_height)
   local has_auto_children = visible_spec_count(specs) > 0
+  local available_main = is_row_direction(direction) and inner_width or inner_height
+  local content_overflows_main = used_main_size(specs, direction, gap) > available_main
   local auto_main_size = has_auto_children
-    and auto_main_available
+    and (auto_main_available or content_overflows_main)
     and (
       (is_row_direction(direction) and explicit_width == nil and available_width == nil and not options.useAvailableWidth)
       or (not is_row_direction(direction) and explicit_height == nil and available_height == nil and not options.useAvailableHeight)
@@ -2068,6 +2089,36 @@ function layout_node(node, left, top, available_width, available_height, owner_w
       (is_row_direction(direction) and explicit_height == nil and available_height == nil and not options.useAvailableHeight)
       or (not is_row_direction(direction) and explicit_width == nil and available_width == nil and not options.useAvailableWidth)
     )
+
+  if auto_main_size then
+    if is_row_direction(direction) then
+      node.layout.width = constrain_size(child_main_extent(specs, direction, gap, padding, border), style, "width", owner_width)
+    else
+      node.layout.height = constrain_size(child_main_extent(specs, direction, gap, padding, border), style, "height", owner_height)
+    end
+
+    inner_width = clamp_size(node.layout.width - border.left - padding.left - padding.right - border.right)
+    inner_height = clamp_size(node.layout.height - border.top - padding.top - padding.bottom - border.bottom)
+  end
+
+  if auto_cross_size then
+    local line = { items = specs }
+    local cross = line_cross_size(line, direction, inner_width, inner_height)
+
+    if is_row_direction(direction) then
+      local height = border.top + padding.top + cross + padding.bottom + border.bottom
+      node.layout.height = constrain_size(height, style, "height", owner_height)
+    else
+      local width = border.left + padding.left + cross + padding.right + border.right
+      node.layout.width = constrain_size(width, style, "width", owner_width)
+    end
+
+    inner_width = clamp_size(node.layout.width - border.left - padding.left - padding.right - border.right)
+    inner_height = clamp_size(node.layout.height - border.top - padding.top - padding.bottom - border.bottom)
+  end
+
+  distribute_auto_main_margins(specs, direction, gap, inner_width, inner_height)
+  local leading, between = justify_offsets(style, specs, direction, gap, inner_width, inner_height)
 
   for index, child in ipairs(layout_items) do
     local child_style = child.style or {}

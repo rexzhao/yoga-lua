@@ -65,6 +65,43 @@ return {
     },
   },
   {
+    name = "justify_content_overflow_min_max_ltr",
+    source = source("justify_content_overflow_min_max"),
+    root = {
+      style = { position = "absolute", minHeight = 100, maxHeight = 110, justifyContent = "center" },
+      children = {
+        { style = { width = 50, height = 50 } },
+        { style = { width = 50, height = 50 } },
+        { style = { width = 50, height = 50 } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 50, height = 110 },
+      { left = 0, top = -20, width = 50, height = 50 },
+      { left = 0, top = 30, width = 50, height = 50 },
+      { left = 0, top = 80, width = 50, height = 50 },
+    },
+  },
+  {
+    name = "justify_content_overflow_min_max_rtl",
+    source = source("justify_content_overflow_min_max"),
+    direction = "rtl",
+    root = {
+      style = { position = "absolute", minHeight = 100, maxHeight = 110, justifyContent = "center" },
+      children = {
+        { style = { width = 50, height = 50 } },
+        { style = { width = 50, height = 50 } },
+        { style = { width = 50, height = 50 } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 50, height = 110 },
+      { left = 0, top = -20, width = 50, height = 50 },
+      { left = 0, top = 30, width = 50, height = 50 },
+      { left = 0, top = 80, width = 50, height = 50 },
+    },
+  },
+  {
     name = "flex_grow_to_min",
     source = source("flex_grow_to_min"),
     root = {

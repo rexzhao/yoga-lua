@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 502 tests, 1 skipped`
+- `lua tests/run.lua` -> `ok - 506 tests, 1 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 - `lua benchmarks/run.lua` -> records 100, 1,000, and 5,000 node layout timings in `BENCHMARKS.md`
 
@@ -190,7 +190,7 @@ Status: complete for the supported Milestone 4 scope.
 - [x] Dirty marking for style/tree changes.
 - [x] Layout caching.
 - [x] Measure caching.
-- [ ] Yoga-compatible `overflow = "hidden" | "scroll"` style semantics.
+- [x] Yoga-compatible `overflow = "hidden" | "scroll"` style semantics.
 - [x] Scroll-container measure behavior matches upstream Yoga on the scroll axis.
 - [x] Container flex items derive auto main size from content and can overflow definite parents.
 - [x] Migrated supported `YGFlexBasisFitContentTest` container overflow subset.
@@ -198,6 +198,8 @@ Status: complete for the supported Milestone 4 scope.
 - [x] Migrated complete `YGSizeOverflowTest` set.
 - [x] Migrated supported `YGJustifyContentTest` overflow row alignment subset.
 - [x] Row-reverse overflow spacing for `justifyContent = "space-around" | "space-evenly"`.
+- [x] Migrated `YGMinMaxDimensionTest` overflow justify/min/max case.
+- [x] Migrated `YGFlexWrapTest` overflowing margin content-sizing case.
 - [x] Love2D renderer clips children for `overflow = "hidden" | "scroll"`.
 - [x] Layout results expose Yoga-compatible `hadOverflow`.
 - [x] UI-level virtualized scroll list builds visible rows, overscan rows, and spacer nodes only.
@@ -226,4 +228,4 @@ Status: complete for the supported Milestone 4 scope.
 
 Known skipped cases: none.
 
-Status: in progress; dirty marking, layout/measure caching, hadOverflow, scroll measure modes, Love2D overflow clipping, container flex-item overflow sizing, generated fit-content overflow fixtures, complete `YGSizeOverflowTest` migration, supported justify-content overflow alignment fixtures, row-reverse overflow spacing, layout benchmarks, UI virtualized lists, supported non-flex measure modes, and upstream `YGMeasureTest` migration are implemented, while full layout-level overflow semantics remain.
+Status: complete.

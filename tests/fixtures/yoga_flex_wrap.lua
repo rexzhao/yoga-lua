@@ -104,6 +104,55 @@ return {
   wrap_row_case("wrap_row_align_items_flex_end", "flex-end", { 20, 10, 0 }),
   wrap_row_case("wrap_row_align_items_center", "center", { 10, 5, 0 }),
   {
+    name = "wrap_nodes_with_content_sizing_overflowing_margin_ltr",
+    source = source("wrap_nodes_with_content_sizing_overflowing_margin"),
+    root = {
+      style = { position = "absolute", width = 500, height = 500 },
+      children = {
+        {
+          style = { flexDirection = "row", flexWrap = "wrap", width = 85 },
+          children = {
+            { children = { box(40, 40) } },
+            { style = { marginRight = 10 }, children = { box(40, 40) } },
+          },
+        },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 500, height = 500 },
+      { left = 0, top = 0, width = 85, height = 80 },
+      { left = 0, top = 0, width = 40, height = 40 },
+      { left = 0, top = 0, width = 40, height = 40 },
+      { left = 0, top = 40, width = 40, height = 40 },
+      { left = 0, top = 0, width = 40, height = 40 },
+    },
+  },
+  {
+    name = "wrap_nodes_with_content_sizing_overflowing_margin_rtl",
+    source = source("wrap_nodes_with_content_sizing_overflowing_margin"),
+    direction = "rtl",
+    root = {
+      style = { position = "absolute", width = 500, height = 500 },
+      children = {
+        {
+          style = { flexDirection = "row", flexWrap = "wrap", width = 85 },
+          children = {
+            { children = { box(40, 40) } },
+            { style = { marginRight = 10 }, children = { box(40, 40) } },
+          },
+        },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 500, height = 500 },
+      { left = 415, top = 0, width = 85, height = 80 },
+      { left = 45, top = 0, width = 40, height = 40 },
+      { left = 0, top = 0, width = 40, height = 40 },
+      { left = 35, top = 40, width = 40, height = 40 },
+      { left = 0, top = 0, width = 40, height = 40 },
+    },
+  },
+  {
     name = "flex_wrap_children_with_min_main_overriding_flex_basis",
     source = source("flex_wrap_children_with_min_main_overriding_flex_basis"),
     root = {
