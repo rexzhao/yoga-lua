@@ -355,8 +355,18 @@ return {
   {
     name = "percent_absolute_position_infinite_height",
     source = source("percent_absolute_position_infinite_height"),
-    skip = true,
-    unsupportedReason = "undefined available height percentage handling is not implemented",
+    root = {
+      style = { position = "absolute", width = 300, flexDirection = "column" },
+      children = {
+        { style = { width = 300 } },
+        { style = { position = "absolute", width = "20%", height = "20%", left = "20%", top = "20%" } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 300, height = 0 },
+      { left = 0, top = 0, width = 300, height = 0 },
+      { left = 60, top = 0, width = 60, height = 0 },
+    },
   },
   {
     name = "absolute_layout_percentage_height_based_on_padded_parent",
