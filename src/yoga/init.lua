@@ -673,6 +673,52 @@ local function line_cross_size(line, direction)
   return cross
 end
 
+local function used_line_cross_size(lines, gap)
+  local used = 0
+
+  for index, line in ipairs(lines) do
+    if index > 1 then
+      used = used + gap
+    end
+
+    used = used + line.cross
+  end
+
+  return used
+end
+
+local function align_content_offsets(style, lines, gap, available_cross, auto_cross_size)
+  local remaining = auto_cross_size and 0 or math.max(0, available_cross - used_line_cross_size(lines, gap))
+  local align = style.alignContent or "flex-start"
+  local leading = 0
+  local between = gap
+  local line_count = #lines
+
+  if align == "center" then
+    leading = remaining / 2
+  elseif align == "flex-end" then
+    leading = remaining
+  elseif align == "space-between" and line_count > 1 then
+    between = gap + remaining / (line_count - 1)
+  elseif align == "space-around" and line_count > 0 then
+    local space = remaining / line_count
+    leading = space / 2
+    between = gap + space
+  elseif align == "space-evenly" and line_count > 0 then
+    local space = remaining / (line_count + 1)
+    leading = space
+    between = gap + space
+  elseif align == "stretch" and line_count > 0 and remaining > 0 then
+    local extra = remaining / line_count
+
+    for _, line in ipairs(lines) do
+      line.cross = line.cross + extra
+    end
+  end
+
+  return leading, between
+end
+
 local function cross_axis_layout_in_line(parent_style, child_style, direction, margin, line_cross, measured, main)
   return cross_axis_layout(parent_style, child_style, direction, margin, line_cross, line_cross, measured, main)
 end
@@ -738,6 +784,10 @@ local function layout_wrapped_children(node, left, top, padding, inner_width, in
     line.cross = line_cross_size(line, direction)
   end
 
+  local cross_leading, cross_between =
+    align_content_offsets(style, lines, line_gap, available_cross, auto_cross_size)
+  cross_cursor = cross_leading
+
   for _, line in ipairs(lines) do
     local leading, between = justify_offsets(style, line.items, direction, gap, inner_width, inner_height)
     local main_cursor = 0
@@ -789,11 +839,11 @@ local function layout_wrapped_children(node, left, top, padding, inner_width, in
       offset_layout_tree(child, relative_left, relative_top)
     end
 
-    cross_cursor = cross_cursor + line.cross + line_gap
+    cross_cursor = cross_cursor + line.cross + cross_between
   end
 
   if #lines > 0 then
-    cross_cursor = cross_cursor - line_gap
+    cross_cursor = cross_cursor - cross_between
   end
 
   for index, child in ipairs(node.children or {}) do

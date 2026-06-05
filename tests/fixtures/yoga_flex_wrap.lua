@@ -110,6 +110,6 @@ return {
     name = "wrap_reverse_row_align_content_flex_start",
     source = source("wrap_reverse_row_align_content_flex_start"),
     skip = true,
-    unsupportedReason = "wrap-reverse and alignContent are not implemented",
+    unsupportedReason = "wrap-reverse is not implemented",
   },
 }

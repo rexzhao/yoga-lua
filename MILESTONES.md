@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 161 tests, 33 skipped`
+- `lua tests/run.lua` -> `ok - 163 tests, 33 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -132,7 +132,7 @@ Known skipped cases:
 - [ ] `aspect_ratio_does_not_stretch_cross_axis_dim`: skipped because upstream generated test is disabled.
 - [ ] `wrap_column`: skipped because upstream generated test is disabled.
 - [ ] `flex_wrap_wrap_to_child_height`: skipped pending auto content sizing from nested wrapped children.
-- [ ] `wrap_reverse_row_align_content_flex_start`: skipped pending wrap-reverse and `alignContent`.
+- [ ] `wrap_reverse_row_align_content_flex_start`: skipped pending wrap-reverse.
 
 Status: partially complete.
 
@@ -146,6 +146,7 @@ Status: partially complete.
 - [x] Basic row `flexWrap = "wrap"` without `alignContent`.
 - [x] Love2D visual demo for basic row `flexWrap`.
 - [ ] `alignContent`.
+- [x] Basic row-wrap `alignContent` values.
 - [x] `aspectRatio`.
 - [x] Love2D visual demo for `aspectRatio`.
 - [ ] Rounding policy.
