@@ -17,6 +17,7 @@ require("display_test")(runner, helper)
 require("absolute_test")(runner, helper)
 require("relative_test")(runner, helper)
 require("rounding_test")(runner, helper)
+require("dirty_test")(runner, helper)
 require("love2d_test")(runner, helper)
 require("fixture_test")(runner, helper)
 

@@ -21,6 +21,56 @@ local function normalize_children(children)
   return children
 end
 
+local function mark_dirty(node)
+  while node do
+    node.dirty = true
+    node = node.parent
+  end
+end
+
+local function mark_subtree_dirty(node)
+  if not node then
+    return
+  end
+
+  node.dirty = true
+
+  for _, child in ipairs(node.children or {}) do
+    mark_subtree_dirty(child)
+  end
+end
+
+local function detach_from_parent(child)
+  local parent = child and child.parent
+  if not parent then
+    return
+  end
+
+  for index, candidate in ipairs(parent.children or {}) do
+    if candidate == child then
+      table.remove(parent.children, index)
+      break
+    end
+  end
+
+  child.parent = nil
+  mark_dirty(parent)
+end
+
+local function attach_children(parent, children)
+  children = normalize_children(children)
+
+  for _, child in ipairs(children) do
+    if child.parent and child.parent ~= parent then
+      detach_from_parent(child)
+    end
+
+    child.parent = parent
+  end
+
+  return children
+end
+
 local function is_display_none(node)
   return (node.style or {}).display == "none"
 end
@@ -138,14 +188,18 @@ local function round_layout_tree(node, absolute_left, absolute_top)
   end
 end
 
-function yoga.node(style, children)
+local function style_without_measure(style)
   local node_style = shallow_copy(style)
   local measure = node_style.measure
   node_style.measure = nil
 
-  return {
+  return node_style, measure
+end
+
+function yoga.node(style, children)
+  local node_style, measure = style_without_measure(style)
+  local node = {
     style = node_style,
-    children = normalize_children(children),
     layout = {
       left = 0,
       top = 0,
@@ -155,6 +209,102 @@ function yoga.node(style, children)
     measure = measure,
     dirty = true,
   }
+
+  node.children = attach_children(node, children)
+  return node
+end
+
+function yoga.markDirty(node)
+  mark_dirty(node)
+  return node
+end
+
+function yoga.setStyle(node, style)
+  local node_style, measure = style_without_measure(style)
+  node.style = node_style
+  node.measure = measure
+  mark_dirty(node)
+  return node
+end
+
+function yoga.updateStyle(node, style)
+  node.style = node.style or {}
+
+  for key, value in pairs(style or {}) do
+    if key == "measure" then
+      node.measure = value
+    else
+      node.style[key] = value
+    end
+  end
+
+  mark_dirty(node)
+  return node
+end
+
+function yoga.setChildren(node, children)
+  for _, child in ipairs(node.children or {}) do
+    if child.parent == node then
+      child.parent = nil
+      mark_subtree_dirty(child)
+    end
+  end
+
+  node.children = attach_children(node, children)
+
+  for _, child in ipairs(node.children) do
+    mark_subtree_dirty(child)
+  end
+
+  mark_dirty(node)
+  return node
+end
+
+function yoga.insertChild(parent, child, index)
+  detach_from_parent(child)
+
+  parent.children = parent.children or {}
+  index = index or (#parent.children + 1)
+  index = math.max(1, math.min(index, #parent.children + 1))
+
+  table.insert(parent.children, index, child)
+  child.parent = parent
+  mark_subtree_dirty(child)
+  mark_dirty(parent)
+
+  return child
+end
+
+function yoga.appendChild(parent, child)
+  return yoga.insertChild(parent, child)
+end
+
+function yoga.removeChild(parent, child_or_index)
+  local children = parent.children or {}
+  local index = type(child_or_index) == "number" and child_or_index or nil
+
+  if not index then
+    for candidate_index, child in ipairs(children) do
+      if child == child_or_index then
+        index = candidate_index
+        break
+      end
+    end
+  end
+
+  if not index or not children[index] then
+    return nil
+  end
+
+  local child = table.remove(children, index)
+  if child.parent == parent then
+    child.parent = nil
+  end
+
+  mark_subtree_dirty(child)
+  mark_dirty(parent)
+
+  return child
 end
 
 local function number_or_zero(value)

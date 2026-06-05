@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 415 tests, 2 skipped`
+- `lua tests/run.lua` -> `ok - 420 tests, 2 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -184,7 +184,7 @@ Status: complete for the supported Milestone 4 scope; upstream-disabled skipped 
 
 ## Milestone 5: Runtime Polish
 
-- [ ] Dirty marking for style/tree changes.
+- [x] Dirty marking for style/tree changes.
 - [ ] Layout caching.
 - [ ] Measure caching.
 - [ ] Yoga-compatible `overflow = "hidden" | "scroll"` style semantics.
@@ -193,8 +193,8 @@ Status: complete for the supported Milestone 4 scope; upstream-disabled skipped 
 - [ ] UI-level virtualized scroll list builds visible rows, overscan rows, and spacer nodes only.
 - [ ] Fixed-height virtualized list supports direct jumps without laying out skipped rows.
 - [ ] Love2D visual demo for a large virtualized scroll list.
-- [ ] Relayout behavior tests.
-- [ ] Dirty marking tests.
+- [x] Relayout behavior tests.
+- [x] Dirty marking tests.
 - [ ] Measure tests.
 - [ ] Measure cache tests.
 - [ ] Overflow and scroll-container measure mode tests.
@@ -204,4 +204,4 @@ Status: complete for the supported Milestone 4 scope; upstream-disabled skipped 
 - [ ] Benchmarks for 5,000 nodes.
 - [ ] Virtualized list scroll and jump benchmark.
 
-Status: not started.
+Status: in progress; dirty marking is implemented, while caching, overflow/scroll, virtualization, and benchmarks remain.
