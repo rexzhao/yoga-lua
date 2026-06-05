@@ -1949,10 +1949,26 @@ end
 
 function yoga.calculateLayout(root, width, height, layout_direction)
   layout_direction = normalize_layout_direction(layout_direction)
+  local cache = root._layout_cache
+
+  if not root.dirty
+    and cache
+    and cache.width == width
+    and cache.height == height
+    and cache.layout_direction == layout_direction
+  then
+    return root
+  end
+
   layout_node(root, 0, 0, width, height, width, height, nil, nil, layout_direction)
   local root_left, root_top = root_offsets(root, width, height, layout_direction)
   offset_layout_box(root, root_left, root_top)
   round_layout_tree(root)
+  root._layout_cache = {
+    width = width,
+    height = height,
+    layout_direction = layout_direction,
+  }
   return root
 end
 
