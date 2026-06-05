@@ -77,8 +77,16 @@ return {
   {
     name = "percentage_absolute_position",
     source = source("percentage_absolute_position"),
-    skip = true,
-    unsupportedReason = "absolute positioning is not implemented",
+    root = {
+      style = { width = 200, height = 100 },
+      children = {
+        { style = { position = "absolute", top = "10%", left = "30%", width = 10, height = 10 } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 200, height = 100 },
+      { left = 60, top = 10, width = 10, height = 10 },
+    },
   },
   {
     name = "percent_of_minmax_main",

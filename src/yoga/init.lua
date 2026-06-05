@@ -25,6 +25,10 @@ local function is_display_none(node)
   return (node.style or {}).display == "none"
 end
 
+local function is_absolute_position(node)
+  return (node.style or {}).position == "absolute"
+end
+
 local function zero_layout_tree(node)
   node.layout.left = 0
   node.layout.top = 0
@@ -176,7 +180,15 @@ local function build_child_specs(children, direction, gap, inner_width, inner_he
       specs[index] = {
         hidden = true,
         grow = 0,
+        base_main = 0,
         main = 0,
+      }
+    elseif is_absolute_position(child) then
+      specs[index] = {
+        absolute = true,
+        grow = 0,
+        main = 0,
+        base_main = 0,
       }
     else
       local style = child.style or {}
@@ -224,7 +236,7 @@ local function used_main_size(specs, direction, gap)
   local visible_count = 0
 
   for _, spec in ipairs(specs) do
-    if not spec.hidden then
+    if not spec.hidden and not spec.absolute then
       local margin = spec.margin
 
       if visible_count > 0 then
@@ -248,7 +260,7 @@ local function visible_spec_count(specs)
   local count = 0
 
   for _, spec in ipairs(specs) do
-    if not spec.hidden then
+    if not spec.hidden and not spec.absolute then
       count = count + 1
     end
   end
@@ -333,7 +345,97 @@ local function cross_axis_layout(parent_style, child_style, direction, margin, i
   return size, offset
 end
 
-local function layout_node(node, left, top, available_width, available_height, owner_width, owner_height, measured)
+local layout_node
+
+local function main_axis_offset(style, available, size)
+  local justify = style.justifyContent or "flex-start"
+  local remaining = clamp_size(available - size)
+
+  if justify == "center" then
+    return remaining / 2
+  elseif justify == "flex-end" then
+    return remaining
+  end
+
+  return 0
+end
+
+local function cross_axis_offset(parent_style, child_style, available, size)
+  local align = child_style.alignSelf or parent_style.alignItems or "stretch"
+  local remaining = clamp_size(available - size)
+
+  if align == "center" then
+    return remaining / 2
+  elseif align == "flex-end" then
+    return remaining
+  end
+
+  return 0
+end
+
+local function absolute_axis_size(style, dimension, owner_size, start_offset, end_offset, measured_size)
+  local explicit = dimension == "width" and resolve_value(style.width, owner_size) or resolve_value(style.height, owner_size)
+
+  if explicit ~= nil then
+    return constrain_size(explicit, style, dimension, owner_size)
+  end
+
+  if start_offset ~= nil and end_offset ~= nil then
+    return constrain_size(owner_size - start_offset - end_offset, style, dimension, owner_size)
+  end
+
+  return constrain_size(measured_size, style, dimension, owner_size)
+end
+
+local function absolute_default_offset(parent_style, child_style, direction, axis, available, size)
+  if axis == "horizontal" then
+    if direction == "row" then
+      return main_axis_offset(parent_style, available, size)
+    end
+
+    return cross_axis_offset(parent_style, child_style, available, size)
+  end
+
+  if direction == "row" then
+    return cross_axis_offset(parent_style, child_style, available, size)
+  end
+
+  return main_axis_offset(parent_style, available, size)
+end
+
+local function absolute_axis_position(parent_style, child_style, direction, axis, origin, available, size, start_offset, end_offset)
+  if start_offset ~= nil then
+    return origin + start_offset
+  end
+
+  if end_offset ~= nil then
+    return origin + available - end_offset - size
+  end
+
+  return origin + absolute_default_offset(parent_style, child_style, direction, axis, available, size)
+end
+
+local function layout_absolute_node(child, parent_style, parent_left, parent_top, padding, inner_width, inner_height)
+  local style = child.style or {}
+  local measured = measure_node(child, inner_width, inner_height)
+  local left_offset = resolve_value(style.left, inner_width)
+  local right_offset = resolve_value(style.right, inner_width)
+  local top_offset = resolve_value(style.top, inner_height)
+  local bottom_offset = resolve_value(style.bottom, inner_height)
+  local width = absolute_axis_size(style, "width", inner_width, left_offset, right_offset, measured and measured.width)
+  local height = absolute_axis_size(style, "height", inner_height, top_offset, bottom_offset, measured and measured.height)
+  local direction = parent_style.flexDirection or "column"
+  local origin_left = parent_left + padding.left
+  local origin_top = parent_top + padding.top
+  local child_left =
+    absolute_axis_position(parent_style, style, direction, "horizontal", origin_left, inner_width, width, left_offset, right_offset)
+  local child_top =
+    absolute_axis_position(parent_style, style, direction, "vertical", origin_top, inner_height, height, top_offset, bottom_offset)
+
+  layout_node(child, child_left, child_top, width, height, inner_width, inner_height, measured)
+end
+
+function layout_node(node, left, top, available_width, available_height, owner_width, owner_height, measured)
   if is_display_none(node) then
     zero_layout_tree(node)
     return node
@@ -366,6 +468,8 @@ local function layout_node(node, left, top, available_width, available_height, o
 
     if spec.hidden then
       zero_layout_tree(child)
+    elseif spec.absolute then
+      layout_absolute_node(child, style, left, top, padding, inner_width, inner_height)
     else
       local margin = spec.margin
       local child_left = left + padding.left
