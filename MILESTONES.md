@@ -156,7 +156,7 @@ Status: partially complete.
 - [x] Migrate supported `YGAspectRatioTest` subset.
 - [ ] Migrate supported `YGRoundingTest` subset.
 
-Status: mostly not started.
+Status: partially complete.
 
 ## Milestone 5: Runtime Polish
 
