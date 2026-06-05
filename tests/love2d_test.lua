@@ -2,6 +2,9 @@ return function(runner)
   runner:test("love2d example syntax", function()
     assert(loadfile("examples/love2d/conf.lua"))
     assert(loadfile("examples/love2d/main.lua"))
+    assert(loadfile("examples/love2d/layouts/menu.lua"))
+    assert(loadfile("examples/love2d/layouts/inventory.lua"))
+    assert(loadfile("examples/love2d/layouts/settings.lua"))
+    assert(loadfile("examples/love2d/layouts/flex_spacing.lua"))
   end)
 end
-

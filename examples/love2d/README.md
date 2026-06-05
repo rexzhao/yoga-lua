@@ -16,8 +16,14 @@ Run a non-interactive smoke check:
 
 Controls:
 
-- `Left` / `Right`: switch demo cases.
-- `1`, `2`, `3`: jump to a demo case.
+- The app starts on a Yoga-rendered selection screen.
+- Click a UI option to open it.
+- `Up` / `Down`: move the selected option.
+- `Enter` / `Space`: open the selected option.
+- `1`, `2`, `3`: open a UI option directly from the selection screen.
+- `Esc`: return from a UI screen to the selection screen.
 - Move the mouse over a rectangle to inspect its computed layout.
 
 The app imports the project modules from `../../src`; the `LOVE/` directory remains only the local Love2D runtime and is ignored by git.
+
+UI layout modules live in `layouts/`. Each file returns one layout descriptor used by the visualizer.
