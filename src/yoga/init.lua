@@ -21,6 +21,22 @@ local function normalize_children(children)
   return children
 end
 
+local function is_display_none(node)
+  return (node.style or {}).display == "none"
+end
+
+local function zero_layout_tree(node)
+  node.layout.left = 0
+  node.layout.top = 0
+  node.layout.width = 0
+  node.layout.height = 0
+  node.dirty = false
+
+  for _, child in ipairs(node.children or {}) do
+    zero_layout_tree(child)
+  end
+end
+
 function yoga.node(style, children)
   local node_style = shallow_copy(style)
   local measure = node_style.measure
@@ -151,30 +167,44 @@ end
 local function build_child_specs(children, direction, gap, inner_width, inner_height)
   local specs = {}
   local total_grow = 0
-  local used_main = math.max(0, #children - 1) * gap
+  local used_main = 0
+  local visible_count = 0
   local available_main = direction == "row" and inner_width or inner_height
 
   for index, child in ipairs(children) do
-    local style = child.style or {}
-    local margin = resolve_edges(style, "margin", inner_width)
-    local grow = flex_grow(style)
-    local measured = measure_node(child, inner_width, inner_height)
-    local base_main = main_size(style, direction, available_main, measured)
-
-    specs[index] = {
-      margin = margin,
-      grow = grow,
-      base_main = base_main,
-      measured = measured,
-    }
-
-    if direction == "row" then
-      used_main = used_main + margin.left + base_main + margin.right
+    if is_display_none(child) then
+      specs[index] = {
+        hidden = true,
+        grow = 0,
+        main = 0,
+      }
     else
-      used_main = used_main + margin.top + base_main + margin.bottom
-    end
+      local style = child.style or {}
+      local margin = resolve_edges(style, "margin", inner_width)
+      local grow = flex_grow(style)
+      local measured = measure_node(child, inner_width, inner_height)
+      local base_main = main_size(style, direction, available_main, measured)
 
-    total_grow = total_grow + grow
+      specs[index] = {
+        margin = margin,
+        grow = grow,
+        base_main = base_main,
+        measured = measured,
+      }
+
+      if visible_count > 0 then
+        used_main = used_main + gap
+      end
+
+      if direction == "row" then
+        used_main = used_main + margin.left + base_main + margin.right
+      else
+        used_main = used_main + margin.top + base_main + margin.bottom
+      end
+
+      visible_count = visible_count + 1
+      total_grow = total_grow + grow
+    end
   end
 
   local remaining = math.max(0, available_main - used_main)
@@ -190,29 +220,47 @@ local function build_child_specs(children, direction, gap, inner_width, inner_he
 end
 
 local function used_main_size(specs, direction, gap)
-  if #specs == 0 then
-    return 0
-  end
-
-  local used = (#specs - 1) * gap
+  local used = 0
+  local visible_count = 0
 
   for _, spec in ipairs(specs) do
-    local margin = spec.margin
+    if not spec.hidden then
+      local margin = spec.margin
 
-    if direction == "row" then
-      used = used + margin.left + spec.main + margin.right
-    else
-      used = used + margin.top + spec.main + margin.bottom
+      if visible_count > 0 then
+        used = used + gap
+      end
+
+      if direction == "row" then
+        used = used + margin.left + spec.main + margin.right
+      else
+        used = used + margin.top + spec.main + margin.bottom
+      end
+
+      visible_count = visible_count + 1
     end
   end
 
   return used
 end
 
+local function visible_spec_count(specs)
+  local count = 0
+
+  for _, spec in ipairs(specs) do
+    if not spec.hidden then
+      count = count + 1
+    end
+  end
+
+  return count
+end
+
 local function justify_offsets(style, specs, direction, gap, inner_width, inner_height)
   local available_main = direction == "row" and inner_width or inner_height
   local remaining = math.max(0, available_main - used_main_size(specs, direction, gap))
   local justify = style.justifyContent or "flex-start"
+  local visible_count = visible_spec_count(specs)
   local leading = 0
   local between = gap
 
@@ -220,14 +268,14 @@ local function justify_offsets(style, specs, direction, gap, inner_width, inner_
     leading = remaining / 2
   elseif justify == "flex-end" then
     leading = remaining
-  elseif justify == "space-between" and #specs > 1 then
-    between = gap + remaining / (#specs - 1)
-  elseif justify == "space-around" and #specs > 0 then
-    local space = remaining / #specs
+  elseif justify == "space-between" and visible_count > 1 then
+    between = gap + remaining / (visible_count - 1)
+  elseif justify == "space-around" and visible_count > 0 then
+    local space = remaining / visible_count
     leading = space / 2
     between = gap + space
-  elseif justify == "space-evenly" and #specs > 0 then
-    local space = remaining / (#specs + 1)
+  elseif justify == "space-evenly" and visible_count > 0 then
+    local space = remaining / (visible_count + 1)
     leading = space
     between = gap + space
   end
@@ -286,6 +334,11 @@ local function cross_axis_layout(parent_style, child_style, direction, margin, i
 end
 
 local function layout_node(node, left, top, available_width, available_height, owner_width, owner_height, measured)
+  if is_display_none(node) then
+    zero_layout_tree(node)
+    return node
+  end
+
   local style = node.style or {}
   local measured_size = measured or measure_node(node, available_width, available_height)
   local width = resolve_value(style.width, owner_width) or available_width or (measured_size and measured_size.width)
@@ -310,42 +363,47 @@ local function layout_node(node, left, top, available_width, available_height, o
   for index, child in ipairs(children) do
     local child_style = child.style or {}
     local spec = specs[index]
-    local margin = spec.margin
-    local child_left = left + padding.left
-    local child_top = top + padding.top
 
-    if direction == "row" then
-      local child_height, cross_offset =
-        cross_axis_layout(style, child_style, direction, margin, inner_width, inner_height, spec.measured)
-      child_left = child_left + leading + cursor + margin.left
-      child_top = child_top + cross_offset
-      layout_node(
-        child,
-        child_left,
-        child_top,
-        spec.main,
-        child_height,
-        inner_width,
-        inner_height,
-        spec.measured
-      )
-      cursor = cursor + margin.left + child.layout.width + margin.right + between
+    if spec.hidden then
+      zero_layout_tree(child)
     else
-      local child_width, cross_offset =
-        cross_axis_layout(style, child_style, direction, margin, inner_width, inner_height, spec.measured)
-      child_left = child_left + cross_offset
-      child_top = child_top + leading + cursor + margin.top
-      layout_node(
-        child,
-        child_left,
-        child_top,
-        child_width,
-        spec.main,
-        inner_width,
-        inner_height,
-        spec.measured
-      )
-      cursor = cursor + margin.top + child.layout.height + margin.bottom + between
+      local margin = spec.margin
+      local child_left = left + padding.left
+      local child_top = top + padding.top
+
+      if direction == "row" then
+        local child_height, cross_offset =
+          cross_axis_layout(style, child_style, direction, margin, inner_width, inner_height, spec.measured)
+        child_left = child_left + leading + cursor + margin.left
+        child_top = child_top + cross_offset
+        layout_node(
+          child,
+          child_left,
+          child_top,
+          spec.main,
+          child_height,
+          inner_width,
+          inner_height,
+          spec.measured
+        )
+        cursor = cursor + margin.left + child.layout.width + margin.right + between
+      else
+        local child_width, cross_offset =
+          cross_axis_layout(style, child_style, direction, margin, inner_width, inner_height, spec.measured)
+        child_left = child_left + cross_offset
+        child_top = child_top + leading + cursor + margin.top
+        layout_node(
+          child,
+          child_left,
+          child_top,
+          child_width,
+          spec.main,
+          inner_width,
+          inner_height,
+          spec.measured
+        )
+        cursor = cursor + margin.top + child.layout.height + margin.bottom + between
+      end
     end
   end
 

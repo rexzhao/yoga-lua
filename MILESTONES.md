@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 65 tests, 6 skipped`
+- `lua tests/run.lua` -> `ok - 69 tests, 6 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -84,7 +84,7 @@ Status: mostly complete; explicit tests/examples for function components and eve
 - [x] Love2D visual demo for min/max constraints.
 - [ ] `position = "absolute"`.
 - [ ] Relative position offsets.
-- [ ] `display = "none"`.
+- [x] `display = "none"`.
 - [x] Migrated supported subset of `YGJustifyContentTest`.
 - [x] Migrated supported subset of `YGAlignItemsTest`.
 - [x] Migrated supported subset of `YGAlignSelfTest`.
