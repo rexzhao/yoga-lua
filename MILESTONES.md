@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 130 tests, 26 skipped`
+- `lua tests/run.lua` -> `ok - 140 tests, 31 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -126,6 +126,11 @@ Known skipped cases:
 - [ ] `absolute_layout_column_reverse_margin_border`: skipped pending column-reverse and border support.
 - [ ] `flex_shrink_to_zero`: skipped pending auto cross-size from children.
 - [ ] `flex_grow_less_than_factor_one`: skipped pending partial remaining-space distribution for total `flexGrow` below 1.
+- [ ] `column_row_gap_wrapping`: skipped pending `flexWrap`.
+- [ ] `column_gap_start_index`: skipped pending `flexWrap`.
+- [ ] `column_gap_justify_space_around`: skipped pending rounding policy.
+- [ ] `column_gap_determines_parent_width`: skipped pending auto main-size from children.
+- [ ] `row_gap_determines_parent_height`: skipped pending auto main-size from children.
 
 Status: partially complete.
 
@@ -144,7 +149,7 @@ Status: partially complete.
 - [x] `rowGap` and `columnGap` main-axis support without wrapping.
 - [x] Migrated supported subset of `YGFlexTest`.
 - [ ] Migrate supported `YGFlexWrapTest` subset.
-- [ ] Migrate supported `YGGapTest` subset.
+- [x] Migrate supported `YGGapTest` subset.
 - [ ] Migrate supported `YGAspectRatioTest` subset.
 - [ ] Migrate supported `YGRoundingTest` subset.
 

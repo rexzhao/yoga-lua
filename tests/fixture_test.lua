@@ -15,4 +15,5 @@ return function(runner, helper)
   fixture_runner.register(runner, helper, require("fixtures.yoga_minmax_dimension"))
   fixture_runner.register(runner, helper, require("fixtures.yoga_display"))
   fixture_runner.register(runner, helper, require("fixtures.yoga_absolute_position"))
+  fixture_runner.register(runner, helper, require("fixtures.yoga_gap"))
 end
