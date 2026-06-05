@@ -40,6 +40,21 @@ local function number_or_zero(value)
   return 0
 end
 
+local function resolve_value(value, owner_size)
+  if type(value) == "number" then
+    return value
+  end
+
+  if type(value) == "string" then
+    local percent = value:match("^%s*([+-]?%d+%.?%d*)%%%s*$")
+    if percent and type(owner_size) == "number" then
+      return owner_size * tonumber(percent) / 100
+    end
+  end
+
+  return nil
+end
+
 local function resolve_edge(style, prefix, edge, axis)
   local edge_key = prefix .. edge:sub(1, 1):upper() .. edge:sub(2)
   local axis_key = prefix .. axis:sub(1, 1):upper() .. axis:sub(2)
@@ -64,20 +79,20 @@ local function resolve_edges(style, prefix)
   }
 end
 
-local function clamp_size(value)
-  return math.max(0, number_or_zero(value))
+local function clamp_size(value, owner_size)
+  return math.max(0, resolve_value(value, owner_size) or number_or_zero(value))
 end
 
 local function flex_grow(style)
   return number_or_zero(style.flexGrow or style.flex)
 end
 
-local function main_size(style, direction)
+local function main_size(style, direction, owner_size)
   if direction == "row" then
-    return number_or_zero(style.width)
+    return resolve_value(style.width, owner_size) or 0
   end
 
-  return number_or_zero(style.height)
+  return resolve_value(style.height, owner_size) or 0
 end
 
 local function build_child_specs(children, direction, gap, inner_width, inner_height)
@@ -90,7 +105,7 @@ local function build_child_specs(children, direction, gap, inner_width, inner_he
     local style = child.style or {}
     local margin = resolve_edges(style, "margin")
     local grow = flex_grow(style)
-    local base_main = main_size(style, direction)
+    local base_main = main_size(style, direction, available_main)
 
     specs[index] = {
       margin = margin,
@@ -174,12 +189,12 @@ local function cross_axis_layout(parent_style, child_style, direction, margin, i
 
   if direction == "row" then
     available = inner_height
-    explicit = child_style.height
+    explicit = resolve_value(child_style.height, inner_height)
     before = margin.top
     after = margin.bottom
   else
     available = inner_width
-    explicit = child_style.width
+    explicit = resolve_value(child_style.width, inner_width)
     before = margin.left
     after = margin.right
   end
@@ -187,7 +202,7 @@ local function cross_axis_layout(parent_style, child_style, direction, margin, i
   local size
   local available_without_margin = clamp_size(available - before - after)
 
-  if type(explicit) == "number" then
+  if explicit ~= nil then
     size = clamp_size(explicit)
   elseif align == "stretch" then
     size = available_without_margin
@@ -207,10 +222,10 @@ local function cross_axis_layout(parent_style, child_style, direction, margin, i
   return size, offset
 end
 
-local function layout_node(node, left, top, available_width, available_height)
+local function layout_node(node, left, top, available_width, available_height, owner_width, owner_height)
   local style = node.style or {}
-  local width = style.width or available_width
-  local height = style.height or available_height
+  local width = resolve_value(style.width, owner_width) or available_width
+  local height = resolve_value(style.height, owner_height) or available_height
 
   node.layout.left = left
   node.layout.top = top
@@ -244,7 +259,9 @@ local function layout_node(node, left, top, available_width, available_height)
         child_left,
         child_top,
         spec.main,
-        child_height
+        child_height,
+        inner_width,
+        inner_height
       )
       cursor = cursor + margin.left + child.layout.width + margin.right + between
     else
@@ -256,7 +273,9 @@ local function layout_node(node, left, top, available_width, available_height)
         child_left,
         child_top,
         child_width,
-        spec.main
+        spec.main,
+        inner_width,
+        inner_height
       )
       cursor = cursor + margin.top + child.layout.height + margin.bottom + between
     end
@@ -266,7 +285,7 @@ local function layout_node(node, left, top, available_width, available_height)
 end
 
 function yoga.calculateLayout(root, width, height)
-  return layout_node(root, 0, 0, width or 0, height or 0)
+  return layout_node(root, 0, 0, width or 0, height or 0, width or 0, height or 0)
 end
 
 return yoga
