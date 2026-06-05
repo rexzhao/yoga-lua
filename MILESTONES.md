@@ -144,6 +144,7 @@ Status: partially complete.
 - [x] Love2D visual demo for `flexBasis`.
 - [ ] `flexWrap`.
 - [x] Basic row `flexWrap = "wrap"` without `alignContent`.
+- [x] Love2D visual demo for basic row `flexWrap`.
 - [ ] `alignContent`.
 - [x] `aspectRatio`.
 - [x] Love2D visual demo for `aspectRatio`.
