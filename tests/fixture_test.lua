@@ -18,4 +18,5 @@ return function(runner, helper)
   fixture_runner.register(runner, helper, require("fixtures.yoga_gap"))
   fixture_runner.register(runner, helper, require("fixtures.yoga_aspect_ratio"))
   fixture_runner.register(runner, helper, require("fixtures.yoga_flex_wrap"))
+  fixture_runner.register(runner, helper, require("fixtures.yoga_rounding"))
 end

@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 173 tests, 31 skipped`
+- `lua tests/run.lua` -> `ok - 181 tests, 36 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -131,6 +131,11 @@ Known skipped cases:
 - [ ] `wrap_column`: skipped because upstream generated test is disabled.
 - [ ] `flex_wrap_wrap_to_child_height`: skipped pending auto content sizing from nested wrapped children.
 - [ ] `wrap_reverse_row_align_content_flex_start`: skipped pending wrap-reverse.
+- [ ] `rounding_fractial_input_3`: skipped pending root top offset support.
+- [ ] `rounding_fractial_input_4`: skipped pending root top offset support.
+- [ ] `rounding_inner_node_controversy_horizontal`: skipped pending auto cross-size from children.
+- [ ] `rounding_inner_node_controversy_vertical`: skipped pending auto cross-size from children.
+- [ ] `rounding_inner_node_controversy_combined`: skipped pending auto cross-size from nested children.
 
 Status: partially complete.
 
@@ -158,7 +163,7 @@ Status: partially complete.
 - [x] Migrate supported `YGFlexWrapTest` subset.
 - [x] Migrate supported `YGGapTest` subset.
 - [x] Migrate supported `YGAspectRatioTest` subset.
-- [ ] Migrate supported `YGRoundingTest` subset.
+- [x] Migrate supported `YGRoundingTest` subset.
 
 Status: partially complete.
 
