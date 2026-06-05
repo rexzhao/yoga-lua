@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 470 tests, 4 skipped`
+- `lua tests/run.lua` -> `ok - 472 tests, 2 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 - `lua benchmarks/run.lua` -> records 100, 1,000, and 5,000 node layout timings in `BENCHMARKS.md`
 
@@ -206,6 +206,7 @@ Status: complete for the supported Milestone 4 scope; upstream-disabled skipped 
 - [x] Percent padding contributes to measured child border-box size.
 - [x] Migrated supported `YGMeasureTest` negative constraint, percent text, nullable measure, and min-width propagation subset.
 - [x] `boxSizing = "content-box" | "border-box"` covers measured parent sizing.
+- [x] Yoga measure-node leaf invariant is enforced.
 - [x] Broader upstream `YGMeasureTest` migration.
 - [x] Measure cache tests.
 - [x] Overflow and scroll-container measure mode tests.
@@ -215,9 +216,6 @@ Status: complete for the supported Milestone 4 scope; upstream-disabled skipped 
 - [x] Benchmarks for 5,000 nodes.
 - [x] Virtualized list scroll and jump benchmark.
 
-Known skipped cases:
+Known skipped cases: none.
 
-- [ ] `cannot_add_child_to_node_with_measure_func`: skipped because the Lua API does not enforce Yoga's measure-node leaf invariant yet.
-- [ ] `cannot_add_nonnull_measure_func_to_non_leaf_node`: skipped because the Lua API does not enforce Yoga's measure-node leaf invariant yet.
-
-Status: in progress; dirty marking, layout/measure caching, hadOverflow, scroll measure modes, Love2D overflow clipping, layout benchmarks, UI virtualized lists, supported non-flex measure modes, and upstream `YGMeasureTest` migration are implemented, while full layout-level overflow semantics and the known skipped measure API invariant cases remain.
+Status: in progress; dirty marking, layout/measure caching, hadOverflow, scroll measure modes, Love2D overflow clipping, layout benchmarks, UI virtualized lists, supported non-flex measure modes, and upstream `YGMeasureTest` migration are implemented, while full layout-level overflow semantics remain.

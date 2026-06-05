@@ -200,6 +200,12 @@ end
 
 function yoga.node(style, children)
   local node_style, measure = style_without_measure(style)
+  children = normalize_children(children)
+
+  if type(measure) == "function" and #children > 0 then
+    error("Cannot add child to node with measure function", 2)
+  end
+
   local node = {
     style = node_style,
     layout = {
@@ -224,6 +230,11 @@ end
 
 function yoga.setStyle(node, style)
   local node_style, measure = style_without_measure(style)
+
+  if type(measure) == "function" and #(node.children or {}) > 0 then
+    error("Cannot set measure function on non-leaf node", 2)
+  end
+
   node.style = node_style
   node.measure = measure
   mark_dirty(node)
@@ -235,6 +246,10 @@ function yoga.updateStyle(node, style)
 
   for key, value in pairs(style or {}) do
     if key == "measure" then
+      if type(value) == "function" and #(node.children or {}) > 0 then
+        error("Cannot set measure function on non-leaf node", 2)
+      end
+
       node.measure = value
     else
       node.style[key] = value

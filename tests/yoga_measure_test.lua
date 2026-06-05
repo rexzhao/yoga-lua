@@ -194,6 +194,37 @@ return function(runner, helper)
     helper.assert_equal(root.measure, nil, "measure function")
   end, source("can_nullify_measure_func_on_any_node"))
 
+  runner:test("cannot add child to node with measure function", function()
+    local ok, err = pcall(function()
+      yoga.node({
+        measure = function()
+          return { width = 10, height = 10 }
+        end,
+      }, {
+        yoga.node({}),
+      })
+    end)
+
+    helper.assert_equal(ok, false, "measure child invariant")
+    helper.assert_equal(tostring(err):match("Cannot add child") ~= nil, true, "measure child error")
+  end, source("cannot_add_child_to_node_with_measure_func"))
+
+  runner:test("cannot set non-null measure function on non-leaf node", function()
+    local root = yoga.node({}, {
+      yoga.node({}),
+    })
+    local ok, err = pcall(function()
+      yoga.setStyle(root, {
+        measure = function()
+          return { width = 10, height = 10 }
+        end,
+      })
+    end)
+
+    helper.assert_equal(ok, false, "measure non-leaf invariant")
+    helper.assert_equal(tostring(err):match("Cannot set measure") ~= nil, true, "measure non-leaf error")
+  end, source("cannot_add_nonnull_measure_func_to_non_leaf_node"))
+
   runner:test("cross-axis auto margin keeps measured size instead of stretch", function()
     local child = yoga.node({
       marginLeft = "auto",
@@ -526,17 +557,5 @@ return function(runner, helper)
     helper.assert_layout(root, { left = 0, top = 0, width = 100, height = 200 }, "border-box root")
     helper.assert_layout(child, { left = 15, top = 15, width = 70, height = 85 }, "border-box child")
   end, source("measure_border_box"))
-
-  runner:skip(
-    "fixture cannot_add_child_to_node_with_measure_func [cannot_add_child_to_node_with_measure_func]",
-    "Lua API does not enforce Yoga's measure-node leaf invariant yet",
-    source("cannot_add_child_to_node_with_measure_func")
-  )
-
-  runner:skip(
-    "fixture cannot_add_nonnull_measure_func_to_non_leaf_node [cannot_add_nonnull_measure_func_to_non_leaf_node]",
-    "Lua API does not enforce Yoga's measure-node leaf invariant yet",
-    source("cannot_add_nonnull_measure_func_to_non_leaf_node")
-  )
 
 end
