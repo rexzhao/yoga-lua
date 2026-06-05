@@ -76,7 +76,6 @@ return {
         }),
       }),
       with_styles(styles, "spacer", {
-        debugName = "overlay spacer",
         fill = { 0, 0, 0, 0 },
         stroke = false,
       }),
@@ -101,4 +100,3 @@ return {
     })
   end,
 }
-

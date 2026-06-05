@@ -188,6 +188,10 @@ end
 
 local function inside(node, x, y)
   local layout = node.layout
+  if layout.width <= 0 or layout.height <= 0 then
+    return false
+  end
+
   return x >= layout.left
     and y >= layout.top
     and x <= layout.left + layout.width
@@ -352,6 +356,10 @@ end
 
 local function draw_node(node, depth)
   local layout = node.layout
+  if layout.width <= 0 or layout.height <= 0 then
+    return
+  end
+
   local props = node.props or {}
   local fill = props.fill or palette.panel
   local radius = node.type == "text" and 0 or 6
