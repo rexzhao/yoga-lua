@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 53 tests, 6 skipped`
+- `lua tests/run.lua` -> `ok - 65 tests, 6 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -87,7 +87,7 @@ Status: mostly complete; explicit tests/examples for function components and eve
 - [x] Migrated supported subset of `YGAlignItemsTest`.
 - [x] Migrated supported subset of `YGAlignSelfTest`.
 - [x] Migrated supported subset of `YGPercentageTest`.
-- [ ] Migrate `YGMinMaxDimensionTest`.
+- [x] Migrated supported subset of `YGMinMaxDimensionTest`.
 - [ ] Migrate `YGAbsolutePositionTest`.
 
 Known skipped cases:
