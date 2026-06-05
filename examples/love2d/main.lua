@@ -22,6 +22,11 @@ local palette = {
   hover = { 1.00, 1.00, 1.00, 1.0 },
 }
 
+local chrome = {
+  top = 42,
+  bottom = 44,
+}
+
 local function normalize_path(path)
   return (path:gsub("\\", "/"))
 end
@@ -256,10 +261,22 @@ local cases = {
   { name = "Rows", build = build_row_wrap_placeholder },
 }
 
+local function offset_layout(node, dx, dy)
+  node.layout.left = node.layout.left + dx
+  node.layout.top = node.layout.top + dy
+
+  for _, child in ipairs(node.children or {}) do
+    offset_layout(child, dx, dy)
+  end
+end
+
 local function rebuild()
-  local width, height = love.graphics.getDimensions()
-  root = cases[current_case].build(width, height)
-  yoga.calculateLayout(root, width, height)
+  local width, window_height = love.graphics.getDimensions()
+  local layout_height = math.max(1, window_height - chrome.top - chrome.bottom)
+
+  root = cases[current_case].build(width, layout_height)
+  yoga.calculateLayout(root, width, layout_height)
+  offset_layout(root, 0, chrome.top)
 end
 
 local function has_flag(args, flag)
@@ -315,7 +332,7 @@ local function draw_label(text, x, y, max_width)
   love.graphics.printf(text, x, y, max_width or 220, "left")
 end
 
-local function node_label(node)
+local function node_label(node, include_containers)
   if node.type == "text" then
     return node.text
   end
@@ -324,7 +341,25 @@ local function node_label(node)
     return node.label
   end
 
-  return node.props and node.props.debugName
+  if include_containers or #(node.children or {}) == 0 then
+    return node.props and node.props.debugName
+  end
+
+  return nil
+end
+
+local function draw_node_label(node)
+  local label = node_label(node, false)
+  if not label then
+    return
+  end
+
+  local layout = node.layout
+  draw_label(label, layout.left + 8, layout.top + 7, math.max(20, layout.width - 16))
+end
+
+local function hover_label(node)
+  return node_label(node, true) or node.type or "node"
 end
 
 local function draw_node(node, depth)
@@ -343,10 +378,7 @@ local function draw_node(node, depth)
   love.graphics.setLineWidth(node == hovered and 3 or 1)
   love.graphics.rectangle("line", layout.left, layout.top, layout.width, layout.height, radius, radius)
 
-  local text = node_label(node)
-  if text then
-    draw_label(text, layout.left + 8, layout.top + 7, math.max(20, layout.width - 16))
-  end
+  draw_node_label(node)
 
   for _, child in ipairs(node.children or {}) do
     draw_node(child, depth + 1)
@@ -355,6 +387,7 @@ end
 
 local function draw_overlay()
   local width = love.graphics.getWidth()
+  local height = love.graphics.getHeight()
   local case = cases[current_case]
 
   set_color({ 0.05, 0.06, 0.07, 0.88 })
@@ -370,7 +403,7 @@ local function draw_overlay()
 
   if hovered then
     local layout = hovered.layout
-    local name = node_label(hovered) or hovered.type or "node"
+    local name = hover_label(hovered)
     local text = string.format(
       "%s  x=%d y=%d w=%d h=%d",
       name,
@@ -380,10 +413,11 @@ local function draw_overlay()
       layout.height
     )
 
+    local bottom_y = height - chrome.bottom
     set_color({ 0.05, 0.06, 0.07, 0.92 })
-    love.graphics.rectangle("fill", 12, love.graphics.getHeight() - 36, width - 24, 26, 6, 6)
+    love.graphics.rectangle("fill", 12, bottom_y + 6, width - 24, 26, 6, 6)
     set_color(palette.text)
-    love.graphics.print(text, 22, love.graphics.getHeight() - 30)
+    love.graphics.print(text, 22, bottom_y + 12)
   end
 end
 
