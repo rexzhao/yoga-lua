@@ -190,6 +190,7 @@ Status: complete for the supported Milestone 4 scope; upstream-disabled skipped 
 - [x] Measure caching.
 - [ ] Yoga-compatible `overflow = "hidden" | "scroll"` style semantics.
 - [x] Scroll-container measure behavior matches upstream Yoga on the scroll axis.
+- [x] Love2D renderer clips children for `overflow = "hidden" | "scroll"`.
 - [x] Layout results expose Yoga-compatible `hadOverflow`.
 - [x] UI-level virtualized scroll list builds visible rows, overscan rows, and spacer nodes only.
 - [x] Fixed-height virtualized list supports direct jumps without laying out skipped rows.
@@ -220,4 +221,4 @@ Known skipped cases:
 - [ ] `measure_content_box`: skipped because `boxSizing = "content-box"` is not implemented yet.
 - [ ] `measure_border_box`: skipped because `boxSizing` style support is not implemented yet.
 
-Status: in progress; dirty marking, layout/measure caching, hadOverflow, scroll measure modes, layout benchmarks, UI virtualized lists, supported non-flex measure modes, and upstream `YGMeasureTest` migration are implemented, while full overflow semantics and the known skipped measure cases remain.
+Status: in progress; dirty marking, layout/measure caching, hadOverflow, scroll measure modes, Love2D overflow clipping, layout benchmarks, UI virtualized lists, supported non-flex measure modes, and upstream `YGMeasureTest` migration are implemented, while full layout-level overflow semantics and the known skipped measure cases remain.

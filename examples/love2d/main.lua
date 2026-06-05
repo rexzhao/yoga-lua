@@ -85,6 +85,7 @@ local layout_modules = {
   "layouts.percent",
   "layouts.measure",
   "layouts.virtual_list",
+  "layouts.overflow",
   "layouts.minmax",
   "layouts.display",
   "layouts.absolute",
@@ -276,12 +277,23 @@ local function point_in_rect(x, y, left, top, width, height)
   return x >= left and y >= top and x <= left + width and y <= top + height
 end
 
+local function clips_children(node, has_box)
+  if not has_box then
+    return false
+  end
+
+  local props = node.props or {}
+  local style = node.style or {}
+  return props.clipChildren == true or style.overflow == "hidden" or style.overflow == "scroll"
+end
+
 local function find_deepest(node, x, y, parent_left, parent_top)
   local left, top, width, height = absolute_rect(node, parent_left, parent_top)
   local has_box = width > 0 and height > 0
   local hit = has_box and point_in_rect(x, y, left, top, width, height)
+  local clipped = clips_children(node, has_box)
 
-  if hit or not has_box then
+  if hit or not has_box or not clipped then
     local child_parent_top = top - ((node.virtual and node.virtual.scrollOffset) or 0)
     for index = #(node.children or {}), 1, -1 do
       local child, rect = find_deepest(node.children[index], x, y, left, child_parent_top)
@@ -466,7 +478,7 @@ local function draw_node(node, depth, parent_left, parent_top)
     draw_node_label(node, left, top)
   end
 
-  local props_clip_children = has_box and props.clipChildren
+  local props_clip_children = clips_children(node, has_box)
   local previous_x, previous_y, previous_width, previous_height
 
   if props_clip_children then
