@@ -55,27 +55,29 @@ local function resolve_value(value, owner_size)
   return nil
 end
 
-local function resolve_edge(style, prefix, edge, axis)
+local function resolve_edge(style, prefix, edge, axis, owner_size)
   local edge_key = prefix .. edge:sub(1, 1):upper() .. edge:sub(2)
   local axis_key = prefix .. axis:sub(1, 1):upper() .. axis:sub(2)
 
-  if type(style[edge_key]) == "number" then
-    return style[edge_key]
+  local edge_value = resolve_value(style[edge_key], owner_size)
+  if edge_value ~= nil then
+    return edge_value
   end
 
-  if type(style[axis_key]) == "number" then
-    return style[axis_key]
+  local axis_value = resolve_value(style[axis_key], owner_size)
+  if axis_value ~= nil then
+    return axis_value
   end
 
-  return number_or_zero(style[prefix])
+  return resolve_value(style[prefix], owner_size) or number_or_zero(style[prefix])
 end
 
-local function resolve_edges(style, prefix)
+local function resolve_edges(style, prefix, owner_size)
   return {
-    left = resolve_edge(style, prefix, "left", "horizontal"),
-    right = resolve_edge(style, prefix, "right", "horizontal"),
-    top = resolve_edge(style, prefix, "top", "vertical"),
-    bottom = resolve_edge(style, prefix, "bottom", "vertical"),
+    left = resolve_edge(style, prefix, "left", "horizontal", owner_size),
+    right = resolve_edge(style, prefix, "right", "horizontal", owner_size),
+    top = resolve_edge(style, prefix, "top", "vertical", owner_size),
+    bottom = resolve_edge(style, prefix, "bottom", "vertical", owner_size),
   }
 end
 
@@ -103,7 +105,7 @@ local function build_child_specs(children, direction, gap, inner_width, inner_he
 
   for index, child in ipairs(children) do
     local style = child.style or {}
-    local margin = resolve_edges(style, "margin")
+    local margin = resolve_edges(style, "margin", inner_width)
     local grow = flex_grow(style)
     local base_main = main_size(style, direction, available_main)
 
@@ -233,7 +235,7 @@ local function layout_node(node, left, top, available_width, available_height, o
   node.layout.height = clamp_size(height)
   node.dirty = false
 
-  local padding = resolve_edges(style, "padding")
+  local padding = resolve_edges(style, "padding", node.layout.width)
   local gap = number_or_zero(style.gap)
   local direction = style.flexDirection or "column"
   local cursor = 0
