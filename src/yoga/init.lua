@@ -180,6 +180,10 @@ local function resolve_value(value, owner_size)
   return nil
 end
 
+local function is_auto_value(value)
+  return value == "auto"
+end
+
 local function relative_axis_offset(style, start_key, end_key, owner_size)
   local start = resolve_value(style[start_key], owner_size)
   if start ~= nil then
@@ -272,6 +276,41 @@ local function resolve_edges(style, prefix, owner_size, layout_direction)
     right = resolve_edge(style, prefix, "right", "horizontal", owner_size, layout_direction),
     top = resolve_edge(style, prefix, "top", "vertical", owner_size, layout_direction),
     bottom = resolve_edge(style, prefix, "bottom", "vertical", owner_size, layout_direction),
+  }
+end
+
+local function resolve_auto_edge(style, prefix, edge, axis, layout_direction)
+  local edge_key = prefix .. edge:sub(1, 1):upper() .. edge:sub(2)
+  local axis_key = prefix .. axis:sub(1, 1):upper() .. axis:sub(2)
+
+  if style[edge_key] ~= nil then
+    return is_auto_value(style[edge_key])
+  end
+
+  if edge == "left" or edge == "right" then
+    local logical_key = prefix .. logical_horizontal_edge(edge, layout_direction)
+    if style[logical_key] ~= nil then
+      return is_auto_value(style[logical_key])
+    end
+  end
+
+  if style[axis_key] ~= nil then
+    return is_auto_value(style[axis_key])
+  end
+
+  if style[prefix] ~= nil then
+    return is_auto_value(style[prefix])
+  end
+
+  return false
+end
+
+local function resolve_auto_edges(style, prefix, layout_direction)
+  return {
+    left = resolve_auto_edge(style, prefix, "left", "horizontal", layout_direction),
+    right = resolve_auto_edge(style, prefix, "right", "horizontal", layout_direction),
+    top = resolve_auto_edge(style, prefix, "top", "vertical", layout_direction),
+    bottom = resolve_auto_edge(style, prefix, "bottom", "vertical", layout_direction),
   }
 end
 
@@ -451,6 +490,7 @@ local function build_child_specs(children, direction, gap, inner_width, inner_he
     else
       local style = child.style or {}
       local margin = resolve_edges(style, "margin", inner_width, layout_direction)
+      local auto_margin = resolve_auto_edges(style, "margin", layout_direction)
       local grow = flex_grow(style)
       local shrink = flex_shrink(style)
       local measured = measure_node(child, inner_width, inner_height)
@@ -461,6 +501,7 @@ local function build_child_specs(children, direction, gap, inner_width, inner_he
         child = child,
         style = style,
         margin = margin,
+        auto_margin = auto_margin,
         grow = grow,
         shrink = shrink,
         base_main = base_main,
@@ -520,6 +561,19 @@ local function build_child_specs(children, direction, gap, inner_width, inner_he
   return specs
 end
 
+local function main_axis_auto_margin_count(spec, direction)
+  local auto_margin = spec.auto_margin
+  if not auto_margin then
+    return 0
+  end
+
+  if is_row_direction(direction) then
+    return (auto_margin.left and 1 or 0) + (auto_margin.right and 1 or 0)
+  end
+
+  return (auto_margin.top and 1 or 0) + (auto_margin.bottom and 1 or 0)
+end
+
 local function used_main_size(specs, direction, gap)
   local used = 0
   local visible_count = 0
@@ -543,6 +597,51 @@ local function used_main_size(specs, direction, gap)
   end
 
   return used
+end
+
+local function distribute_auto_main_margins(specs, direction, gap, inner_width, inner_height)
+  local available_main = is_row_direction(direction) and inner_width or inner_height
+  local remaining = available_main - used_main_size(specs, direction, gap)
+  if remaining <= 0 then
+    return
+  end
+
+  local auto_count = 0
+  for _, spec in ipairs(specs) do
+    if not spec.hidden and not spec.absolute then
+      auto_count = auto_count + main_axis_auto_margin_count(spec, direction)
+    end
+  end
+
+  if auto_count == 0 then
+    return
+  end
+
+  local auto_size = remaining / auto_count
+  for _, spec in ipairs(specs) do
+    if not spec.hidden and not spec.absolute then
+      local auto_margin = spec.auto_margin
+      local margin = spec.margin
+
+      if auto_margin then
+        if is_row_direction(direction) then
+          if auto_margin.left then
+            margin.left = auto_size
+          end
+          if auto_margin.right then
+            margin.right = auto_size
+          end
+        else
+          if auto_margin.top then
+            margin.top = auto_size
+          end
+          if auto_margin.bottom then
+            margin.bottom = auto_size
+          end
+        end
+      end
+    end
+  end
 end
 
 local function child_main_extent(specs, direction, gap, padding, border)
@@ -608,16 +707,17 @@ end
 
 local function justify_offsets(style, specs, direction, gap, inner_width, inner_height)
   local available_main = is_row_direction(direction) and inner_width or inner_height
-  local remaining = math.max(0, available_main - used_main_size(specs, direction, gap))
+  local raw_remaining = available_main - used_main_size(specs, direction, gap)
+  local remaining = math.max(0, raw_remaining)
   local justify = style.justifyContent or "flex-start"
   local visible_count = visible_spec_count(specs)
   local leading = 0
   local between = gap
 
   if justify == "center" then
-    leading = remaining / 2
+    leading = raw_remaining / 2
   elseif justify == "flex-end" then
-    leading = remaining
+    leading = raw_remaining
   elseif justify == "space-between" and visible_count > 1 then
     between = gap + remaining / (visible_count - 1)
   elseif justify == "space-around" and visible_count > 0 then
@@ -633,7 +733,18 @@ local function justify_offsets(style, specs, direction, gap, inner_width, inner_
   return leading, between
 end
 
-local function cross_axis_layout(parent_style, child_style, direction, margin, inner_width, inner_height, measured, main, layout_direction)
+local function cross_axis_layout(
+  parent_style,
+  child_style,
+  direction,
+  margin,
+  inner_width,
+  inner_height,
+  measured,
+  main,
+  layout_direction,
+  auto_margin
+)
   local align = child_style.alignSelf or parent_style.alignItems or "stretch"
   local available
   local explicit
@@ -641,6 +752,8 @@ local function cross_axis_layout(parent_style, child_style, direction, margin, i
   local after
   local measured_size
   local dimension
+  local before_auto
+  local after_auto
 
   if is_row_direction(direction) then
     available = inner_height
@@ -649,6 +762,8 @@ local function cross_axis_layout(parent_style, child_style, direction, margin, i
     after = margin.bottom
     measured_size = measured and measured.height
     dimension = "height"
+    before_auto = auto_margin and auto_margin.top
+    after_auto = auto_margin and auto_margin.bottom
   else
     available = inner_width
     explicit = resolve_value(child_style.width, inner_width)
@@ -656,6 +771,8 @@ local function cross_axis_layout(parent_style, child_style, direction, margin, i
     after = margin.right
     measured_size = measured and measured.width
     dimension = "width"
+    before_auto = auto_margin and auto_margin.left
+    after_auto = auto_margin and auto_margin.right
   end
 
   local size
@@ -678,17 +795,30 @@ local function cross_axis_layout(parent_style, child_style, direction, margin, i
 
   size = constrain_size(size, child_style, dimension, available)
 
-  local remaining = clamp_size(available - before - size - after)
+  local raw_remaining = available - before - size - after
+  local remaining = clamp_size(raw_remaining)
   local offset = before
 
-  if align == "center" then
-    offset = before + remaining / 2
-  elseif align == "flex-end" then
-    offset = before + remaining
-  end
+  if before_auto or after_auto then
+    if raw_remaining > 0 then
+      if before_auto and after_auto then
+        offset = before + raw_remaining / 2
+      elseif before_auto then
+        offset = before + raw_remaining
+      end
+    elseif not is_row_direction(direction) and is_rtl(layout_direction) then
+      offset = available - after - size
+    end
+  else
+    if align == "center" then
+      offset = before + remaining / 2
+    elseif align == "flex-end" then
+      offset = before + remaining
+    end
 
-  if not is_row_direction(direction) and is_rtl(layout_direction) then
-    offset = available - offset - size
+    if not is_row_direction(direction) and is_rtl(layout_direction) then
+      offset = available - offset - size
+    end
   end
 
   return size, offset
@@ -1472,6 +1602,7 @@ function layout_node(node, left, top, available_width, available_height, owner_w
 
   local layout_items = collect_layout_items(children)
   local specs = build_child_specs(layout_items, direction, gap, inner_width, inner_height, layout_direction)
+  distribute_auto_main_margins(specs, direction, gap, inner_width, inner_height)
   local leading, between = justify_offsets(style, specs, direction, gap, inner_width, inner_height)
   local has_auto_children = visible_spec_count(specs) > 0
   local auto_main_size = has_auto_children
@@ -1502,7 +1633,18 @@ function layout_node(node, left, top, available_width, available_height, owner_w
 
       if is_row_direction(direction) then
         local child_height, cross_offset =
-          cross_axis_layout(style, child_style, direction, margin, inner_width, inner_height, spec.measured, spec.main, layout_direction)
+          cross_axis_layout(
+            style,
+            child_style,
+            direction,
+            margin,
+            inner_width,
+            inner_height,
+            spec.measured,
+            spec.main,
+            layout_direction,
+            spec.auto_margin
+          )
         local child_auto_main = auto_main_size and spec.auto_main
         local child_width = spec.main
         if auto_cross_size and spec.auto_cross then
@@ -1538,7 +1680,18 @@ function layout_node(node, left, top, available_width, available_height, owner_w
         cursor = cursor + margin.left + child.layout.width + margin.right + between
       else
         local child_width, cross_offset =
-          cross_axis_layout(style, child_style, direction, margin, inner_width, inner_height, spec.measured, spec.main, layout_direction)
+          cross_axis_layout(
+            style,
+            child_style,
+            direction,
+            margin,
+            inner_width,
+            inner_height,
+            spec.measured,
+            spec.main,
+            layout_direction,
+            spec.auto_margin
+          )
         local child_auto_main = auto_main_size and spec.auto_main
         local child_height = spec.main
         if auto_cross_size and spec.auto_cross then

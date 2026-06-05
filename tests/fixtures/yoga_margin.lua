@@ -7,12 +7,13 @@ local function source(test)
   }
 end
 
-local function unsupported_auto_margin(name)
+local function auto_case(name, direction, root, expect)
   return {
-    name = name,
+    name = name .. "_" .. direction,
     source = source(name),
-    skip = true,
-    unsupportedReason = "auto margins are not implemented",
+    direction = direction,
+    root = root,
+    expect = expect,
   }
 end
 
@@ -195,26 +196,480 @@ return {
       { left = 20, top = 0, width = 100, height = 100 },
     },
   },
-  unsupported_auto_margin("margin_auto_bottom"),
-  unsupported_auto_margin("margin_auto_top"),
-  unsupported_auto_margin("margin_auto_bottom_and_top"),
-  unsupported_auto_margin("margin_auto_bottom_and_top_justify_center"),
-  unsupported_auto_margin("margin_auto_multiple_children_column"),
-  unsupported_auto_margin("margin_auto_multiple_children_row"),
-  unsupported_auto_margin("margin_auto_left_and_right_column"),
-  unsupported_auto_margin("margin_auto_left_and_right"),
-  unsupported_auto_margin("margin_auto_start_and_end_column"),
-  unsupported_auto_margin("margin_auto_start_and_end"),
-  unsupported_auto_margin("margin_auto_left_and_right_column_and_center"),
-  unsupported_auto_margin("margin_auto_left"),
-  unsupported_auto_margin("margin_auto_right"),
-  unsupported_auto_margin("margin_auto_left_and_right_stretch"),
-  unsupported_auto_margin("margin_auto_top_and_bottom_stretch"),
-  unsupported_auto_margin("margin_auto_left_right_child_bigger_than_parent"),
-  unsupported_auto_margin("margin_auto_left_child_bigger_than_parent"),
-  unsupported_auto_margin("margin_fix_left_auto_right_child_bigger_than_parent"),
-  unsupported_auto_margin("margin_auto_left_fix_right_child_bigger_than_parent"),
-  unsupported_auto_margin("margin_auto_top_stretching_child"),
-  unsupported_auto_margin("margin_auto_left_stretching_child"),
-  unsupported_auto_margin("margin_auto_overflowing_container"),
+  auto_case("margin_auto_bottom", "ltr", {
+    style = { position = "absolute", width = 200, height = 200, alignItems = "center" },
+    children = {
+      { style = { width = 50, height = 50, marginBottom = "auto" } },
+      { style = { width = 50, height = 50 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 200, height = 200 },
+    { left = 75, top = 0, width = 50, height = 50 },
+    { left = 75, top = 150, width = 50, height = 50 },
+  }),
+  auto_case("margin_auto_bottom", "rtl", {
+    style = { position = "absolute", width = 200, height = 200, alignItems = "center" },
+    children = {
+      { style = { width = 50, height = 50, marginBottom = "auto" } },
+      { style = { width = 50, height = 50 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 200, height = 200 },
+    { left = 75, top = 0, width = 50, height = 50 },
+    { left = 75, top = 150, width = 50, height = 50 },
+  }),
+  auto_case("margin_auto_top", "ltr", {
+    style = { position = "absolute", width = 200, height = 200, alignItems = "center" },
+    children = {
+      { style = { width = 50, height = 50, marginTop = "auto" } },
+      { style = { width = 50, height = 50 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 200, height = 200 },
+    { left = 75, top = 100, width = 50, height = 50 },
+    { left = 75, top = 150, width = 50, height = 50 },
+  }),
+  auto_case("margin_auto_top", "rtl", {
+    style = { position = "absolute", width = 200, height = 200, alignItems = "center" },
+    children = {
+      { style = { width = 50, height = 50, marginTop = "auto" } },
+      { style = { width = 50, height = 50 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 200, height = 200 },
+    { left = 75, top = 100, width = 50, height = 50 },
+    { left = 75, top = 150, width = 50, height = 50 },
+  }),
+  auto_case("margin_auto_bottom_and_top", "ltr", {
+    style = { position = "absolute", width = 200, height = 200, alignItems = "center" },
+    children = {
+      { style = { width = 50, height = 50, marginTop = "auto", marginBottom = "auto" } },
+      { style = { width = 50, height = 50 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 200, height = 200 },
+    { left = 75, top = 50, width = 50, height = 50 },
+    { left = 75, top = 150, width = 50, height = 50 },
+  }),
+  auto_case("margin_auto_bottom_and_top", "rtl", {
+    style = { position = "absolute", width = 200, height = 200, alignItems = "center" },
+    children = {
+      { style = { width = 50, height = 50, marginTop = "auto", marginBottom = "auto" } },
+      { style = { width = 50, height = 50 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 200, height = 200 },
+    { left = 75, top = 50, width = 50, height = 50 },
+    { left = 75, top = 150, width = 50, height = 50 },
+  }),
+  auto_case("margin_auto_bottom_and_top_justify_center", "ltr", {
+    style = { position = "absolute", width = 200, height = 200, justifyContent = "center" },
+    children = {
+      { style = { width = 50, height = 50, marginTop = "auto", marginBottom = "auto" } },
+      { style = { width = 50, height = 50 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 200, height = 200 },
+    { left = 0, top = 50, width = 50, height = 50 },
+    { left = 0, top = 150, width = 50, height = 50 },
+  }),
+  auto_case("margin_auto_bottom_and_top_justify_center", "rtl", {
+    style = { position = "absolute", width = 200, height = 200, justifyContent = "center" },
+    children = {
+      { style = { width = 50, height = 50, marginTop = "auto", marginBottom = "auto" } },
+      { style = { width = 50, height = 50 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 200, height = 200 },
+    { left = 150, top = 50, width = 50, height = 50 },
+    { left = 150, top = 150, width = 50, height = 50 },
+  }),
+  auto_case("margin_auto_multiple_children_column", "ltr", {
+    style = { position = "absolute", width = 200, height = 200, alignItems = "center" },
+    children = {
+      { style = { width = 50, height = 50, marginTop = "auto" } },
+      { style = { width = 50, height = 50, marginTop = "auto" } },
+      { style = { width = 50, height = 50 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 200, height = 200 },
+    { left = 75, top = 25, width = 50, height = 50 },
+    { left = 75, top = 100, width = 50, height = 50 },
+    { left = 75, top = 150, width = 50, height = 50 },
+  }),
+  auto_case("margin_auto_multiple_children_column", "rtl", {
+    style = { position = "absolute", width = 200, height = 200, alignItems = "center" },
+    children = {
+      { style = { width = 50, height = 50, marginTop = "auto" } },
+      { style = { width = 50, height = 50, marginTop = "auto" } },
+      { style = { width = 50, height = 50 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 200, height = 200 },
+    { left = 75, top = 25, width = 50, height = 50 },
+    { left = 75, top = 100, width = 50, height = 50 },
+    { left = 75, top = 150, width = 50, height = 50 },
+  }),
+  auto_case("margin_auto_multiple_children_row", "ltr", {
+    style = { position = "absolute", width = 200, height = 200, flexDirection = "row", alignItems = "center" },
+    children = {
+      { style = { width = 50, height = 50, marginRight = "auto" } },
+      { style = { width = 50, height = 50, marginRight = "auto" } },
+      { style = { width = 50, height = 50 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 200, height = 200 },
+    { left = 0, top = 75, width = 50, height = 50 },
+    { left = 75, top = 75, width = 50, height = 50 },
+    { left = 150, top = 75, width = 50, height = 50 },
+  }),
+  auto_case("margin_auto_multiple_children_row", "rtl", {
+    style = { position = "absolute", width = 200, height = 200, flexDirection = "row", alignItems = "center" },
+    children = {
+      { style = { width = 50, height = 50, marginRight = "auto" } },
+      { style = { width = 50, height = 50, marginRight = "auto" } },
+      { style = { width = 50, height = 50 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 200, height = 200 },
+    { left = 125, top = 75, width = 50, height = 50 },
+    { left = 50, top = 75, width = 50, height = 50 },
+    { left = 0, top = 75, width = 50, height = 50 },
+  }),
+  auto_case("margin_auto_left_and_right_column", "ltr", {
+    style = { position = "absolute", width = 200, height = 200, flexDirection = "row", alignItems = "center" },
+    children = {
+      { style = { width = 50, height = 50, marginLeft = "auto", marginRight = "auto" } },
+      { style = { width = 50, height = 50 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 200, height = 200 },
+    { left = 50, top = 75, width = 50, height = 50 },
+    { left = 150, top = 75, width = 50, height = 50 },
+  }),
+  auto_case("margin_auto_left_and_right_column", "rtl", {
+    style = { position = "absolute", width = 200, height = 200, flexDirection = "row", alignItems = "center" },
+    children = {
+      { style = { width = 50, height = 50, marginLeft = "auto", marginRight = "auto" } },
+      { style = { width = 50, height = 50 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 200, height = 200 },
+    { left = 100, top = 75, width = 50, height = 50 },
+    { left = 0, top = 75, width = 50, height = 50 },
+  }),
+  auto_case("margin_auto_left_and_right", "ltr", {
+    style = { position = "absolute", width = 200, height = 200 },
+    children = {
+      { style = { width = 50, height = 50, marginLeft = "auto", marginRight = "auto" } },
+      { style = { width = 50, height = 50 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 200, height = 200 },
+    { left = 75, top = 0, width = 50, height = 50 },
+    { left = 0, top = 50, width = 50, height = 50 },
+  }),
+  auto_case("margin_auto_left_and_right", "rtl", {
+    style = { position = "absolute", width = 200, height = 200 },
+    children = {
+      { style = { width = 50, height = 50, marginLeft = "auto", marginRight = "auto" } },
+      { style = { width = 50, height = 50 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 200, height = 200 },
+    { left = 75, top = 0, width = 50, height = 50 },
+    { left = 150, top = 50, width = 50, height = 50 },
+  }),
+  auto_case("margin_auto_start_and_end_column", "ltr", {
+    style = { position = "absolute", width = 200, height = 200, flexDirection = "row", alignItems = "center" },
+    children = {
+      { style = { width = 50, height = 50, marginStart = "auto", marginEnd = "auto" } },
+      { style = { width = 50, height = 50 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 200, height = 200 },
+    { left = 50, top = 75, width = 50, height = 50 },
+    { left = 150, top = 75, width = 50, height = 50 },
+  }),
+  auto_case("margin_auto_start_and_end_column", "rtl", {
+    style = { position = "absolute", width = 200, height = 200, flexDirection = "row", alignItems = "center" },
+    children = {
+      { style = { width = 50, height = 50, marginStart = "auto", marginEnd = "auto" } },
+      { style = { width = 50, height = 50 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 200, height = 200 },
+    { left = 100, top = 75, width = 50, height = 50 },
+    { left = 0, top = 75, width = 50, height = 50 },
+  }),
+  auto_case("margin_auto_start_and_end", "ltr", {
+    style = { position = "absolute", width = 200, height = 200 },
+    children = {
+      { style = { width = 50, height = 50, marginStart = "auto", marginEnd = "auto" } },
+      { style = { width = 50, height = 50 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 200, height = 200 },
+    { left = 75, top = 0, width = 50, height = 50 },
+    { left = 0, top = 50, width = 50, height = 50 },
+  }),
+  auto_case("margin_auto_start_and_end", "rtl", {
+    style = { position = "absolute", width = 200, height = 200 },
+    children = {
+      { style = { width = 50, height = 50, marginStart = "auto", marginEnd = "auto" } },
+      { style = { width = 50, height = 50 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 200, height = 200 },
+    { left = 75, top = 0, width = 50, height = 50 },
+    { left = 150, top = 50, width = 50, height = 50 },
+  }),
+  auto_case("margin_auto_left_and_right_column_and_center", "ltr", {
+    style = { position = "absolute", width = 200, height = 200, alignItems = "center" },
+    children = {
+      { style = { width = 50, height = 50, marginLeft = "auto", marginRight = "auto" } },
+      { style = { width = 50, height = 50 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 200, height = 200 },
+    { left = 75, top = 0, width = 50, height = 50 },
+    { left = 75, top = 50, width = 50, height = 50 },
+  }),
+  auto_case("margin_auto_left_and_right_column_and_center", "rtl", {
+    style = { position = "absolute", width = 200, height = 200, alignItems = "center" },
+    children = {
+      { style = { width = 50, height = 50, marginLeft = "auto", marginRight = "auto" } },
+      { style = { width = 50, height = 50 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 200, height = 200 },
+    { left = 75, top = 0, width = 50, height = 50 },
+    { left = 75, top = 50, width = 50, height = 50 },
+  }),
+  auto_case("margin_auto_left", "ltr", {
+    style = { position = "absolute", width = 200, height = 200, alignItems = "center" },
+    children = {
+      { style = { width = 50, height = 50, marginLeft = "auto" } },
+      { style = { width = 50, height = 50 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 200, height = 200 },
+    { left = 150, top = 0, width = 50, height = 50 },
+    { left = 75, top = 50, width = 50, height = 50 },
+  }),
+  auto_case("margin_auto_left", "rtl", {
+    style = { position = "absolute", width = 200, height = 200, alignItems = "center" },
+    children = {
+      { style = { width = 50, height = 50, marginLeft = "auto" } },
+      { style = { width = 50, height = 50 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 200, height = 200 },
+    { left = 150, top = 0, width = 50, height = 50 },
+    { left = 75, top = 50, width = 50, height = 50 },
+  }),
+  auto_case("margin_auto_right", "ltr", {
+    style = { position = "absolute", width = 200, height = 200, alignItems = "center" },
+    children = {
+      { style = { width = 50, height = 50, marginRight = "auto" } },
+      { style = { width = 50, height = 50 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 200, height = 200 },
+    { left = 0, top = 0, width = 50, height = 50 },
+    { left = 75, top = 50, width = 50, height = 50 },
+  }),
+  auto_case("margin_auto_right", "rtl", {
+    style = { position = "absolute", width = 200, height = 200, alignItems = "center" },
+    children = {
+      { style = { width = 50, height = 50, marginRight = "auto" } },
+      { style = { width = 50, height = 50 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 200, height = 200 },
+    { left = 0, top = 0, width = 50, height = 50 },
+    { left = 75, top = 50, width = 50, height = 50 },
+  }),
+  auto_case("margin_auto_left_and_right_stretch", "ltr", {
+    style = { position = "absolute", width = 200, height = 200, flexDirection = "row" },
+    children = {
+      { style = { width = 50, height = 50, marginLeft = "auto", marginRight = "auto" } },
+      { style = { width = 50, height = 50 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 200, height = 200 },
+    { left = 50, top = 0, width = 50, height = 50 },
+    { left = 150, top = 0, width = 50, height = 50 },
+  }),
+  auto_case("margin_auto_left_and_right_stretch", "rtl", {
+    style = { position = "absolute", width = 200, height = 200, flexDirection = "row" },
+    children = {
+      { style = { width = 50, height = 50, marginLeft = "auto", marginRight = "auto" } },
+      { style = { width = 50, height = 50 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 200, height = 200 },
+    { left = 100, top = 0, width = 50, height = 50 },
+    { left = 0, top = 0, width = 50, height = 50 },
+  }),
+  auto_case("margin_auto_top_and_bottom_stretch", "ltr", {
+    style = { position = "absolute", width = 200, height = 200 },
+    children = {
+      { style = { width = 50, height = 50, marginTop = "auto", marginBottom = "auto" } },
+      { style = { width = 50, height = 50 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 200, height = 200 },
+    { left = 0, top = 50, width = 50, height = 50 },
+    { left = 0, top = 150, width = 50, height = 50 },
+  }),
+  auto_case("margin_auto_top_and_bottom_stretch", "rtl", {
+    style = { position = "absolute", width = 200, height = 200 },
+    children = {
+      { style = { width = 50, height = 50, marginTop = "auto", marginBottom = "auto" } },
+      { style = { width = 50, height = 50 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 200, height = 200 },
+    { left = 150, top = 50, width = 50, height = 50 },
+    { left = 150, top = 150, width = 50, height = 50 },
+  }),
+  auto_case("margin_auto_left_right_child_bigger_than_parent", "ltr", {
+    style = { position = "absolute", width = 52, height = 52, justifyContent = "center" },
+    children = {
+      { style = { width = 72, height = 72, marginLeft = "auto", marginRight = "auto" } },
+    },
+  }, {
+    { left = 0, top = 0, width = 52, height = 52 },
+    { left = 0, top = -10, width = 72, height = 72 },
+  }),
+  auto_case("margin_auto_left_right_child_bigger_than_parent", "rtl", {
+    style = { position = "absolute", width = 52, height = 52, justifyContent = "center" },
+    children = {
+      { style = { width = 72, height = 72, marginLeft = "auto", marginRight = "auto" } },
+    },
+  }, {
+    { left = 0, top = 0, width = 52, height = 52 },
+    { left = -20, top = -10, width = 72, height = 72 },
+  }),
+  auto_case("margin_auto_left_child_bigger_than_parent", "ltr", {
+    style = { position = "absolute", width = 52, height = 52, justifyContent = "center" },
+    children = {
+      { style = { width = 72, height = 72, marginLeft = "auto" } },
+    },
+  }, {
+    { left = 0, top = 0, width = 52, height = 52 },
+    { left = 0, top = -10, width = 72, height = 72 },
+  }),
+  auto_case("margin_auto_left_child_bigger_than_parent", "rtl", {
+    style = { position = "absolute", width = 52, height = 52, justifyContent = "center" },
+    children = {
+      { style = { width = 72, height = 72, marginLeft = "auto" } },
+    },
+  }, {
+    { left = 0, top = 0, width = 52, height = 52 },
+    { left = -20, top = -10, width = 72, height = 72 },
+  }),
+  auto_case("margin_fix_left_auto_right_child_bigger_than_parent", "ltr", {
+    style = { position = "absolute", width = 52, height = 52, justifyContent = "center" },
+    children = {
+      { style = { width = 72, height = 72, marginLeft = 10, marginRight = "auto" } },
+    },
+  }, {
+    { left = 0, top = 0, width = 52, height = 52 },
+    { left = 10, top = -10, width = 72, height = 72 },
+  }),
+  auto_case("margin_fix_left_auto_right_child_bigger_than_parent", "rtl", {
+    style = { position = "absolute", width = 52, height = 52, justifyContent = "center" },
+    children = {
+      { style = { width = 72, height = 72, marginLeft = 10, marginRight = "auto" } },
+    },
+  }, {
+    { left = 0, top = 0, width = 52, height = 52 },
+    { left = -20, top = -10, width = 72, height = 72 },
+  }),
+  auto_case("margin_auto_left_fix_right_child_bigger_than_parent", "ltr", {
+    style = { position = "absolute", width = 52, height = 52, justifyContent = "center" },
+    children = {
+      { style = { width = 72, height = 72, marginLeft = "auto", marginRight = 10 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 52, height = 52 },
+    { left = 0, top = -10, width = 72, height = 72 },
+  }),
+  auto_case("margin_auto_left_fix_right_child_bigger_than_parent", "rtl", {
+    style = { position = "absolute", width = 52, height = 52, justifyContent = "center" },
+    children = {
+      { style = { width = 72, height = 72, marginLeft = "auto", marginRight = 10 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 52, height = 52 },
+    { left = -30, top = -10, width = 72, height = 72 },
+  }),
+  auto_case("margin_auto_top_stretching_child", "ltr", {
+    style = { position = "absolute", width = 200, height = 200, alignItems = "center" },
+    children = {
+      { style = { flexGrow = 1, flexShrink = 1, flexBasis = "0%", marginTop = "auto" } },
+      { style = { width = 50, height = 50 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 200, height = 200 },
+    { left = 100, top = 0, width = 0, height = 150 },
+    { left = 75, top = 150, width = 50, height = 50 },
+  }),
+  auto_case("margin_auto_top_stretching_child", "rtl", {
+    style = { position = "absolute", width = 200, height = 200, alignItems = "center" },
+    children = {
+      { style = { flexGrow = 1, flexShrink = 1, flexBasis = "0%", marginTop = "auto" } },
+      { style = { width = 50, height = 50 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 200, height = 200 },
+    { left = 100, top = 0, width = 0, height = 150 },
+    { left = 75, top = 150, width = 50, height = 50 },
+  }),
+  auto_case("margin_auto_left_stretching_child", "ltr", {
+    style = { position = "absolute", width = 200, height = 200, alignItems = "center" },
+    children = {
+      { style = { flexGrow = 1, flexShrink = 1, flexBasis = "0%", marginLeft = "auto" } },
+      { style = { width = 50, height = 50 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 200, height = 200 },
+    { left = 200, top = 0, width = 0, height = 150 },
+    { left = 75, top = 150, width = 50, height = 50 },
+  }),
+  auto_case("margin_auto_left_stretching_child", "rtl", {
+    style = { position = "absolute", width = 200, height = 200, alignItems = "center" },
+    children = {
+      { style = { flexGrow = 1, flexShrink = 1, flexBasis = "0%", marginLeft = "auto" } },
+      { style = { width = 50, height = 50 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 200, height = 200 },
+    { left = 200, top = 0, width = 0, height = 150 },
+    { left = 75, top = 150, width = 50, height = 50 },
+  }),
+  auto_case("margin_auto_overflowing_container", "ltr", {
+    style = { position = "absolute", width = 200, height = 200, alignItems = "center" },
+    children = {
+      { style = { width = 50, height = 150, marginBottom = "auto" } },
+      { style = { width = 50, height = 150 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 200, height = 200 },
+    { left = 75, top = 0, width = 50, height = 150 },
+    { left = 75, top = 150, width = 50, height = 150 },
+  }),
+  auto_case("margin_auto_overflowing_container", "rtl", {
+    style = { position = "absolute", width = 200, height = 200, alignItems = "center" },
+    children = {
+      { style = { width = 50, height = 150, marginBottom = "auto" } },
+      { style = { width = 50, height = 150 } },
+    },
+  }, {
+    { left = 0, top = 0, width = 200, height = 200 },
+    { left = 75, top = 0, width = 50, height = 150 },
+    { left = 75, top = 150, width = 50, height = 150 },
+  }),
 }

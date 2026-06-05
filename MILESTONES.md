@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 371 tests, 24 skipped`
+- `lua tests/run.lua` -> `ok - 415 tests, 2 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -30,6 +30,7 @@ Status: complete.
 - [x] Auto size includes border/padding when no content size is specified.
 - [x] Uniform `margin`.
 - [x] Edge/axis margin: `marginLeft`, `marginRight`, `marginTop`, `marginBottom`, `marginHorizontal`, `marginVertical`.
+- [x] Auto margins.
 - [x] `gap`.
 - [x] Basic `flexGrow`.
 - [x] `flex` as grow shorthand.
@@ -38,7 +39,7 @@ Status: complete.
 - [x] Fixture runner for layout trees.
 - [x] Basic local fixtures for fixed layout, spacing, and grow.
 - [x] Migrated complete `YGDimensionTest` set.
-- [x] Migrated supported non-auto `YGMarginTest` subset.
+- [x] Migrated complete `YGMarginTest` set.
 - [x] Migrated complete `YGPaddingTest` set.
 - [x] Migrated basic `YGFlexDirectionTest` column/row/reverse subset.
 - [x] Migrated physical-edge `YGFlexDirectionTest` reverse margin/padding/border subset.
@@ -49,11 +50,9 @@ Status: complete.
 - [x] Migrated complete `YGFlexDirectionTest` set.
 - [ ] Broader Yoga dimension/flex-direction/margin/padding fixture migration.
 
-Known skipped cases:
+Known skipped cases: none.
 
-- [ ] `YGMarginTest` auto margin subset: 22 fixtures skipped pending auto margin support.
-
-Status: mostly complete; broader Yoga fixture migration and auto margins remain.
+Status: mostly complete; broader Yoga fixture migration remains.
 
 ## Milestone 2: Web-Like Component API
 
