@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 109 tests, 25 skipped`
+- `lua tests/run.lua` -> `ok - 115 tests, 24 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -101,7 +101,6 @@ Known skipped cases:
 - [ ] `justify_content_row_space_evenly`: skipped pending rounding policy.
 - [ ] `align_baseline`: skipped pending baseline alignment.
 - [ ] `align_self_baseline`: skipped pending baseline alignment.
-- [ ] `percentage_flex_basis`: skipped pending `flexBasis`.
 - [ ] `display_contents`: skipped pending `display = "contents"`.
 - [ ] `display_contents_fixed_size`: skipped pending `display = "contents"`.
 - [ ] `display_contents_with_margin`: skipped pending `display = "contents"`.
@@ -129,7 +128,7 @@ Status: partially complete.
 ## Milestone 4: Advanced Flex Behavior
 
 - [ ] `flexShrink`.
-- [ ] `flexBasis`.
+- [x] `flexBasis`.
 - [ ] `flexWrap`.
 - [ ] `alignContent`.
 - [ ] `aspectRatio`.

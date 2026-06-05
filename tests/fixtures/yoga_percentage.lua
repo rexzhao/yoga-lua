@@ -93,8 +93,34 @@ return {
   {
     name = "percentage_flex_basis",
     source = source("percentage_flex_basis"),
-    skip = true,
-    unsupportedReason = "flexBasis is not implemented",
+    root = {
+      style = { width = 200, height = 200, flexDirection = "row" },
+      children = {
+        { style = { flexGrow = 1, flexBasis = "50%" } },
+        { style = { flexGrow = 1, flexBasis = "25%" } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 200, height = 200 },
+      { left = 0, top = 0, width = 125, height = 200 },
+      { left = 125, top = 0, width = 75, height = 200 },
+    },
+  },
+  {
+    name = "percentage_flex_basis_cross",
+    source = source("percentage_flex_basis_cross"),
+    root = {
+      style = { width = 200, height = 200 },
+      children = {
+        { style = { flexGrow = 1, flexBasis = "50%" } },
+        { style = { flexGrow = 1, flexBasis = "25%" } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 200, height = 200 },
+      { left = 0, top = 0, width = 200, height = 125 },
+      { left = 0, top = 125, width = 200, height = 75 },
+    },
   },
   {
     name = "percentage_absolute_position",

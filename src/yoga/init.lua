@@ -188,8 +188,18 @@ end
 
 local function main_size(style, direction, owner_size, measured)
   if direction == "row" then
+    local basis = resolve_value(style.flexBasis, owner_size)
+    if basis ~= nil then
+      return constrain_size(basis, style, "width", owner_size)
+    end
+
     local width = resolve_value(style.width, owner_size) or number_or_zero(measured and measured.width)
     return constrain_size(width, style, "width", owner_size)
+  end
+
+  local basis = resolve_value(style.flexBasis, owner_size)
+  if basis ~= nil then
+    return constrain_size(basis, style, "height", owner_size)
   end
 
   local height = resolve_value(style.height, owner_size) or number_or_zero(measured and measured.height)
@@ -463,16 +473,24 @@ local function layout_absolute_node(child, parent_style, parent_left, parent_top
   layout_node(child, child_left, child_top, width, height, inner_width, inner_height, measured)
 end
 
-function layout_node(node, left, top, available_width, available_height, owner_width, owner_height, measured)
+function layout_node(node, left, top, available_width, available_height, owner_width, owner_height, measured, options)
   if is_display_none(node) then
     zero_layout_tree(node)
     return node
   end
 
+  options = options or {}
+
   local style = node.style or {}
   local measured_size = measured or measure_node(node, available_width, available_height)
-  local width = resolve_value(style.width, owner_width) or available_width or (measured_size and measured_size.width)
-  local height = resolve_value(style.height, owner_height) or available_height or (measured_size and measured_size.height)
+  local width = options.useAvailableWidth and available_width
+    or resolve_value(style.width, owner_width)
+    or available_width
+    or (measured_size and measured_size.width)
+  local height = options.useAvailableHeight and available_height
+    or resolve_value(style.height, owner_height)
+    or available_height
+    or (measured_size and measured_size.height)
 
   node.layout.left = left
   node.layout.top = top
@@ -516,7 +534,8 @@ function layout_node(node, left, top, available_width, available_height, owner_w
           child_height,
           inner_width,
           inner_height,
-          spec.measured
+          spec.measured,
+          { useAvailableWidth = true }
         )
         local relative_left, relative_top = relative_offsets(child_style, inner_width, inner_height)
         offset_layout_tree(child, relative_left, relative_top)
@@ -534,7 +553,8 @@ function layout_node(node, left, top, available_width, available_height, owner_w
           spec.main,
           inner_width,
           inner_height,
-          spec.measured
+          spec.measured,
+          { useAvailableHeight = true }
         )
         local relative_left, relative_top = relative_offsets(child_style, inner_width, inner_height)
         offset_layout_tree(child, relative_left, relative_top)
