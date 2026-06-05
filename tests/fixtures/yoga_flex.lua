@@ -107,8 +107,20 @@ return {
   {
     name = "flex_shrink_to_zero",
     source = source("flex_shrink_to_zero"),
-    skip = true,
-    unsupportedReason = "auto cross-size from children is not implemented",
+    root = {
+      style = { height = 75 },
+      children = {
+        { style = { width = 50, height = 50 } },
+        { style = { width = 50, height = 50, flexShrink = 1 } },
+        { style = { width = 50, height = 50 } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 50, height = 75 },
+      { left = 0, top = 0, width = 50, height = 50 },
+      { left = 0, top = 50, width = 50, height = 0 },
+      { left = 0, top = 50, width = 50, height = 50 },
+    },
   },
   {
     name = "flex_basis_overrides_main_size",

@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 181 tests, 36 skipped`
+- `lua tests/run.lua` -> `ok - 184 tests, 35 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -123,7 +123,6 @@ Known skipped cases:
 - [ ] `absolute_layout_padding`: skipped pending auto-size parent layout.
 - [ ] `absolute_layout_border`: skipped pending border support.
 - [ ] `absolute_layout_column_reverse_margin_border`: skipped pending column-reverse and border support.
-- [ ] `flex_shrink_to_zero`: skipped pending auto cross-size from children.
 - [ ] `flex_grow_less_than_factor_one`: skipped pending partial remaining-space distribution for total `flexGrow` below 1.
 - [ ] `column_gap_determines_parent_width`: skipped pending auto main-size from children.
 - [ ] `row_gap_determines_parent_height`: skipped pending auto main-size from children.
@@ -133,9 +132,9 @@ Known skipped cases:
 - [ ] `wrap_reverse_row_align_content_flex_start`: skipped pending wrap-reverse.
 - [ ] `rounding_fractial_input_3`: skipped pending root top offset support.
 - [ ] `rounding_fractial_input_4`: skipped pending root top offset support.
-- [ ] `rounding_inner_node_controversy_horizontal`: skipped pending auto cross-size from children.
-- [ ] `rounding_inner_node_controversy_vertical`: skipped pending auto cross-size from children.
-- [ ] `rounding_inner_node_controversy_combined`: skipped pending auto cross-size from nested children.
+- [ ] `rounding_inner_node_controversy_horizontal`: skipped pending parent-relative fixture coordinates for nested rounding cases.
+- [ ] `rounding_inner_node_controversy_vertical`: skipped pending parent-relative fixture coordinates for nested rounding cases.
+- [ ] `rounding_inner_node_controversy_combined`: skipped pending parent-relative fixture coordinates for nested rounding cases.
 
 Status: partially complete.
 
@@ -143,6 +142,7 @@ Status: partially complete.
 
 - [x] `flexShrink`.
 - [x] Love2D visual demo for `flexShrink`.
+- [x] Auto cross-size from non-wrapped flex children.
 - [x] `flexBasis`.
 - [x] Love2D visual demo for `flexBasis`.
 - [ ] `flexWrap`.

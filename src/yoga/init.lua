@@ -324,6 +324,7 @@ local function build_child_specs(children, direction, gap, inner_width, inner_he
       local base_main = main_size(style, direction, available_main, available_cross, measured)
 
       specs[index] = {
+        child = child,
         style = style,
         margin = margin,
         grow = grow,
@@ -713,6 +714,29 @@ local function line_cross_size(line, direction)
   return cross
 end
 
+local function child_cross_extent(specs, direction, padding)
+  local cross = 0
+
+  for _, spec in ipairs(specs) do
+    if not spec.hidden and not spec.absolute then
+      local margin = spec.margin
+      local child = spec.child
+
+      if direction == "row" then
+        cross = math.max(cross, margin.top + child.layout.height + margin.bottom)
+      else
+        cross = math.max(cross, margin.left + child.layout.width + margin.right)
+      end
+    end
+  end
+
+  if direction == "row" then
+    return padding.top + cross + padding.bottom
+  end
+
+  return padding.left + cross + padding.right
+end
+
 local function used_line_cross_size(lines, gap)
   local used = 0
 
@@ -958,6 +982,8 @@ function layout_node(node, left, top, available_width, available_height, owner_w
 
   local specs = build_child_specs(children, direction, gap, inner_width, inner_height)
   local leading, between = justify_offsets(style, specs, direction, gap, inner_width, inner_height)
+  local auto_cross_size = (direction == "row" and explicit_height == nil and available_height == nil and not options.useAvailableHeight)
+    or (direction == "column" and explicit_width == nil and available_width == nil and not options.useAvailableWidth)
 
   for index, child in ipairs(children) do
     local child_style = child.style or {}
@@ -1011,6 +1037,14 @@ function layout_node(node, left, top, available_width, available_height, owner_w
         offset_layout_tree(child, relative_left, relative_top)
         cursor = cursor + margin.top + child.layout.height + margin.bottom + between
       end
+    end
+  end
+
+  if auto_cross_size then
+    if direction == "row" then
+      node.layout.height = constrain_size(child_cross_extent(specs, direction, padding), style, "height", owner_height)
+    else
+      node.layout.width = constrain_size(child_cross_extent(specs, direction, padding), style, "width", owner_width)
     end
   end
 
