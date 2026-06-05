@@ -1,6 +1,10 @@
 return {
   {
     name = "percentage_padding_based_on_width",
+    source = {
+      repo = "local",
+      test = "percentage_padding_based_on_width",
+    },
     root = {
       style = { width = 200, height = 100, padding = "10%" },
       children = {
@@ -14,6 +18,10 @@ return {
   },
   {
     name = "percentage_margin_based_on_width",
+    source = {
+      repo = "local",
+      test = "percentage_margin_based_on_width",
+    },
     root = {
       style = { width = 200, height = 100 },
       children = {
@@ -26,4 +34,3 @@ return {
     },
   },
 }
-

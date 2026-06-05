@@ -1,6 +1,10 @@
 return {
   {
     name = "percentage_width_height_row",
+    source = {
+      repo = "local",
+      test = "percentage_width_height_row",
+    },
     root = {
       style = { width = 200, height = 120, flexDirection = "row" },
       children = {
@@ -14,6 +18,10 @@ return {
   },
   {
     name = "percentage_height_column",
+    source = {
+      repo = "local",
+      test = "percentage_height_column",
+    },
     root = {
       style = { width = 120, height = 200, flexDirection = "column" },
       children = {
@@ -29,6 +37,10 @@ return {
   },
   {
     name = "percentage_cross_axis_column",
+    source = {
+      repo = "local",
+      test = "percentage_cross_axis_column",
+    },
     root = {
       style = { width = 200, height = 100, flexDirection = "column", alignItems = "flex-start" },
       children = {
@@ -41,4 +53,3 @@ return {
     },
   },
 }
-
