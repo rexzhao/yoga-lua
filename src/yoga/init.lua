@@ -164,6 +164,10 @@ local function flex_grow(style)
   return number_or_zero(style.flexGrow or style.flex)
 end
 
+local function flex_shrink(style)
+  return number_or_zero(style.flexShrink)
+end
+
 local function measure_node(node, available_width, available_height)
   if type(node.measure) ~= "function" then
     return nil
@@ -232,12 +236,15 @@ local function build_child_specs(children, direction, gap, inner_width, inner_he
       local style = child.style or {}
       local margin = resolve_edges(style, "margin", inner_width)
       local grow = flex_grow(style)
+      local shrink = flex_shrink(style)
       local measured = measure_node(child, inner_width, inner_height)
       local base_main = main_size(style, direction, available_main, measured)
 
       specs[index] = {
+        style = style,
         margin = margin,
         grow = grow,
+        shrink = shrink,
         base_main = base_main,
         measured = measured,
       }
@@ -257,12 +264,35 @@ local function build_child_specs(children, direction, gap, inner_width, inner_he
     end
   end
 
-  local remaining = math.max(0, available_main - used_main)
+  local remaining = available_main - used_main
 
   for _, spec in ipairs(specs) do
     spec.main = spec.base_main
-    if total_grow > 0 and spec.grow > 0 then
+    if remaining > 0 and total_grow > 0 and spec.grow > 0 then
       spec.main = spec.main + remaining * spec.grow / total_grow
+    end
+  end
+
+  if remaining < 0 then
+    local total_scaled_shrink = 0
+    local dimension = direction == "row" and "width" or "height"
+
+    for _, spec in ipairs(specs) do
+      if not spec.hidden and not spec.absolute and spec.shrink > 0 then
+        spec.scaled_shrink = spec.shrink * spec.base_main
+        total_scaled_shrink = total_scaled_shrink + spec.scaled_shrink
+      end
+    end
+
+    if total_scaled_shrink > 0 then
+      local deficit = -remaining
+
+      for _, spec in ipairs(specs) do
+        if not spec.hidden and not spec.absolute and spec.scaled_shrink and spec.scaled_shrink > 0 then
+          local shrink_amount = deficit * spec.scaled_shrink / total_scaled_shrink
+          spec.main = constrain_size(spec.base_main - shrink_amount, spec.style, dimension, available_main)
+        end
+      end
     end
   end
 

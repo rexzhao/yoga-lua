@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 115 tests, 24 skipped`
+- `lua tests/run.lua` -> `ok - 127 tests, 26 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -123,12 +123,14 @@ Known skipped cases:
 - [ ] `absolute_layout_padding`: skipped pending auto-size parent layout.
 - [ ] `absolute_layout_border`: skipped pending border support.
 - [ ] `absolute_layout_column_reverse_margin_border`: skipped pending column-reverse and border support.
+- [ ] `flex_shrink_to_zero`: skipped pending auto cross-size from children.
+- [ ] `flex_grow_less_than_factor_one`: skipped pending partial remaining-space distribution for total `flexGrow` below 1.
 
 Status: partially complete.
 
 ## Milestone 4: Advanced Flex Behavior
 
-- [ ] `flexShrink`.
+- [x] `flexShrink`.
 - [x] `flexBasis`.
 - [x] Love2D visual demo for `flexBasis`.
 - [ ] `flexWrap`.
@@ -137,7 +139,7 @@ Status: partially complete.
 - [ ] Rounding policy.
 - [ ] Baseline alignment.
 - [x] `gap` basic support.
-- [ ] Migrate supported `YGFlexTest` subset.
+- [x] Migrated supported subset of `YGFlexTest`.
 - [ ] Migrate supported `YGFlexWrapTest` subset.
 - [ ] Migrate supported `YGGapTest` subset.
 - [ ] Migrate supported `YGAspectRatioTest` subset.
