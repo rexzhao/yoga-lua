@@ -48,4 +48,18 @@ return function(runner, helper)
     helper.assert_layout(root.children[1], { left = 0, top = 0, width = 125, height = 40 }, "first percent basis")
     helper.assert_layout(root.children[2], { left = 125, top = 0, width = 75, height = 40 }, "second percent basis")
   end)
+
+  runner:test("flex grow below one consumes partial remaining space", function()
+    local root = yoga.node({ width = 200, height = 500 }, {
+      yoga.node({ flexGrow = 0.2, flexBasis = 40 }),
+      yoga.node({ flexGrow = 0.2 }),
+      yoga.node({ flexGrow = 0.4 }),
+    })
+
+    yoga.calculateLayout(root)
+
+    helper.assert_layout(root.children[1], { left = 0, top = 0, width = 200, height = 132 }, "first partial grow child")
+    helper.assert_layout(root.children[2], { left = 0, top = 132, width = 200, height = 92 }, "second partial grow child")
+    helper.assert_layout(root.children[3], { left = 0, top = 224, width = 200, height = 184 }, "third partial grow child")
+  end)
 end

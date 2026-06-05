@@ -163,7 +163,19 @@ return {
   {
     name = "flex_grow_less_than_factor_one",
     source = source("flex_grow_less_than_factor_one"),
-    skip = true,
-    unsupportedReason = "partial remaining-space distribution for total flexGrow below 1 is not implemented",
+    root = {
+      style = { width = 200, height = 500 },
+      children = {
+        { style = { flexGrow = 0.2, flexBasis = 40 } },
+        { style = { flexGrow = 0.2 } },
+        { style = { flexGrow = 0.4 } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 200, height = 500 },
+      { left = 0, top = 0, width = 200, height = 132 },
+      { left = 0, top = 132, width = 200, height = 92 },
+      { left = 0, top = 224, width = 200, height = 184 },
+    },
   },
 }

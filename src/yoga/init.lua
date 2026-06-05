@@ -345,11 +345,12 @@ local function build_child_specs(children, direction, gap, inner_width, inner_he
   end
 
   local remaining = available_main - used_main
+  local grow_factor = math.max(total_grow, 1)
 
   for _, spec in ipairs(specs) do
     spec.main = spec.base_main
     if remaining > 0 and total_grow > 0 and spec.grow > 0 then
-      spec.main = spec.main + remaining * spec.grow / total_grow
+      spec.main = spec.main + remaining * spec.grow / grow_factor
     end
   end
 
@@ -638,9 +639,11 @@ local function distribute_line_main(line, direction, gap, available_main)
   local remaining = available_main - used_main
 
   if remaining > 0 and total_grow > 0 then
+    local grow_factor = math.max(total_grow, 1)
+
     for _, spec in ipairs(line.items) do
       if spec.grow > 0 then
-        spec.main = spec.main + remaining * spec.grow / total_grow
+        spec.main = spec.main + remaining * spec.grow / grow_factor
       end
     end
 
