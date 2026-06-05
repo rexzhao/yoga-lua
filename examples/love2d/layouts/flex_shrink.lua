@@ -75,9 +75,6 @@ return {
         height = 60,
         flexShrink = 1,
       },
-      column_fixed = {
-        height = 60,
-      },
     })
 
     local function demo_row(name, stage_style, children)
@@ -108,10 +105,9 @@ return {
         with_styles(styles, "basis_shrink", { debugName = "basis 520 shrink 1", fill = palette.accent }),
         with_styles(styles, "basis_fixed", { debugName = "basis 260", fill = palette.green }),
       }),
-      demo_row("column shrink", styles.column_stage, {
-        with_styles(styles, "column_fixed", { debugName = "height 60", fill = palette.gold }),
-        with_styles(styles, "column_shrink", { debugName = "height 60 shrink 1", fill = palette.accent }),
-        with_styles(styles, "column_fixed", { debugName = "height 60", fill = palette.red }),
+      demo_row("column equal shrink", styles.column_stage, {
+        with_styles(styles, "column_shrink", { debugName = "height 60 shrink 1", fill = palette.gold }),
+        with_styles(styles, "column_shrink", { debugName = "height 60 shrink 1", fill = palette.red }),
       }),
     })
   end,
