@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 291 tests, 3 skipped`
+- `lua tests/run.lua` -> `ok - 292 tests, 3 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -130,11 +130,11 @@ Status: partially complete.
 - [x] Nested wrapped children contribute to auto content size.
 - [x] Love2D visual demo for basic row `flexWrap`.
 - [x] Love2D visual demo for `flexWrap = "wrap-reverse"`.
-- [ ] `alignContent`.
+- [x] `alignContent`.
 - [x] Basic row-wrap `alignContent` values.
 - [x] `alignContent` nowrap and single-line wrap behavior matches Yoga.
 - [x] Love2D visual demo for `alignContent`.
-- [x] Migrated supported subset of `YGAlignContentTest`.
+- [x] Migrated complete LTR `YGAlignContentTest` set.
 - [x] Migrated supported `YGAlignContentTest` stretch row subset.
 - [x] Migrated `YGAlignContentTest` stretch row children and flex variants.
 - [x] `alignContent: stretch` line sizing respects child min/max cross-axis constraints.
@@ -165,7 +165,7 @@ Status: partially complete.
 - [x] Migrate supported `YGAspectRatioTest` subset.
 - [x] Migrate supported `YGRoundingTest` subset.
 
-Status: partially complete.
+Status: complete for the supported Milestone 4 scope; upstream-disabled skipped fixtures remain tracked under known skipped cases.
 
 ## Milestone 5: Runtime Polish
 

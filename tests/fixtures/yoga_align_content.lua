@@ -169,6 +169,37 @@ local function flex_start_column_case(name, height, children, expected)
   }
 end
 
+local function stretch_column_default()
+  return {
+    name = "align_content_stretch",
+    source = source("align_content_stretch"),
+    root = {
+      style = {
+        position = "absolute",
+        width = 150,
+        height = 100,
+        flexWrap = "wrap",
+        alignContent = "stretch",
+      },
+      children = {
+        { style = { width = 50 } },
+        { style = { width = 50 } },
+        { style = { width = 50 } },
+        { style = { width = 50 } },
+        { style = { width = 50 } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 150, height = 100 },
+      { left = 0, top = 0, width = 50, height = 0 },
+      { left = 0, top = 0, width = 50, height = 0 },
+      { left = 0, top = 0, width = 50, height = 0 },
+      { left = 0, top = 0, width = 50, height = 0 },
+      { left = 0, top = 0, width = 50, height = 0 },
+    },
+  }
+end
+
 local function root_cross_axis_case(name, align_content, cross_style, root_height, first_top, second_top, child_left)
   local style = {
     position = "absolute",
@@ -459,6 +490,7 @@ return {
     { left = 0, top = 80, width = 50, height = 40 },
     { left = 0, top = 120, width = 50, height = 0 },
   }),
+  stretch_column_default(),
   stretch_row("align_content_stretch_row", {
     { style = { width = 50 } },
     { style = { width = 50 } },
