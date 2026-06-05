@@ -203,6 +203,6 @@ Status: complete for the supported Milestone 4 scope; upstream-disabled skipped 
 - [x] Benchmarks for 100 nodes.
 - [x] Benchmarks for 1,000 nodes.
 - [x] Benchmarks for 5,000 nodes.
-- [ ] Virtualized list scroll and jump benchmark.
+- [x] Virtualized list scroll and jump benchmark.
 
-Status: in progress; dirty marking, layout/measure caching, hadOverflow, scroll measure modes, layout benchmarks, and UI virtualized lists are implemented, while full overflow semantics and virtualized list benchmarking remain.
+Status: in progress; dirty marking, layout/measure caching, hadOverflow, scroll measure modes, layout benchmarks, and UI virtualized lists are implemented, while full overflow semantics remain.
