@@ -105,4 +105,32 @@ return {
     { left = 0, top = 80, width = 50, height = 20 },
     { left = 50, top = 80, width = 50, height = 20 },
   }),
+  stretch_row("align_content_stretch_row_with_margin", {
+    { style = { width = 50 } },
+    { style = { width = 50, margin = 10 } },
+    { style = { width = 50 } },
+    { style = { width = 50, margin = 10 } },
+    { style = { width = 50 } },
+  }, {
+    { left = 0, top = 0, width = 150, height = 100 },
+    { left = 0, top = 0, width = 50, height = 40 },
+    { left = 60, top = 10, width = 50, height = 20 },
+    { left = 0, top = 40, width = 50, height = 40 },
+    { left = 60, top = 50, width = 50, height = 20 },
+    { left = 0, top = 80, width = 50, height = 20 },
+  }),
+  stretch_row("align_content_stretch_row_with_padding", {
+    { style = { width = 50 } },
+    { style = { width = 50, padding = 10 } },
+    { style = { width = 50 } },
+    { style = { width = 50, padding = 10 } },
+    { style = { width = 50 } },
+  }, {
+    { left = 0, top = 0, width = 150, height = 100 },
+    { left = 0, top = 0, width = 50, height = 50 },
+    { left = 50, top = 0, width = 50, height = 50 },
+    { left = 100, top = 0, width = 50, height = 50 },
+    { left = 0, top = 50, width = 50, height = 50 },
+    { left = 50, top = 50, width = 50, height = 50 },
+  }),
 }
