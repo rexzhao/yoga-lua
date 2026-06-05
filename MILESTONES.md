@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 69 tests, 6 skipped`
+- `lua tests/run.lua` -> `ok - 75 tests, 14 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -90,6 +90,7 @@ Status: mostly complete; explicit tests/examples for function components and eve
 - [x] Migrated supported subset of `YGAlignSelfTest`.
 - [x] Migrated supported subset of `YGPercentageTest`.
 - [x] Migrated supported subset of `YGMinMaxDimensionTest`.
+- [x] Migrated supported subset of `YGDisplayTest`.
 - [ ] Migrate `YGAbsolutePositionTest`.
 
 Known skipped cases:
@@ -100,6 +101,14 @@ Known skipped cases:
 - [ ] `percentage_position_left_top`: skipped pending relative position offsets.
 - [ ] `percentage_flex_basis`: skipped pending `flexBasis`.
 - [ ] `percentage_absolute_position`: skipped pending absolute positioning.
+- [ ] `display_contents`: skipped pending `display = "contents"`.
+- [ ] `display_contents_fixed_size`: skipped pending `display = "contents"`.
+- [ ] `display_contents_with_margin`: skipped pending `display = "contents"`.
+- [ ] `display_contents_with_padding`: skipped pending `display = "contents"`.
+- [ ] `display_contents_with_position`: skipped pending `display = "contents"`.
+- [ ] `display_contents_with_position_absolute`: skipped pending `display = "contents"`.
+- [ ] `display_contents_nested`: skipped pending `display = "contents"`.
+- [ ] `display_contents_with_siblings`: skipped pending `display = "contents"`.
 
 Status: partially complete.
 

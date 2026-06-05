@@ -12,4 +12,5 @@ return function(runner, helper)
   fixture_runner.register(runner, helper, require("fixtures.percentage_spacing"))
   fixture_runner.register(runner, helper, require("fixtures.yoga_percentage"))
   fixture_runner.register(runner, helper, require("fixtures.yoga_minmax_dimension"))
+  fixture_runner.register(runner, helper, require("fixtures.yoga_display"))
 end
