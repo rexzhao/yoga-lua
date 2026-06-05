@@ -32,7 +32,7 @@ return function(runner, helper)
     helper.assert_layout(child, { left = 40, top = 80, width = 180, height = 220 }, "percentage relative child")
   end)
 
-  runner:test("relative offset moves descendant subtree", function()
+  runner:test("relative offset keeps descendant coordinates parent-relative", function()
     local grandchild = yoga.node({ width = 10, height = 10 })
     local child = yoga.node({ width = 50, height = 50, left = 12, top = 8 }, { grandchild })
     local root = yoga.node({ width = 100, height = 100 }, { child })
@@ -40,6 +40,6 @@ return function(runner, helper)
     yoga.calculateLayout(root)
 
     helper.assert_layout(child, { left = 12, top = 8, width = 50, height = 50 }, "relative parent")
-    helper.assert_layout(grandchild, { left = 12, top = 8, width = 10, height = 10 }, "relative grandchild")
+    helper.assert_layout(grandchild, { left = 0, top = 0, width = 10, height = 10 }, "relative grandchild")
   end)
 end

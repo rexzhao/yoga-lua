@@ -36,7 +36,7 @@ The core data model:
 
 - `style`: layout inputs.
 - `children`: ordered child nodes.
-- `layout`: computed rectangle.
+- `layout`: computed rectangle; `left` and `top` are parent-relative like Yoga, and renderers can derive absolute/screen rectangles by accumulating ancestor offsets.
 - `measure`: optional callback for text/image intrinsic size.
 - `dirty`: whether layout needs recomputation.
 

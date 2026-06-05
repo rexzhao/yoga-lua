@@ -183,19 +183,83 @@ return {
   {
     name = "rounding_inner_node_controversy_horizontal",
     source = source("rounding_inner_node_controversy_horizontal"),
-    skip = true,
-    unsupportedReason = "upstream expects parent-relative layout coordinates for nested nodes",
+    root = {
+      style = { width = 320, flexDirection = "row" },
+      children = {
+        { style = { height = 10, flexGrow = 1 } },
+        {
+          style = { height = 10, flexGrow = 1 },
+          children = {
+            { style = { height = 10, flexGrow = 1 } },
+          },
+        },
+        { style = { height = 10, flexGrow = 1 } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 320, height = 10 },
+      { left = 0, top = 0, width = 107, height = 10 },
+      { left = 107, top = 0, width = 106, height = 10 },
+      { left = 0, top = 0, width = 106, height = 10 },
+      { left = 213, top = 0, width = 107, height = 10 },
+    },
   },
   {
     name = "rounding_inner_node_controversy_vertical",
     source = source("rounding_inner_node_controversy_vertical"),
-    skip = true,
-    unsupportedReason = "upstream expects parent-relative layout coordinates for nested nodes",
+    root = {
+      style = { height = 320 },
+      children = {
+        { style = { width = 10, flexGrow = 1 } },
+        {
+          style = { width = 10, flexGrow = 1 },
+          children = {
+            { style = { width = 10, flexGrow = 1 } },
+          },
+        },
+        { style = { width = 10, flexGrow = 1 } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 10, height = 320 },
+      { left = 0, top = 0, width = 10, height = 107 },
+      { left = 0, top = 107, width = 10, height = 106 },
+      { left = 0, top = 0, width = 10, height = 106 },
+      { left = 0, top = 213, width = 10, height = 107 },
+    },
   },
   {
     name = "rounding_inner_node_controversy_combined",
     source = source("rounding_inner_node_controversy_combined"),
-    skip = true,
-    unsupportedReason = "upstream expects parent-relative layout coordinates for nested nodes",
+    root = {
+      style = { width = 640, height = 320, flexDirection = "row" },
+      children = {
+        { style = { height = "100%", flexGrow = 1 } },
+        {
+          style = { height = "100%", flexGrow = 1, flexDirection = "column" },
+          children = {
+            { style = { width = "100%", flexGrow = 1 } },
+            {
+              style = { width = "100%", flexGrow = 1 },
+              children = {
+                { style = { width = "100%", flexGrow = 1 } },
+              },
+            },
+            { style = { width = "100%", flexGrow = 1 } },
+          },
+        },
+        { style = { height = "100%", flexGrow = 1 } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 640, height = 320 },
+      { left = 0, top = 0, width = 213, height = 320 },
+      { left = 213, top = 0, width = 214, height = 320 },
+      { left = 0, top = 0, width = 214, height = 107 },
+      { left = 0, top = 107, width = 214, height = 106 },
+      { left = 0, top = 0, width = 214, height = 106 },
+      { left = 0, top = 213, width = 214, height = 107 },
+      { left = 427, top = 0, width = 213, height = 320 },
+    },
   },
 }

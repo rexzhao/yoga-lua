@@ -402,8 +402,8 @@ return {
     expect = {
       { left = 0, top = 0, width = 220, height = 220 },
       { left = 10, top = 10, width = 200, height = 200 },
-      { left = 10, top = 10, width = 200, height = 200 },
-      { left = 60, top = 60, width = 50, height = 50 },
+      { left = 0, top = 0, width = 200, height = 200 },
+      { left = 50, top = 50, width = 50, height = 50 },
     },
   },
   {

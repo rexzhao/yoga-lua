@@ -64,13 +64,9 @@ local function collect_layout_items(children, out)
   return out
 end
 
-local function offset_layout_tree(node, dx, dy)
+local function offset_layout_box(node, dx, dy)
   node.layout.left = node.layout.left + dx
   node.layout.top = node.layout.top + dy
-
-  for _, child in ipairs(node.children or {}) do
-    offset_layout_tree(child, dx, dy)
-  end
 end
 
 local function round_to_pixel_grid(value)
@@ -89,23 +85,30 @@ local function round_to_pixel_grid(value)
   return rounded
 end
 
-local function round_layout_tree(node)
+local function round_layout_tree(node, absolute_left, absolute_top)
+  absolute_left = absolute_left or 0
+  absolute_top = absolute_top or 0
+
   local raw_left = node.layout.left
   local raw_top = node.layout.top
   local raw_width = node.layout.width
   local raw_height = node.layout.height
-  local rounded_left = round_to_pixel_grid(raw_left)
-  local rounded_top = round_to_pixel_grid(raw_top)
-  local rounded_right = round_to_pixel_grid(raw_left + raw_width)
-  local rounded_bottom = round_to_pixel_grid(raw_top + raw_height)
+  local node_absolute_left = absolute_left + raw_left
+  local node_absolute_top = absolute_top + raw_top
+  local rounded_parent_left = round_to_pixel_grid(absolute_left)
+  local rounded_parent_top = round_to_pixel_grid(absolute_top)
+  local rounded_left = round_to_pixel_grid(node_absolute_left)
+  local rounded_top = round_to_pixel_grid(node_absolute_top)
+  local rounded_right = round_to_pixel_grid(node_absolute_left + raw_width)
+  local rounded_bottom = round_to_pixel_grid(node_absolute_top + raw_height)
 
-  node.layout.left = rounded_left
-  node.layout.top = rounded_top
+  node.layout.left = rounded_left - rounded_parent_left
+  node.layout.top = rounded_top - rounded_parent_top
   node.layout.width = math.max(0, rounded_right - rounded_left)
   node.layout.height = math.max(0, rounded_bottom - rounded_top)
 
   for _, child in ipairs(node.children or {}) do
-    round_layout_tree(child)
+    round_layout_tree(child, node_absolute_left, node_absolute_top)
   end
 end
 
@@ -441,7 +444,7 @@ end
 local function node_baseline(node)
   for _, child in ipairs(node.children or {}) do
     if not is_display_none(child) then
-      return child.layout.top - node.layout.top + node_baseline(child)
+      return child.layout.top + node_baseline(child)
     end
   end
 
@@ -472,7 +475,7 @@ local function baseline_align_children(parent_style, specs, direction)
 
   for _, spec in ipairs(specs) do
     if spec.baseline then
-      offset_layout_tree(spec.child, 0, max_baseline - spec.baseline)
+      offset_layout_box(spec.child, 0, max_baseline - spec.baseline)
     end
   end
 end
@@ -647,7 +650,7 @@ local function absolute_axis_position(parent_style, child_style, direction, axis
   return origin + absolute_default_offset(parent_style, child_style, direction, axis, available, size or 0)
 end
 
-local function layout_absolute_node(child, parent_style, parent_left, parent_top, padding, inner_width, inner_height)
+local function layout_absolute_node(child, parent_style, padding, inner_width, inner_height)
   local style = child.style or {}
   local measured = measure_node(child, inner_width, inner_height)
   local left_offset = resolve_value(style.left, inner_width)
@@ -657,8 +660,8 @@ local function layout_absolute_node(child, parent_style, parent_left, parent_top
   local width = absolute_axis_size(style, "width", inner_width, left_offset, right_offset, measured and measured.width)
   local height = absolute_axis_size(style, "height", inner_height, top_offset, bottom_offset, measured and measured.height)
   local direction = parent_style.flexDirection or "column"
-  local origin_left = parent_left + padding.left
-  local origin_top = parent_top + padding.top
+  local origin_left = padding.left
+  local origin_top = padding.top
   local child_left =
     absolute_axis_position(parent_style, style, direction, "horizontal", origin_left, inner_width, width, left_offset, right_offset)
   local child_top =
@@ -862,7 +865,7 @@ local function cross_axis_layout_in_line(parent_style, child_style, direction, m
   return cross_axis_layout(parent_style, child_style, direction, margin, line_cross, line_cross, measured, main)
 end
 
-local function layout_wrapped_children(node, left, top, padding, inner_width, inner_height, auto_cross_size)
+local function layout_wrapped_children(node, padding, inner_width, inner_height, auto_cross_size)
   local style = node.style or {}
   local direction = style.flexDirection or "column"
   local gap = main_axis_gap(style, direction)
@@ -937,8 +940,8 @@ local function layout_wrapped_children(node, left, top, padding, inner_width, in
       local child = spec.child
       local child_style = child.style or {}
       local margin = spec.margin
-      local child_left = left + padding.left
-      local child_top = top + padding.top
+      local child_left = padding.left
+      local child_top = padding.top
 
       if direction == "row" then
         local child_height, cross_offset =
@@ -977,7 +980,7 @@ local function layout_wrapped_children(node, left, top, padding, inner_width, in
       end
 
       local relative_left, relative_top = relative_offsets(child_style, inner_width, inner_height)
-      offset_layout_tree(child, relative_left, relative_top)
+      offset_layout_box(child, relative_left, relative_top)
     end
 
     cross_cursor = cross_cursor + line.cross + cross_between
@@ -993,7 +996,7 @@ local function layout_wrapped_children(node, left, top, padding, inner_width, in
     if spec and spec.hidden then
       zero_layout_tree(child)
     elseif spec and spec.absolute then
-      layout_absolute_node(child, style, left, top, padding, inner_width, inner_height)
+      layout_absolute_node(child, style, padding, inner_width, inner_height)
     end
   end
 
@@ -1053,7 +1056,7 @@ function layout_node(node, left, top, available_width, available_height, owner_w
   if style.flexWrap == "wrap" then
     local auto_cross_size = (direction == "row" and explicit_height == nil and available_height == nil and not options.useAvailableHeight)
       or (direction == "column" and explicit_width == nil and available_width == nil and not options.useAvailableWidth)
-    layout_wrapped_children(node, left, top, padding, inner_width, inner_height, auto_cross_size)
+    layout_wrapped_children(node, padding, inner_width, inner_height, auto_cross_size)
     return node
   end
 
@@ -1079,11 +1082,11 @@ function layout_node(node, left, top, available_width, available_height, owner_w
     if spec.hidden then
       zero_layout_tree(child)
     elseif spec.absolute then
-      layout_absolute_node(child, style, left, top, padding, inner_width, inner_height)
+      layout_absolute_node(child, style, padding, inner_width, inner_height)
     else
       local margin = spec.margin
-      local child_left = left + padding.left
-      local child_top = top + padding.top
+      local child_left = padding.left
+      local child_top = padding.top
 
       if direction == "row" then
         local child_height, cross_offset =
@@ -1102,7 +1105,7 @@ function layout_node(node, left, top, available_width, available_height, owner_w
           { useAvailableWidth = true }
         )
         local relative_left, relative_top = relative_offsets(child_style, inner_width, inner_height)
-        offset_layout_tree(child, relative_left, relative_top)
+        offset_layout_box(child, relative_left, relative_top)
         cursor = cursor + margin.left + child.layout.width + margin.right + between
       else
         local child_width, cross_offset =
@@ -1121,7 +1124,7 @@ function layout_node(node, left, top, available_width, available_height, owner_w
           { useAvailableHeight = true }
         )
         local relative_left, relative_top = relative_offsets(child_style, inner_width, inner_height)
-        offset_layout_tree(child, relative_left, relative_top)
+        offset_layout_box(child, relative_left, relative_top)
         cursor = cursor + margin.top + child.layout.height + margin.bottom + between
       end
     end

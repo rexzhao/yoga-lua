@@ -48,7 +48,7 @@ return {
       { left = 0, top = 0, width = 100, height = 100 },
       { left = 0, top = 0, width = 50, height = 50 },
       { left = 50, top = 40, width = 50, height = 20 },
-      { left = 50, top = 40, width = 50, height = 10 },
+      { left = 0, top = 0, width = 50, height = 10 },
     },
   },
 }

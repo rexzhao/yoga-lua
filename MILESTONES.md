@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 206 tests, 20 skipped`
+- `lua tests/run.lua` -> `ok - 209 tests, 17 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -100,6 +100,7 @@ Status: complete.
 - [x] Migrated supported subset of `YGMinMaxDimensionTest`.
 - [x] Migrated supported subset of `YGDisplayTest`.
 - [x] Migrated supported subset of `YGAbsolutePositionTest`.
+- [x] Layout `left`/`top` values are Yoga-compatible parent-relative coordinates.
 
 Known skipped cases:
 
@@ -120,10 +121,6 @@ Known skipped cases:
 - [ ] `wrap_reverse_row_align_content_flex_start`: skipped pending wrap-reverse.
 - [ ] `rounding_fractial_input_3`: skipped pending root top offset support.
 - [ ] `rounding_fractial_input_4`: skipped pending root top offset support.
-- [ ] `rounding_inner_node_controversy_horizontal`: skipped pending parent-relative fixture coordinates for nested rounding cases.
-- [ ] `rounding_inner_node_controversy_vertical`: skipped pending parent-relative fixture coordinates for nested rounding cases.
-- [ ] `rounding_inner_node_controversy_combined`: skipped pending parent-relative fixture coordinates for nested rounding cases.
-
 Status: partially complete.
 
 ## Milestone 4: Advanced Flex Behavior
@@ -145,7 +142,7 @@ Status: partially complete.
 - [x] `aspectRatio`.
 - [x] Love2D visual demo for `aspectRatio`.
 - [x] Rounding policy.
-- [x] Nested rounding preserves project absolute-coordinate layout semantics.
+- [x] Nested rounding preserves Yoga parent-relative layout semantics.
 - [x] Baseline alignment.
 - [x] Love2D visual demo for baseline alignment.
 - [x] `gap` basic support.

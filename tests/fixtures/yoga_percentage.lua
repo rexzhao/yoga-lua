@@ -39,7 +39,7 @@ return {
     expect = {
       { left = 0, top = 0, width = 200, height = 100 },
       { left = 20, top = 20, width = 160, height = 60 },
-      { left = 20, top = 20, width = 10, height = 10 },
+      { left = 0, top = 0, width = 10, height = 10 },
     },
   },
   {
