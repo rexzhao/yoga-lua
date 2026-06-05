@@ -111,6 +111,43 @@ local function column_reverse_spacing(name, style, top)
   }
 end
 
+local function reverse_position(name, direction, position_style, child_left, child_top, nested_lefts, nested_top)
+  local child_style = {
+    width = 100,
+    height = 100,
+    flexDirection = direction,
+  }
+
+  for key, value in pairs(position_style) do
+    child_style[key] = value
+  end
+
+  return {
+    name = name,
+    source = source(name),
+    root = {
+      style = { position = "absolute", width = 100, height = 100 },
+      children = {
+        {
+          style = child_style,
+          children = {
+            { style = { width = 10 } },
+            { style = { width = 10 } },
+            { style = { width = 10 } },
+          },
+        },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 100, height = 100 },
+      { left = child_left, top = child_top, width = 100, height = 100 },
+      { left = nested_lefts[1], top = nested_top, width = 10, height = direction == "row-reverse" and 100 or 0 },
+      { left = nested_lefts[2], top = nested_top, width = 10, height = direction == "row-reverse" and 100 or 0 },
+      { left = nested_lefts[3], top = nested_top, width = 10, height = direction == "row-reverse" and 100 or 0 },
+    },
+  }
+end
+
 return {
   column_case("flex_direction_column", nil, { 0, 10, 20 }),
   row_case("flex_direction_row", "row", { 0, 10, 20 }),
@@ -128,4 +165,16 @@ return {
   row_reverse_spacing("flex_direction_row_reverse_border_right", { borderRight = 100 }, { -10, -20, -30 }),
   column_reverse_spacing("flex_direction_column_reverse_border_top", { borderTop = 100 }, 100),
   column_reverse_spacing("flex_direction_column_reverse_border_bottom", { borderBottom = 100 }, 0),
+  reverse_position("flex_direction_row_reverse_pos_left", "row-reverse", { left = 100 }, 100, 0, { 90, 80, 70 }, 0),
+  reverse_position("flex_direction_row_reverse_pos_right", "row-reverse", { right = 100 }, -100, 0, { 90, 80, 70 }, 0),
+  reverse_position("flex_direction_column_reverse_pos_top", "column-reverse", { top = 100 }, 0, 100, { 0, 0, 0 }, 100),
+  reverse_position(
+    "flex_direction_column_reverse_pos_bottom",
+    "column-reverse",
+    { bottom = 100 },
+    0,
+    -100,
+    { 0, 0, 0 },
+    100
+  ),
 }
