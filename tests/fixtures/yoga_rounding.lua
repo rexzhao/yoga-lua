@@ -184,18 +184,18 @@ return {
     name = "rounding_inner_node_controversy_horizontal",
     source = source("rounding_inner_node_controversy_horizontal"),
     skip = true,
-    unsupportedReason = "auto cross-size from children is not implemented",
+    unsupportedReason = "upstream expects parent-relative layout coordinates for nested nodes",
   },
   {
     name = "rounding_inner_node_controversy_vertical",
     source = source("rounding_inner_node_controversy_vertical"),
     skip = true,
-    unsupportedReason = "auto cross-size from children is not implemented",
+    unsupportedReason = "upstream expects parent-relative layout coordinates for nested nodes",
   },
   {
     name = "rounding_inner_node_controversy_combined",
     source = source("rounding_inner_node_controversy_combined"),
     skip = true,
-    unsupportedReason = "auto cross-size from nested children is not implemented",
+    unsupportedReason = "upstream expects parent-relative layout coordinates for nested nodes",
   },
 }

@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 184 tests, 35 skipped`
+- `lua tests/run.lua` -> `ok - 185 tests, 35 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -155,6 +155,7 @@ Status: partially complete.
 - [x] `aspectRatio`.
 - [x] Love2D visual demo for `aspectRatio`.
 - [x] Rounding policy.
+- [x] Nested rounding preserves project absolute-coordinate layout semantics.
 - [ ] Baseline alignment.
 - [x] `gap` basic support.
 - [x] `rowGap` and `columnGap` main-axis support without wrapping.
