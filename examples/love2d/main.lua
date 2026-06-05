@@ -7,6 +7,7 @@ local root
 local current_case = 1
 local mode = "menu"
 local hovered
+local hovered_rect
 local menu_scroll = 0
 local menu_scroll_max = 0
 local screenshot_path
@@ -130,10 +131,6 @@ end
 local function offset_layout(node, dx, dy)
   node.layout.left = node.layout.left + dx
   node.layout.top = node.layout.top + dy
-
-  for _, child in ipairs(node.children or {}) do
-    offset_layout(child, dx, dy)
-  end
 end
 
 local function offset_children(node, dx, dy)
@@ -153,12 +150,12 @@ local function update_menu_scroll_limits()
     return
   end
 
-  local content_bottom = root.layout.top
+  local content_bottom = 0
   for _, child in ipairs(root.children or {}) do
     content_bottom = math.max(content_bottom, child.layout.top + child.layout.height)
   end
 
-  menu_scroll_max = math.max(0, content_bottom - (root.layout.top + root.layout.height))
+  menu_scroll_max = math.max(0, content_bottom - root.layout.height)
   clamp_menu_scroll()
 end
 
@@ -265,42 +262,50 @@ local function save_screenshot(path, image_data)
   love.event.quit(0)
 end
 
-local function inside(node, x, y)
+local function absolute_rect(node, parent_left, parent_top)
   local layout = node.layout
-  if layout.width <= 0 or layout.height <= 0 then
+  return (parent_left or 0) + layout.left, (parent_top or 0) + layout.top, layout.width, layout.height
+end
+
+local function point_in_rect(x, y, left, top, width, height)
+  if width <= 0 or height <= 0 then
     return false
   end
 
-  return x >= layout.left
-    and y >= layout.top
-    and x <= layout.left + layout.width
-    and y <= layout.top + layout.height
+  return x >= left and y >= top and x <= left + width and y <= top + height
 end
 
-local function find_deepest(node, x, y)
-  local layout = node.layout
-  local has_box = layout.width > 0 and layout.height > 0
-  local hit = has_box and inside(node, x, y)
+local function find_deepest(node, x, y, parent_left, parent_top)
+  local left, top, width, height = absolute_rect(node, parent_left, parent_top)
+  local has_box = width > 0 and height > 0
+  local hit = has_box and point_in_rect(x, y, left, top, width, height)
 
   if hit or not has_box then
     for index = #(node.children or {}), 1, -1 do
-      local child = find_deepest(node.children[index], x, y)
+      local child, rect = find_deepest(node.children[index], x, y, left, top)
       if child then
-        return child
+        return child, rect
       end
     end
   end
 
-  return hit and node or nil
+  if hit then
+    return node, { left = left, top = top, width = width, height = height }
+  end
+
+  return nil
 end
 
-local function find_case_at(node, x, y)
-  if not inside(node, x, y) then
+local function find_case_at(node, x, y, parent_left, parent_top)
+  local left, top, width, height = absolute_rect(node, parent_left, parent_top)
+  local has_box = width > 0 and height > 0
+
+  if has_box and not point_in_rect(x, y, left, top, width, height) then
     return nil
   end
 
   for index = #(node.children or {}), 1, -1 do
-    local child_case = find_case_at(node.children[index], x, y)
+    local child_case = find_case_at(node.children[index], x, y, left, top)
     if child_case then
       return child_case
     end
@@ -334,8 +339,8 @@ local function ensure_current_case_visible()
   local padding = 8
   local viewport_top = root.layout.top + padding
   local viewport_bottom = root.layout.top + root.layout.height - padding
-  local item_top = selected.layout.top
-  local item_bottom = selected.layout.top + selected.layout.height
+  local item_top = root.layout.top + selected.layout.top
+  local item_bottom = item_top + selected.layout.height
   local next_scroll = menu_scroll
 
   if item_top < viewport_top then
@@ -420,7 +425,7 @@ local function node_label(node, include_containers)
   return nil
 end
 
-local function draw_node_label(node)
+local function draw_node_label(node, left, top)
   local label = node_label(node, false)
   if not label then
     return
@@ -428,16 +433,16 @@ local function draw_node_label(node)
 
   local layout = node.layout
   local props = node.props or {}
-  draw_label(label, layout.left + 8, layout.top + 7, math.max(20, layout.width - 16), props.textColor)
+  draw_label(label, left + 8, top + 7, math.max(20, layout.width - 16), props.textColor)
 end
 
 local function hover_label(node)
   return node_label(node, true) or node.type or "node"
 end
 
-local function draw_node(node, depth)
-  local layout = node.layout
-  local has_box = layout.width > 0 and layout.height > 0
+local function draw_node(node, depth, parent_left, parent_top)
+  local left, top, width, height = absolute_rect(node, parent_left, parent_top)
+  local has_box = width > 0 and height > 0
   local props = node.props or {}
 
   if has_box then
@@ -446,17 +451,17 @@ local function draw_node(node, depth)
 
     if fill[4] ~= 0 then
       set_color(fill)
-      love.graphics.rectangle("fill", layout.left, layout.top, layout.width, layout.height, radius, radius)
+      love.graphics.rectangle("fill", left, top, width, height, radius, radius)
     end
 
     if props.stroke ~= false then
       local line = node == hovered and palette.hover or palette.line
       set_color(line)
       love.graphics.setLineWidth(node == hovered and 3 or 1)
-      love.graphics.rectangle("line", layout.left, layout.top, layout.width, layout.height, radius, radius)
+      love.graphics.rectangle("line", left, top, width, height, radius, radius)
     end
 
-    draw_node_label(node)
+    draw_node_label(node, left, top)
   end
 
   local props_clip_children = has_box and props.clipChildren
@@ -465,15 +470,15 @@ local function draw_node(node, depth)
   if props_clip_children then
     previous_x, previous_y, previous_width, previous_height = love.graphics.getScissor()
     love.graphics.setScissor(
-      math.floor(layout.left),
-      math.floor(layout.top),
-      math.ceil(layout.width),
-      math.ceil(layout.height)
+      math.floor(left),
+      math.floor(top),
+      math.ceil(width),
+      math.ceil(height)
     )
   end
 
   for _, child in ipairs(node.children or {}) do
-    draw_node(child, depth + 1)
+    draw_node(child, depth + 1, left, top)
   end
 
   if props_clip_children then
@@ -492,16 +497,15 @@ local function draw_overlay()
   local hint = mode == "menu" and "Wheel, click, Up/Down, Enter" or "Esc to menu"
   local hover_text = ""
 
-  if hovered then
-    local layout = hovered.layout
+  if hovered and hovered_rect then
     local name = hover_label(hovered)
     hover_text = string.format(
       "%s  x=%d y=%d w=%d h=%d",
       name,
-      layout.left,
-      layout.top,
-      layout.width,
-      layout.height
+      hovered_rect.left,
+      hovered_rect.top,
+      hovered_rect.width,
+      hovered_rect.height
     )
   end
 
@@ -536,7 +540,12 @@ end
 
 function love.update()
   local x, y = love.mouse.getPosition()
-  hovered = root and find_deepest(root, x, y) or nil
+  if root then
+    hovered, hovered_rect = find_deepest(root, x, y)
+  else
+    hovered = nil
+    hovered_rect = nil
+  end
 end
 
 function love.draw()

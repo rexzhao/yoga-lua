@@ -59,6 +59,7 @@ Status: mostly complete; broader Yoga fixture migration remains.
 - [x] Love2D overlay is rendered through Yoga.
 - [x] Love2D visualizer can start a named UI with `--case`.
 - [x] Love2D visualizer can save a screenshot with `--screenshot`.
+- [x] Love2D visualizer derives screen rectangles from parent-relative layout results.
 
 Status: complete.
 
