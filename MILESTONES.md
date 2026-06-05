@@ -6,6 +6,7 @@ Current verification:
 
 - `lua tests/run.lua` -> `ok - 434 tests, 2 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
+- `lua benchmarks/run.lua` -> records 100, 1,000, and 5,000 node layout timings in `BENCHMARKS.md`
 
 ## Milestone 0: Project Skeleton
 
@@ -199,9 +200,9 @@ Status: complete for the supported Milestone 4 scope; upstream-disabled skipped 
 - [x] Measure cache tests.
 - [x] Overflow and scroll-container measure mode tests.
 - [x] `hadOverflow` behavior tests.
-- [ ] Benchmarks for 100 nodes.
-- [ ] Benchmarks for 1,000 nodes.
-- [ ] Benchmarks for 5,000 nodes.
+- [x] Benchmarks for 100 nodes.
+- [x] Benchmarks for 1,000 nodes.
+- [x] Benchmarks for 5,000 nodes.
 - [ ] Virtualized list scroll and jump benchmark.
 
-Status: in progress; dirty marking, layout/measure caching, and hadOverflow are implemented, while overflow/scroll, virtualization, and benchmarks remain.
+Status: in progress; dirty marking, layout/measure caching, hadOverflow, scroll measure modes, and layout benchmarks are implemented, while full overflow semantics and virtualization remain.
