@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 82 tests, 13 skipped`
+- `lua tests/run.lua` -> `ok - 103 tests, 26 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -92,7 +92,7 @@ Status: mostly complete; explicit tests/examples for function components and eve
 - [x] Migrated supported subset of `YGPercentageTest`.
 - [x] Migrated supported subset of `YGMinMaxDimensionTest`.
 - [x] Migrated supported subset of `YGDisplayTest`.
-- [ ] Migrate `YGAbsolutePositionTest`.
+- [x] Migrated supported subset of `YGAbsolutePositionTest`.
 
 Known skipped cases:
 
@@ -109,6 +109,19 @@ Known skipped cases:
 - [ ] `display_contents_with_position_absolute`: skipped pending `display = "contents"`.
 - [ ] `display_contents_nested`: skipped pending `display = "contents"`.
 - [ ] `display_contents_with_siblings`: skipped pending `display = "contents"`.
+- [ ] `do_not_clamp_height_of_absolute_node_to_height_of_its_overflow_hidden_parent`: skipped pending absolute auto-size from children.
+- [ ] `absolute_layout_within_border`: skipped pending border support.
+- [ ] `position_root_with_rtl_should_position_withoutdirection`: skipped pending RTL direction support.
+- [ ] `absolute_layout_in_wrap_reverse_column_container`: skipped pending wrap-reverse support.
+- [ ] `absolute_layout_in_wrap_reverse_row_container`: skipped pending wrap-reverse support.
+- [ ] `absolute_layout_in_wrap_reverse_column_container_flex_end`: skipped pending wrap-reverse support.
+- [ ] `absolute_layout_in_wrap_reverse_row_container_flex_end`: skipped pending wrap-reverse support.
+- [ ] `percent_absolute_position_infinite_height`: skipped pending undefined-height percentage handling.
+- [ ] `absolute_layout_percentage_height_based_on_padded_parent`: skipped pending border support.
+- [ ] `absolute_layout_percentage_height_based_on_padded_parent_and_align_items_center`: skipped pending border support.
+- [ ] `absolute_layout_padding`: skipped pending auto-size parent layout.
+- [ ] `absolute_layout_border`: skipped pending border support.
+- [ ] `absolute_layout_column_reverse_margin_border`: skipped pending column-reverse and border support.
 
 Status: partially complete.
 
