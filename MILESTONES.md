@@ -80,6 +80,7 @@ Status: mostly complete; explicit tests/examples for function components and eve
 - [x] `maxWidth`.
 - [x] `minHeight`.
 - [x] `maxHeight`.
+- [x] Love2D visual demo for min/max constraints.
 - [ ] `position = "absolute"`.
 - [ ] Relative position offsets.
 - [ ] `display = "none"`.
