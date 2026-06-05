@@ -61,12 +61,12 @@ return {
         flex = 1,
         height = 104,
         flexDirection = "row",
-        flexWrap = "wrap",
+        flexWrap = "wrap-reverse",
         alignItems = "flex-start",
         paddingHorizontal = 10,
         paddingVertical = 10,
-        columnGap = 22,
-        rowGap = 18,
+        columnGap = 12,
+        rowGap = 8,
       },
       chip = {
         width = 220,
@@ -115,9 +115,9 @@ return {
         with_styles(styles, "small", { debugName = "short", fill = palette.gold }),
         with_styles(styles, "small", { debugName = "next line", fill = palette.red }),
       }),
-      demo_row("columnGap 22 rowGap 18", "gap_stage", {
+      demo_row("wrap reverse", "gap_stage", {
         with_styles(styles, "small", { debugName = "A", fill = palette.accent }),
-        with_styles(styles, "small", { debugName = "B", fill = palette.green }),
+        with_styles(styles, "tall", { debugName = "B", fill = palette.green }),
         with_styles(styles, "small", { debugName = "C", fill = palette.gold }),
         with_styles(styles, "small", { debugName = "D", fill = palette.red }),
       }),

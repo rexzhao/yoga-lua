@@ -131,6 +131,7 @@ Status: partially complete.
 - [x] Basic row `flexWrap = "wrap"` without `alignContent`.
 - [x] `flexWrap = "wrap-reverse"` cross-axis placement.
 - [x] Love2D visual demo for basic row `flexWrap`.
+- [x] Love2D visual demo for `flexWrap = "wrap-reverse"`.
 - [ ] `alignContent`.
 - [x] Basic row-wrap `alignContent` values.
 - [x] Love2D visual demo for `alignContent`.
