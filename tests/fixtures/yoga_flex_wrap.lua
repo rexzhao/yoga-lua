@@ -109,7 +109,23 @@ return {
   {
     name = "wrap_reverse_row_align_content_flex_start",
     source = source("wrap_reverse_row_align_content_flex_start"),
-    skip = true,
-    unsupportedReason = "wrap-reverse is not implemented",
+    root = {
+      style = { width = 100, flexDirection = "row", flexWrap = "wrap-reverse", alignContent = "flex-start" },
+      children = {
+        box(30, 10),
+        box(30, 20),
+        box(30, 30),
+        box(30, 40),
+        box(30, 50),
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 100, height = 80 },
+      { left = 0, top = 70, width = 30, height = 10 },
+      { left = 30, top = 60, width = 30, height = 20 },
+      { left = 60, top = 50, width = 30, height = 30 },
+      { left = 0, top = 10, width = 30, height = 40 },
+      { left = 30, top = 0, width = 30, height = 50 },
+    },
   },
 }

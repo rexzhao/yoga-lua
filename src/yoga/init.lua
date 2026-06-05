@@ -621,19 +621,30 @@ local function absolute_axis_size(style, dimension, owner_size, start_offset, en
 end
 
 local function absolute_default_offset(parent_style, child_style, direction, axis, available, size)
+  local offset
+  local is_cross_axis
+
   if axis == "horizontal" then
     if direction == "row" then
-      return main_axis_offset(parent_style, available, size)
+      offset = main_axis_offset(parent_style, available, size)
+      is_cross_axis = false
+    else
+      offset = cross_axis_offset(parent_style, child_style, available, size)
+      is_cross_axis = true
     end
-
-    return cross_axis_offset(parent_style, child_style, available, size)
+  elseif direction == "row" then
+    offset = cross_axis_offset(parent_style, child_style, available, size)
+    is_cross_axis = true
+  else
+    offset = main_axis_offset(parent_style, available, size)
+    is_cross_axis = false
   end
 
-  if direction == "row" then
-    return cross_axis_offset(parent_style, child_style, available, size)
+  if is_cross_axis and parent_style.flexWrap == "wrap-reverse" then
+    return available - offset - size
   end
 
-  return main_axis_offset(parent_style, available, size)
+  return offset
 end
 
 local function absolute_axis_position(parent_style, child_style, direction, axis, origin, available, size, start_offset, end_offset)
@@ -866,6 +877,7 @@ end
 local function layout_wrapped_children(node, padding, inner_width, inner_height, auto_cross_size)
   local style = node.style or {}
   local direction = style.flexDirection or "column"
+  local wrap_reverse = style.flexWrap == "wrap-reverse"
   local gap = main_axis_gap(style, direction)
   local line_gap = cross_axis_gap(style, direction)
   local available_main = direction == "row" and inner_width or inner_height
@@ -928,11 +940,18 @@ local function layout_wrapped_children(node, padding, inner_width, inner_height,
 
   local cross_leading, cross_between =
     align_content_offsets(style, lines, line_gap, available_cross, auto_cross_size)
-  cross_cursor = cross_leading
+  local used_cross = used_line_cross_size(lines, cross_between)
+  local cross_extent = auto_cross_size and used_cross or available_cross
+  cross_cursor = wrap_reverse and cross_extent - cross_leading or cross_leading
 
   for _, line in ipairs(lines) do
     local leading, between = justify_offsets(style, line.items, direction, gap, inner_width, inner_height)
     local main_cursor = 0
+    local line_cross_start = cross_cursor
+
+    if wrap_reverse then
+      line_cross_start = cross_cursor - line.cross
+    end
 
     for _, spec in ipairs(line.items) do
       local child = spec.child
@@ -944,8 +963,11 @@ local function layout_wrapped_children(node, padding, inner_width, inner_height,
       if direction == "row" then
         local child_height, cross_offset =
           cross_axis_layout_in_line(style, child_style, direction, margin, line.cross, spec.measured, spec.main)
+        if wrap_reverse then
+          cross_offset = line.cross - cross_offset - child_height
+        end
         child_left = child_left + leading + main_cursor + margin.left
-        child_top = child_top + cross_cursor + cross_offset
+        child_top = child_top + line_cross_start + cross_offset
         layout_node(
           child,
           child_left,
@@ -961,7 +983,10 @@ local function layout_wrapped_children(node, padding, inner_width, inner_height,
       else
         local child_width, cross_offset =
           cross_axis_layout_in_line(style, child_style, direction, margin, line.cross, spec.measured, spec.main)
-        child_left = child_left + cross_cursor + cross_offset
+        if wrap_reverse then
+          cross_offset = line.cross - cross_offset - child_width
+        end
+        child_left = child_left + line_cross_start + cross_offset
         child_top = child_top + leading + main_cursor + margin.top
         layout_node(
           child,
@@ -981,10 +1006,14 @@ local function layout_wrapped_children(node, padding, inner_width, inner_height,
       offset_layout_box(child, relative_left, relative_top)
     end
 
-    cross_cursor = cross_cursor + line.cross + cross_between
+    if wrap_reverse then
+      cross_cursor = line_cross_start - cross_between
+    else
+      cross_cursor = cross_cursor + line.cross + cross_between
+    end
   end
 
-  if #lines > 0 then
+  if #lines > 0 and not wrap_reverse then
     cross_cursor = cross_cursor - cross_between
   end
 
@@ -1000,9 +1029,9 @@ local function layout_wrapped_children(node, padding, inner_width, inner_height,
 
   if auto_cross_size then
     if direction == "row" then
-      node.layout.height = padding.top + cross_cursor + padding.bottom
+      node.layout.height = padding.top + used_cross + padding.bottom
     else
-      node.layout.width = padding.left + cross_cursor + padding.right
+      node.layout.width = padding.left + used_cross + padding.right
     end
   end
 end
@@ -1051,7 +1080,7 @@ function layout_node(node, left, top, available_width, available_height, owner_w
   local inner_height = clamp_size(node.layout.height - padding.top - padding.bottom)
   local children = node.children or {}
 
-  if style.flexWrap == "wrap" then
+  if style.flexWrap == "wrap" or style.flexWrap == "wrap-reverse" then
     local auto_cross_size = (direction == "row" and explicit_height == nil and available_height == nil and not options.useAvailableHeight)
       or (direction == "column" and explicit_width == nil and available_width == nil and not options.useAvailableWidth)
     layout_wrapped_children(node, padding, inner_width, inner_height, auto_cross_size)

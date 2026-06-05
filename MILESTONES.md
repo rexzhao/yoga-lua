@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 211 tests, 15 skipped`
+- `lua tests/run.lua` -> `ok - 216 tests, 10 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -107,10 +107,6 @@ Known skipped cases:
 
 - [ ] `absolute_layout_within_border`: skipped pending border support.
 - [ ] `position_root_with_rtl_should_position_withoutdirection`: skipped pending RTL direction support.
-- [ ] `absolute_layout_in_wrap_reverse_column_container`: skipped pending wrap-reverse support.
-- [ ] `absolute_layout_in_wrap_reverse_row_container`: skipped pending wrap-reverse support.
-- [ ] `absolute_layout_in_wrap_reverse_column_container_flex_end`: skipped pending wrap-reverse support.
-- [ ] `absolute_layout_in_wrap_reverse_row_container_flex_end`: skipped pending wrap-reverse support.
 - [ ] `percent_absolute_position_infinite_height`: skipped pending undefined-height percentage handling.
 - [ ] `absolute_layout_percentage_height_based_on_padded_parent`: skipped pending border support.
 - [ ] `absolute_layout_percentage_height_based_on_padded_parent_and_align_items_center`: skipped pending border support.
@@ -119,7 +115,6 @@ Known skipped cases:
 - [ ] `aspect_ratio_does_not_stretch_cross_axis_dim`: skipped because upstream generated test is disabled.
 - [ ] `wrap_column`: skipped because upstream generated test is disabled.
 - [ ] `flex_wrap_wrap_to_child_height`: skipped pending auto content sizing from nested wrapped children.
-- [ ] `wrap_reverse_row_align_content_flex_start`: skipped pending wrap-reverse.
 
 Status: partially complete.
 
@@ -134,6 +129,7 @@ Status: partially complete.
 - [x] Love2D visual demo for `flexBasis`.
 - [ ] `flexWrap`.
 - [x] Basic row `flexWrap = "wrap"` without `alignContent`.
+- [x] `flexWrap = "wrap-reverse"` cross-axis placement.
 - [x] Love2D visual demo for basic row `flexWrap`.
 - [ ] `alignContent`.
 - [x] Basic row-wrap `alignContent` values.

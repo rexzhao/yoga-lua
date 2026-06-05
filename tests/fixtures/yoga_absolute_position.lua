@@ -285,26 +285,58 @@ return {
   {
     name = "absolute_layout_in_wrap_reverse_column_container",
     source = source("absolute_layout_in_wrap_reverse_column_container"),
-    skip = true,
-    unsupportedReason = "wrap-reverse is not implemented",
+    root = {
+      style = { width = 100, height = 100, flexWrap = "wrap-reverse" },
+      children = {
+        { style = { position = "absolute", width = 20, height = 20 } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 100, height = 100 },
+      { left = 80, top = 0, width = 20, height = 20 },
+    },
   },
   {
     name = "absolute_layout_in_wrap_reverse_row_container",
     source = source("absolute_layout_in_wrap_reverse_row_container"),
-    skip = true,
-    unsupportedReason = "wrap-reverse is not implemented",
+    root = {
+      style = { width = 100, height = 100, flexDirection = "row", flexWrap = "wrap-reverse" },
+      children = {
+        { style = { position = "absolute", width = 20, height = 20 } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 100, height = 100 },
+      { left = 0, top = 80, width = 20, height = 20 },
+    },
   },
   {
     name = "absolute_layout_in_wrap_reverse_column_container_flex_end",
     source = source("absolute_layout_in_wrap_reverse_column_container_flex_end"),
-    skip = true,
-    unsupportedReason = "wrap-reverse is not implemented",
+    root = {
+      style = { width = 100, height = 100, flexWrap = "wrap-reverse" },
+      children = {
+        { style = { position = "absolute", alignSelf = "flex-end", width = 20, height = 20 } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 100, height = 100 },
+      { left = 0, top = 0, width = 20, height = 20 },
+    },
   },
   {
     name = "absolute_layout_in_wrap_reverse_row_container_flex_end",
     source = source("absolute_layout_in_wrap_reverse_row_container_flex_end"),
-    skip = true,
-    unsupportedReason = "wrap-reverse is not implemented",
+    root = {
+      style = { width = 100, height = 100, flexDirection = "row", flexWrap = "wrap-reverse" },
+      children = {
+        { style = { position = "absolute", alignSelf = "flex-end", width = 20, height = 20 } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 100, height = 100 },
+      { left = 0, top = 0, width = 20, height = 20 },
+    },
   },
   {
     name = "percent_absolute_position_infinite_height",
