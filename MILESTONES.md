@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 152 tests, 32 skipped`
+- `lua tests/run.lua` -> `ok - 159 tests, 33 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -126,12 +126,13 @@ Known skipped cases:
 - [ ] `absolute_layout_column_reverse_margin_border`: skipped pending column-reverse and border support.
 - [ ] `flex_shrink_to_zero`: skipped pending auto cross-size from children.
 - [ ] `flex_grow_less_than_factor_one`: skipped pending partial remaining-space distribution for total `flexGrow` below 1.
-- [ ] `column_row_gap_wrapping`: skipped pending `flexWrap`.
-- [ ] `column_gap_start_index`: skipped pending `flexWrap`.
 - [ ] `column_gap_justify_space_around`: skipped pending rounding policy.
 - [ ] `column_gap_determines_parent_width`: skipped pending auto main-size from children.
 - [ ] `row_gap_determines_parent_height`: skipped pending auto main-size from children.
 - [ ] `aspect_ratio_does_not_stretch_cross_axis_dim`: skipped because upstream generated test is disabled.
+- [ ] `wrap_column`: skipped because upstream generated test is disabled.
+- [ ] `flex_wrap_wrap_to_child_height`: skipped pending auto content sizing from nested wrapped children.
+- [ ] `wrap_reverse_row_align_content_flex_start`: skipped pending wrap-reverse and `alignContent`.
 
 Status: partially complete.
 
@@ -152,7 +153,7 @@ Status: partially complete.
 - [x] `rowGap` and `columnGap` main-axis support without wrapping.
 - [x] Love2D visual demo for `rowGap` and `columnGap`.
 - [x] Migrated supported subset of `YGFlexTest`.
-- [ ] Migrate supported `YGFlexWrapTest` subset.
+- [x] Migrate supported `YGFlexWrapTest` subset.
 - [x] Migrate supported `YGGapTest` subset.
 - [x] Migrate supported `YGAspectRatioTest` subset.
 - [ ] Migrate supported `YGRoundingTest` subset.
