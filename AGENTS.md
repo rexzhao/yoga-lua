@@ -90,6 +90,8 @@ These rules capture lessons from the `yoga-lua` implementation so far.
 - Put each visual UI layout in its own file under `examples/love2d/layouts/`.
 - Start each Love2D layout file with a Chinese comment describing what the layout demonstrates.
 - The selection screen and overlay should remain Yoga-rendered so the demo exercises the same layout path as application UI.
+- For targeted visual checks, start a demo by name with `.\LOVE\lovec.exe .\examples\love2d --case <layout-id-or-title>`.
+- For screenshot review, save to a temp path with `--screenshot <path>`, inspect the image, and do not commit generated screenshots.
 - When a visual issue appears only at certain aspect ratios, treat it as a layout demo problem until proven otherwise, and test the fix with the smoke command.
 
 ---
