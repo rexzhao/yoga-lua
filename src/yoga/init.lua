@@ -1055,10 +1055,16 @@ local function justify_offsets(style, specs, direction, gap, inner_width, inner_
     local space = remaining / visible_count
     leading = space / 2
     between = gap + space
+    if direction == "row-reverse" and raw_remaining < 0 then
+      leading = raw_remaining
+    end
   elseif justify == "space-evenly" and visible_count > 0 then
     local space = remaining / (visible_count + 1)
     leading = space
     between = gap + space
+    if direction == "row-reverse" and raw_remaining < 0 then
+      leading = raw_remaining
+    end
   end
 
   return leading, between

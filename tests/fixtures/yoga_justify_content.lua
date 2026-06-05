@@ -60,12 +60,31 @@ local function overflow_row_case(name, direction, justify_content, expected_left
   }
 end
 
-local function skipped_overflow_case(name)
+local function overflow_row_reverse_case(name, direction, justify_content, expected_lefts)
   return {
-    name = name,
+    name = name .. "_" .. direction,
     source = source(name),
-    skip = true,
-    unsupportedReason = "upstream generated test is disabled; row-reverse overflow spacing is deferred",
+    direction = direction,
+    root = {
+      style = {
+        position = "absolute",
+        width = 102,
+        height = 102,
+        flexDirection = "row-reverse",
+        justifyContent = justify_content,
+      },
+      children = {
+        { style = { width = 40 } },
+        { style = { width = 40 } },
+        { style = { width = 40 } },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 102, height = 102 },
+      { left = expected_lefts[1], top = 0, width = 40, height = 102 },
+      { left = expected_lefts[2], top = 0, width = 40, height = 102 },
+      { left = expected_lefts[3], top = 0, width = 40, height = 102 },
+    },
   }
 end
 
@@ -105,8 +124,10 @@ return {
   overflow_row_case("justify_content_overflow_row_space_around", "rtl", "space-around", { 62, 22, -18 }),
   overflow_row_case("justify_content_overflow_row_space_evenly", "ltr", "space-evenly", { 0, 40, 80 }),
   overflow_row_case("justify_content_overflow_row_space_evenly", "rtl", "space-evenly", { 62, 22, -18 }),
-  skipped_overflow_case("justify_content_overflow_row_reverse_space_around"),
-  skipped_overflow_case("justify_content_overflow_row_reverse_space_evenly"),
+  overflow_row_reverse_case("justify_content_overflow_row_reverse_space_around", "ltr", "space-around", { 80, 40, 0 }),
+  overflow_row_reverse_case("justify_content_overflow_row_reverse_space_around", "rtl", "space-around", { -18, 22, 62 }),
+  overflow_row_reverse_case("justify_content_overflow_row_reverse_space_evenly", "ltr", "space-evenly", { 80, 40, 0 }),
+  overflow_row_reverse_case("justify_content_overflow_row_reverse_space_evenly", "rtl", "space-evenly", { -18, 22, 62 }),
   overflow_row_case(
     "justify_content_overflow_row_space_evenly_auto_margin",
     "ltr",
