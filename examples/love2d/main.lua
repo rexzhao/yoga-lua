@@ -71,6 +71,7 @@ local layout_modules = {
   "layouts.settings",
   "layouts.flex_spacing",
   "layouts.flex_basis",
+  "layouts.flex_shrink",
   "layouts.justify",
   "layouts.align",
   "layouts.percent",

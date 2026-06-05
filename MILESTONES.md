@@ -131,6 +131,7 @@ Status: partially complete.
 ## Milestone 4: Advanced Flex Behavior
 
 - [x] `flexShrink`.
+- [x] Love2D visual demo for `flexShrink`.
 - [x] `flexBasis`.
 - [x] Love2D visual demo for `flexBasis`.
 - [ ] `flexWrap`.
