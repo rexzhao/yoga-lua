@@ -1,5 +1,7 @@
 # yoga-lua Roadmap
 
+See `MILESTONES.md` for the live checklist. Keep that checklist synchronized with feature and test changes.
+
 ## Milestone 0: Project Skeleton
 
 Success criteria:
@@ -115,4 +117,3 @@ Verification:
 
 - Repeated layout avoids unnecessary measure calls.
 - Benchmark records layout time for 100, 1,000, and 5,000 nodes.
-
