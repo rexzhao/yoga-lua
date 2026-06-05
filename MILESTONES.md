@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 223 tests, 3 skipped`
+- `lua tests/run.lua` -> `ok - 229 tests, 3 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -132,6 +132,7 @@ Status: partially complete.
 - [ ] `alignContent`.
 - [x] Basic row-wrap `alignContent` values.
 - [x] Love2D visual demo for `alignContent`.
+- [x] Migrated supported subset of `YGAlignContentTest`.
 - [x] Migrated supported `YGGapTest` row-wrap `alignContent` subset.
 - [x] `aspectRatio`.
 - [x] Love2D visual demo for `aspectRatio`.
