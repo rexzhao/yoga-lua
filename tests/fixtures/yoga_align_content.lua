@@ -94,7 +94,7 @@ local function align_content_singleline(name, align_content, top)
   }
 end
 
-local function negative_space(name, align_content, tops, gap)
+local function negative_space(name, align_content, tops, gap, direction)
   return {
     name = name,
     source = source(name),
@@ -108,7 +108,7 @@ local function negative_space(name, align_content, tops, gap)
       children = {
         {
           style = {
-            flexDirection = "row",
+            flexDirection = direction or "row",
             flexWrap = "wrap",
             alignContent = align_content,
             justifyContent = "center",
@@ -409,7 +409,21 @@ return {
   negative_space("align_content_flex_end_wrapped_negative_space", "flex-end", { -50, -30, -10 }),
   negative_space("align_content_center_wrapped_negative_space", "center", { -25, -5, 15 }),
   negative_space("align_content_space_between_wrapped_negative_space", "space-between", { 0, 20, 40 }),
+  negative_space(
+    "align_content_space_between_wrapped_negative_space_row_reverse",
+    "space-between",
+    { 0, 20, 40 },
+    nil,
+    "row-reverse"
+  ),
   negative_space("align_content_space_around_wrapped_negative_space", "space-around", { 0, 20, 40 }),
+  negative_space(
+    "align_content_space_around_wrapped_negative_space_row_reverse",
+    "space-around",
+    { 0, 20, 40 },
+    nil,
+    "row-reverse"
+  ),
   negative_space("align_content_space_evenly_wrapped_negative_space", "space-evenly", { 0, 20, 40 }),
   negative_space("align_content_flex_start_wrapped_negative_space_gap", "flex-start", { 0, 30, 60 }, 10),
   negative_space("align_content_flex_end_wrapped_negative_space_gap", "flex-end", { -70, -40, -10 }, 10),
