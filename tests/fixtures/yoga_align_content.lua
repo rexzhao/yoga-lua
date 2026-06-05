@@ -133,4 +133,32 @@ return {
     { left = 0, top = 50, width = 50, height = 50 },
     { left = 50, top = 50, width = 50, height = 50 },
   }),
+  stretch_row("align_content_stretch_row_with_max_height", {
+    { style = { width = 50 } },
+    { style = { width = 50, maxHeight = 20 } },
+    { style = { width = 50 } },
+    { style = { width = 50 } },
+    { style = { width = 50 } },
+  }, {
+    { left = 0, top = 0, width = 150, height = 100 },
+    { left = 0, top = 0, width = 50, height = 50 },
+    { left = 50, top = 0, width = 50, height = 20 },
+    { left = 100, top = 0, width = 50, height = 50 },
+    { left = 0, top = 50, width = 50, height = 50 },
+    { left = 50, top = 50, width = 50, height = 50 },
+  }),
+  stretch_row("align_content_stretch_row_with_min_height", {
+    { style = { width = 50 } },
+    { style = { width = 50, minHeight = 80 } },
+    { style = { width = 50 } },
+    { style = { width = 50 } },
+    { style = { width = 50 } },
+  }, {
+    { left = 0, top = 0, width = 150, height = 100 },
+    { left = 0, top = 0, width = 50, height = 90 },
+    { left = 50, top = 0, width = 50, height = 90 },
+    { left = 100, top = 0, width = 50, height = 90 },
+    { left = 0, top = 90, width = 50, height = 10 },
+    { left = 50, top = 90, width = 50, height = 10 },
+  }),
 }

@@ -877,32 +877,35 @@ local function distribute_line_main(line, direction, gap, available_main)
   end
 end
 
-local function cross_axis_size_in_line(child_style, direction, measured, main)
+local function cross_axis_size_in_line(child_style, direction, measured, main, owner_size)
   local ratio = aspect_ratio(child_style)
+  local dimension
 
   if direction == "row" then
+    dimension = "height"
     local explicit = resolve_value(child_style.height)
     if explicit ~= nil then
-      return clamp_size(explicit)
+      return constrain_size(explicit, child_style, dimension, owner_size)
     end
 
     if ratio and type(main) == "number" then
-      return clamp_size(main / ratio)
+      return constrain_size(main / ratio, child_style, dimension, owner_size)
     end
 
-    return clamp_size(measured and measured.height)
+    return constrain_size(measured and measured.height, child_style, dimension, owner_size)
   end
 
+  dimension = "width"
   local explicit = resolve_value(child_style.width)
   if explicit ~= nil then
-    return clamp_size(explicit)
+    return constrain_size(explicit, child_style, dimension, owner_size)
   end
 
   if ratio and type(main) == "number" then
-    return clamp_size(main * ratio)
+    return constrain_size(main * ratio, child_style, dimension, owner_size)
   end
 
-  return clamp_size(measured and measured.width)
+  return constrain_size(measured and measured.width, child_style, dimension, owner_size)
 end
 
 local function needs_auto_cross_measure(child_style, direction, measured)
@@ -944,8 +947,9 @@ local function line_cross_size(line, direction, owner_width, owner_height)
 
   for _, spec in ipairs(line.items) do
     local margin = spec.margin
+    local owner_size = direction == "row" and owner_height or owner_width
     local size = auto_cross_size_from_child(spec, direction, owner_width, owner_height)
-      or cross_axis_size_in_line(spec.style, direction, spec.measured, spec.main)
+      or cross_axis_size_in_line(spec.style, direction, spec.measured, spec.main, owner_size)
 
     if direction == "row" then
       cross = math.max(cross, margin.top + size + margin.bottom)
