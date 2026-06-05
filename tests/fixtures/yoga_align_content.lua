@@ -43,6 +43,44 @@ local function align_content_wrap(name, align_content, tops)
   }
 end
 
+local function negative_space(name, align_content, tops)
+  return {
+    name = name,
+    source = source(name),
+    root = {
+      style = {
+        position = "absolute",
+        width = 320,
+        height = 320,
+        border = 60,
+      },
+      children = {
+        {
+          style = {
+            flexDirection = "row",
+            flexWrap = "wrap",
+            alignContent = align_content,
+            justifyContent = "center",
+            height = 10,
+          },
+          children = {
+            { style = { width = "80%", height = 20 } },
+            { style = { width = "80%", height = 20 } },
+            { style = { width = "80%", height = 20 } },
+          },
+        },
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 320, height = 320 },
+      { left = 60, top = 60, width = 200, height = 10 },
+      { left = 20, top = tops[1], width = 160, height = 20 },
+      { left = 20, top = tops[2], width = 160, height = 20 },
+      { left = 20, top = tops[3], width = 160, height = 20 },
+    },
+  }
+end
+
 local function stretch_row(name, children, expected)
   return {
     name = name,
@@ -166,6 +204,12 @@ return {
   align_content_wrap("align_content_space_between_wrap", "space-between", { 0, 55, 110 }),
   align_content_wrap("align_content_space_around_wrap", "space-around", { 15, 55, 95 }),
   align_content_wrap("align_content_space_evenly_wrap", "space-evenly", { 23, 55, 88 }),
+  negative_space("align_content_flex_start_wrapped_negative_space", "flex-start", { 0, 20, 40 }),
+  negative_space("align_content_flex_end_wrapped_negative_space", "flex-end", { -50, -30, -10 }),
+  negative_space("align_content_center_wrapped_negative_space", "center", { -25, -5, 15 }),
+  negative_space("align_content_space_between_wrapped_negative_space", "space-between", { 0, 20, 40 }),
+  negative_space("align_content_space_around_wrapped_negative_space", "space-around", { 0, 20, 40 }),
+  negative_space("align_content_space_evenly_wrapped_negative_space", "space-evenly", { 0, 20, 40 }),
   stretch_row("align_content_stretch_row", {
     { style = { width = 50 } },
     { style = { width = 50 } },

@@ -999,16 +999,17 @@ local function used_line_cross_size(lines, gap)
 end
 
 local function align_content_offsets(style, lines, gap, available_cross, auto_cross_size)
-  local remaining = auto_cross_size and 0 or math.max(0, available_cross - used_line_cross_size(lines, gap))
+  local raw_remaining = auto_cross_size and 0 or available_cross - used_line_cross_size(lines, gap)
+  local remaining = math.max(0, raw_remaining)
   local align = style.alignContent or "flex-start"
   local leading = 0
   local between = gap
   local line_count = #lines
 
   if align == "center" then
-    leading = remaining / 2
+    leading = raw_remaining / 2
   elseif align == "flex-end" then
-    leading = remaining
+    leading = raw_remaining
   elseif align == "space-between" and line_count > 1 then
     between = gap + remaining / (line_count - 1)
   elseif align == "space-around" and line_count > 0 then
