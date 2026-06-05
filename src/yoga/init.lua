@@ -494,6 +494,28 @@ local function constrain_size(value, style, dimension, owner_size)
   return math.max(0, value)
 end
 
+local function locked_min_max_measure(style, owner_width, owner_height)
+  local min_width = resolve_value(style.minWidth, owner_width)
+  local max_width = resolve_value(style.maxWidth, owner_width)
+  local min_height = resolve_value(style.minHeight, owner_height)
+  local max_height = resolve_value(style.maxHeight, owner_height)
+
+  if min_width ~= nil
+    and max_width ~= nil
+    and min_width == max_width
+    and min_height ~= nil
+    and max_height ~= nil
+    and min_height == max_height
+  then
+    return {
+      width = clamp_size(min_width),
+      height = clamp_size(min_height),
+    }
+  end
+
+  return nil
+end
+
 local function flex_grow(style)
   return number_or_zero(style.flexGrow or style.flex)
 end
@@ -712,9 +734,12 @@ local function build_child_specs(children, parent_style, direction, gap, inner_w
       local auto_margin = resolve_auto_edges(style, "margin", layout_direction)
       local grow = flex_grow(style)
       local shrink = flex_shrink(style)
-      local measure_width, measure_height, width_mode, height_mode =
-        child_measure_constraints(parent_style, style, direction, inner_width, inner_height)
-      local measured = measure_node(child, measure_width, measure_height, width_mode, height_mode)
+      local measured = locked_min_max_measure(style, inner_width, inner_height)
+      if measured == nil then
+        local measure_width, measure_height, width_mode, height_mode =
+          child_measure_constraints(parent_style, style, direction, inner_width, inner_height)
+        measured = measure_node(child, measure_width, measure_height, width_mode, height_mode)
+      end
       local available_cross = is_row_direction(direction) and inner_height or inner_width
       local base_main = main_size(style, direction, available_main, available_cross, measured)
 
@@ -1169,7 +1194,8 @@ local function layout_absolute_node(child, parent_style, padding, border, parent
   local style = child.style or {}
   local parent_direction = parent_style.flexDirection or "column"
   local measure_width, measure_height = child_measure_available(parent_style, parent_direction, inner_width, inner_height)
-  local measured = measure_node(child, measure_width, measure_height)
+  local measured = locked_min_max_measure(style, inner_width, inner_height)
+    or measure_node(child, measure_width, measure_height)
   local margin = resolve_edges(style, "margin", inner_width, layout_direction)
   local left_offset, right_offset = resolve_horizontal_position_offsets(style, inner_width, layout_direction)
   local top_offset = resolve_value(style.top, inner_height)
@@ -1616,9 +1642,12 @@ local function layout_wrapped_children(
     else
       local child_style = child.style or {}
       local margin = resolve_edges(child_style, "margin", inner_width, layout_direction)
-      local measure_width, measure_height, width_mode, height_mode =
-        child_measure_constraints(style, child_style, direction, inner_width, inner_height)
-      local measured = measure_node(child, measure_width, measure_height, width_mode, height_mode)
+      local measured = locked_min_max_measure(child_style, inner_width, inner_height)
+      if measured == nil then
+        local measure_width, measure_height, width_mode, height_mode =
+          child_measure_constraints(style, child_style, direction, inner_width, inner_height)
+        measured = measure_node(child, measure_width, measure_height, width_mode, height_mode)
+      end
       local base_main = main_size(child_style, direction, available_main, available_cross, measured)
       local spec = {
         child = child,
@@ -1797,7 +1826,9 @@ function layout_node(node, left, top, available_width, available_height, owner_w
   layout_direction = normalize_layout_direction(layout_direction)
 
   local style = node.style or {}
-  local measured_size = measured or measure_node(node, available_width, available_height)
+  local measured_size = measured
+    or locked_min_max_measure(style, owner_width, owner_height)
+    or measure_node(node, available_width, available_height)
   local explicit_width = resolve_value(style.width, owner_width)
   local explicit_height = resolve_value(style.height, owner_height)
   local width = options.useAvailableWidth and available_width
