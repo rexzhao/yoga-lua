@@ -25,20 +25,43 @@ local function is_display_none(node)
   return (node.style or {}).display == "none"
 end
 
+local function is_display_contents(node)
+  return (node.style or {}).display == "contents"
+end
+
 local function is_absolute_position(node)
   return (node.style or {}).position == "absolute"
 end
 
-local function zero_layout_tree(node)
+local function zero_layout_box(node)
   node.layout.left = 0
   node.layout.top = 0
   node.layout.width = 0
   node.layout.height = 0
   node.dirty = false
+end
+
+local function zero_layout_tree(node)
+  zero_layout_box(node)
 
   for _, child in ipairs(node.children or {}) do
     zero_layout_tree(child)
   end
+end
+
+local function collect_layout_items(children, out)
+  out = out or {}
+
+  for _, child in ipairs(children or {}) do
+    if is_display_contents(child) then
+      zero_layout_box(child)
+      collect_layout_items(child.children, out)
+    else
+      out[#out + 1] = child
+    end
+  end
+
+  return out
 end
 
 local function offset_layout_tree(node, dx, dy)
@@ -814,7 +837,9 @@ local function layout_wrapped_children(node, left, top, padding, inner_width, in
     end
   end
 
-  for index, child in ipairs(node.children or {}) do
+  local children = collect_layout_items(node.children)
+
+  for index, child in ipairs(children) do
     if is_display_none(child) then
       specs[index] = { hidden = true }
     elseif is_absolute_position(child) then
@@ -919,7 +944,7 @@ local function layout_wrapped_children(node, left, top, padding, inner_width, in
     cross_cursor = cross_cursor - cross_between
   end
 
-  for index, child in ipairs(node.children or {}) do
+  for index, child in ipairs(children) do
     local spec = specs[index]
 
     if spec and spec.hidden then
@@ -989,7 +1014,8 @@ function layout_node(node, left, top, available_width, available_height, owner_w
     return node
   end
 
-  local specs = build_child_specs(children, direction, gap, inner_width, inner_height)
+  local layout_items = collect_layout_items(children)
+  local specs = build_child_specs(layout_items, direction, gap, inner_width, inner_height)
   local leading, between = justify_offsets(style, specs, direction, gap, inner_width, inner_height)
   local has_auto_children = visible_spec_count(specs) > 0
   local auto_main_size = has_auto_children
@@ -1003,7 +1029,7 @@ function layout_node(node, left, top, available_width, available_height, owner_w
       or (direction == "column" and explicit_width == nil and available_width == nil and not options.useAvailableWidth)
     )
 
-  for index, child in ipairs(children) do
+  for index, child in ipairs(layout_items) do
     local child_style = child.style or {}
     local spec = specs[index]
 

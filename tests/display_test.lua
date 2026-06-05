@@ -58,4 +58,38 @@ return function(runner, helper)
     helper.assert_layout(root, { left = 0, top = 0, width = 0, height = 0 }, "hidden root")
     helper.assert_layout(root_child, { left = 0, top = 0, width = 0, height = 0 }, "hidden root child")
   end)
+
+  runner:test("display contents promotes children into parent flex flow", function()
+    local contents = yoga.node({ display = "contents" }, {
+      yoga.node({ flexGrow = 1, height = 10 }),
+      yoga.node({ flexGrow = 1, height = 20 }),
+    })
+    local root = yoga.node({ width = 100, height = 100, flexDirection = "row" }, { contents })
+
+    yoga.calculateLayout(root)
+
+    helper.assert_layout(contents, { left = 0, top = 0, width = 0, height = 0 }, "contents box")
+    helper.assert_layout(contents.children[1], { left = 0, top = 0, width = 50, height = 10 }, "first promoted child")
+    helper.assert_layout(contents.children[2], { left = 50, top = 0, width = 50, height = 20 }, "second promoted child")
+  end)
+
+  runner:test("display contents keeps promoted children ordered with siblings", function()
+    local contents = yoga.node({ display = "contents" }, {
+      yoga.node({ flexGrow = 1, height = 10 }),
+      yoga.node({ flexGrow = 1, height = 20 }),
+    })
+    local root = yoga.node({ width = 100, height = 100, flexDirection = "row" }, {
+      yoga.node({ flexGrow = 1, height = 30 }),
+      contents,
+      yoga.node({ flexGrow = 1, height = 30 }),
+    })
+
+    yoga.calculateLayout(root)
+
+    helper.assert_layout(root.children[1], { left = 0, top = 0, width = 25, height = 30 }, "first sibling")
+    helper.assert_layout(contents, { left = 0, top = 0, width = 0, height = 0 }, "contents box")
+    helper.assert_layout(contents.children[1], { left = 25, top = 0, width = 25, height = 10 }, "first promoted child")
+    helper.assert_layout(contents.children[2], { left = 50, top = 0, width = 25, height = 20 }, "second promoted child")
+    helper.assert_layout(root.children[3], { left = 75, top = 0, width = 25, height = 30 }, "last sibling")
+  end)
 end

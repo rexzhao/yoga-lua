@@ -1,4 +1,4 @@
--- 显示属性布局：展示 display = "none" 的节点不参与 flex、gap、margin 和子树绘制。
+-- 显示属性布局：展示 display = "none" 隐藏子树，以及 display = "contents" 将子节点提升到父级布局流。
 return {
   id = "display",
   name = "Display",
@@ -78,6 +78,13 @@ return {
         width = 60,
         height = 40,
       },
+      contents_parent = {
+        display = "contents",
+      },
+      contents_child = {
+        flex = 1,
+        height = 58,
+      },
     })
 
     local function demo_row(name, stage_style, children)
@@ -91,7 +98,7 @@ return {
 
     return with_styles(styles, "screen", { debugName = "display screen", fill = palette.background }, {
       with_styles(styles, "header", { debugName = "display header", fill = palette.panel }, {
-        label("display none removes nodes from layout while keeping the source tree intact.", {
+        label("display none removes boxes; display contents promotes child boxes into parent flow.", {
           style = { flex = 1, height = 28 },
           fill = { 0, 0, 0, 0 },
         }),
@@ -112,6 +119,14 @@ return {
           with_styles(styles, "hidden_child", { debugName = "hidden child", fill = palette.gold }),
         }),
         with_styles(styles, "flex_box", { debugName = "visible right", fill = palette.accent }),
+      }),
+      demo_row("contents children join parent flow", styles.stage, {
+        with_styles(styles, "flex_box", { debugName = "outer left", fill = palette.accent }),
+        with_styles(styles, "contents_parent", { debugName = "contents wrapper", fill = palette.red }, {
+          with_styles(styles, "contents_child", { debugName = "contents child A", fill = palette.gold }),
+          with_styles(styles, "contents_child", { debugName = "contents child B", fill = palette.green }),
+        }),
+        with_styles(styles, "flex_box", { debugName = "outer right", fill = palette.red }),
       }),
     })
   end,

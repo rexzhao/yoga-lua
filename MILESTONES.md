@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 191 tests, 32 skipped`
+- `lua tests/run.lua` -> `ok - 201 tests, 24 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -90,6 +90,8 @@ Status: complete.
 - [x] Love2D visual demo for relative position offsets.
 - [x] `display = "none"`.
 - [x] Love2D visual demo for `display = "none"`.
+- [x] `display = "contents"`.
+- [x] Love2D visual demo for `display = "contents"`.
 - [x] Migrated supported subset of `YGJustifyContentTest`.
 - [x] Migrated supported subset of `YGAlignItemsTest`.
 - [x] Migrated supported subset of `YGAlignSelfTest`.
@@ -102,14 +104,6 @@ Known skipped cases:
 
 - [ ] `align_baseline`: skipped pending baseline alignment.
 - [ ] `align_self_baseline`: skipped pending baseline alignment.
-- [ ] `display_contents`: skipped pending `display = "contents"`.
-- [ ] `display_contents_fixed_size`: skipped pending `display = "contents"`.
-- [ ] `display_contents_with_margin`: skipped pending `display = "contents"`.
-- [ ] `display_contents_with_padding`: skipped pending `display = "contents"`.
-- [ ] `display_contents_with_position`: skipped pending `display = "contents"`.
-- [ ] `display_contents_with_position_absolute`: skipped pending `display = "contents"`.
-- [ ] `display_contents_nested`: skipped pending `display = "contents"`.
-- [ ] `display_contents_with_siblings`: skipped pending `display = "contents"`.
 - [ ] `do_not_clamp_height_of_absolute_node_to_height_of_its_overflow_hidden_parent`: skipped pending absolute auto-size from children.
 - [ ] `absolute_layout_within_border`: skipped pending border support.
 - [ ] `position_root_with_rtl_should_position_withoutdirection`: skipped pending RTL direction support.

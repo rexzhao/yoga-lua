@@ -277,18 +277,20 @@ local function inside(node, x, y)
 end
 
 local function find_deepest(node, x, y)
-  if not inside(node, x, y) then
-    return nil
-  end
+  local layout = node.layout
+  local has_box = layout.width > 0 and layout.height > 0
+  local hit = has_box and inside(node, x, y)
 
-  for index = #(node.children or {}), 1, -1 do
-    local child = find_deepest(node.children[index], x, y)
-    if child then
-      return child
+  if hit or not has_box then
+    for index = #(node.children or {}), 1, -1 do
+      local child = find_deepest(node.children[index], x, y)
+      if child then
+        return child
+      end
     end
   end
 
-  return node
+  return hit and node or nil
 end
 
 local function find_case_at(node, x, y)
@@ -434,29 +436,29 @@ end
 
 local function draw_node(node, depth)
   local layout = node.layout
-  if layout.width <= 0 or layout.height <= 0 then
-    return
-  end
-
+  local has_box = layout.width > 0 and layout.height > 0
   local props = node.props or {}
-  local fill = props.fill or palette.panel
-  local radius = node.type == "text" and 0 or 6
 
-  if fill[4] ~= 0 then
-    set_color(fill)
-    love.graphics.rectangle("fill", layout.left, layout.top, layout.width, layout.height, radius, radius)
+  if has_box then
+    local fill = props.fill or palette.panel
+    local radius = node.type == "text" and 0 or 6
+
+    if fill[4] ~= 0 then
+      set_color(fill)
+      love.graphics.rectangle("fill", layout.left, layout.top, layout.width, layout.height, radius, radius)
+    end
+
+    if props.stroke ~= false then
+      local line = node == hovered and palette.hover or palette.line
+      set_color(line)
+      love.graphics.setLineWidth(node == hovered and 3 or 1)
+      love.graphics.rectangle("line", layout.left, layout.top, layout.width, layout.height, radius, radius)
+    end
+
+    draw_node_label(node)
   end
 
-  if props.stroke ~= false then
-    local line = node == hovered and palette.hover or palette.line
-    set_color(line)
-    love.graphics.setLineWidth(node == hovered and 3 or 1)
-    love.graphics.rectangle("line", layout.left, layout.top, layout.width, layout.height, radius, radius)
-  end
-
-  draw_node_label(node)
-
-  local props_clip_children = props.clipChildren
+  local props_clip_children = has_box and props.clipChildren
   local previous_x, previous_y, previous_width, previous_height
 
   if props_clip_children then
