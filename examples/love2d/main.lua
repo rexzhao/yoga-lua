@@ -189,6 +189,63 @@ local function has_flag(args, flag)
   return false
 end
 
+local function arg_value(args, flag)
+  local sources = { args, _G.arg }
+
+  for _, source in ipairs(sources) do
+    if source then
+      for index, value in ipairs(source) do
+        if value == flag then
+          return source[index + 1]
+        end
+
+        local inline = value:match("^" .. flag .. "=(.+)$")
+        if inline then
+          return inline
+        end
+      end
+    end
+  end
+
+  return nil
+end
+
+local function case_key(value)
+  return tostring(value or ""):lower():gsub("[%s_-]+", "")
+end
+
+local function find_case_index(value)
+  local target = case_key(value)
+  local number = tonumber(value)
+
+  if number and cases[number] then
+    return number
+  end
+
+  for index, case in ipairs(cases) do
+    if case_key(case.id) == target or case_key(case.name) == target then
+      return index
+    end
+  end
+
+  return nil
+end
+
+local function apply_startup_args(args)
+  local requested_case = arg_value(args, "--case") or arg_value(args, "--ui")
+  if not requested_case then
+    return
+  end
+
+  local index = find_case_index(requested_case)
+  if not index then
+    error("unknown Love2D UI case: " .. tostring(requested_case))
+  end
+
+  current_case = index
+  mode = "case"
+end
+
 local function inside(node, x, y)
   local layout = node.layout
   if layout.width <= 0 or layout.height <= 0 then
@@ -447,6 +504,7 @@ function love.load(args)
   love.graphics.setBackgroundColor(palette.background)
 
   load_cases()
+  apply_startup_args(args)
   rebuild()
 
   if has_flag(args, "--smoke") then
