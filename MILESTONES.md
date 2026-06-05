@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 332 tests, 18 skipped`
+- `lua tests/run.lua` -> `ok - 350 tests, 2 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -42,7 +42,7 @@ Status: complete.
 - [x] Migrated inner absolute-position `YGFlexDirectionTest` reverse subset.
 - [x] Migrated inner absolute-spacing `YGFlexDirectionTest` reverse subset.
 - [x] Migrated auto-size and percent `YGFlexDirectionTest` subset.
-- [x] Added skipped `YGFlexDirectionTest` logical start/end edge subset.
+- [x] Migrated complete `YGFlexDirectionTest` set.
 - [ ] Broader Yoga dimension/flex-direction/margin/padding fixture migration.
 
 Status: mostly complete; broader Yoga fixture migration remains.
@@ -105,6 +105,7 @@ Status: complete.
 - [x] Love2D visual demo for `display = "contents"`.
 - [x] Numeric `border`/`border*` layout insets.
 - [x] Basic RTL layout direction parameter.
+- [x] Logical `start`/`end` edges for horizontal position, margin, padding, and border.
 - [x] Migrated supported subset of `YGJustifyContentTest`.
 - [x] Migrated supported subset of `YGAlignItemsTest`.
 - [x] Migrated supported subset of `YGAlignSelfTest`.
@@ -117,11 +118,10 @@ Status: complete.
 
 Known skipped cases:
 
-- [ ] `YGFlexDirectionTest` logical start/end edge subset: 16 fixtures skipped pending logical edge and RTL direction support.
 - [ ] `aspect_ratio_does_not_stretch_cross_axis_dim`: skipped because upstream generated test is disabled.
 - [ ] `wrap_column`: skipped because upstream generated test is disabled.
 
-Status: partially complete.
+Status: complete for the supported Milestone 3 scope; upstream-disabled skipped fixtures remain tracked under known skipped cases.
 
 ## Milestone 4: Advanced Flex Behavior
 

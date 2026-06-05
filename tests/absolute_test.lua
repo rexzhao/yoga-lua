@@ -96,4 +96,29 @@ return function(runner, helper)
 
     helper.assert_layout(root, { left = 72, top = 0, width = 52, height = 52 }, "root")
   end)
+
+  runner:test("absolute child logical start and end follow rtl layout direction", function()
+    local start_child = yoga.node({ position = "absolute", start = 10, top = 0, width = 10, height = 10 })
+    local end_child = yoga.node({ position = "absolute", ["end"] = 10, top = 10, width = 10, height = 10 })
+    local root = yoga.node({ width = 100, height = 30 }, {
+      start_child,
+      end_child,
+    })
+
+    yoga.calculateLayout(root, nil, nil, "rtl")
+
+    helper.assert_layout(start_child, { left = 80, top = 0, width = 10, height = 10 }, "start child")
+    helper.assert_layout(end_child, { left = 10, top = 10, width = 10, height = 10 }, "end child")
+  end)
+
+  runner:test("absolute child logical spacing follows rtl layout direction", function()
+    local child = yoga.node({ position = "absolute", marginStart = 10, width = 10, height = 10 })
+    local root = yoga.node({ width = 100, height = 20, paddingStart = 10 }, {
+      child,
+    })
+
+    yoga.calculateLayout(root, nil, nil, "rtl")
+
+    helper.assert_layout(child, { left = 70, top = 0, width = 10, height = 10 }, "child")
+  end)
 end

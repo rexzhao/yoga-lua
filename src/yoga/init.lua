@@ -194,18 +194,68 @@ local function relative_axis_offset(style, start_key, end_key, owner_size)
   return 0
 end
 
-local function relative_offsets(style, owner_width, owner_height)
-  return relative_axis_offset(style, "left", "right", owner_width),
+local function logical_horizontal_edge(edge, layout_direction)
+  if edge == "left" then
+    return is_rtl(layout_direction) and "End" or "Start"
+  end
+
+  return is_rtl(layout_direction) and "Start" or "End"
+end
+
+local function resolve_horizontal_position_offsets(style, owner_size, layout_direction)
+  local left = resolve_value(style.left, owner_size)
+  local right = resolve_value(style.right, owner_size)
+
+  if left == nil and right == nil then
+    local start = resolve_value(style.start, owner_size)
+    local ending = resolve_value(style["end"], owner_size)
+
+    if is_rtl(layout_direction) then
+      left = ending
+      right = start
+    else
+      left = start
+      right = ending
+    end
+  end
+
+  return left, right
+end
+
+local function horizontal_relative_offset(style, owner_size, layout_direction)
+  local left, right = resolve_horizontal_position_offsets(style, owner_size, layout_direction)
+
+  if left ~= nil then
+    return left
+  end
+
+  if right ~= nil then
+    return -right
+  end
+
+  return 0
+end
+
+local function relative_offsets(style, owner_width, owner_height, layout_direction)
+  return horizontal_relative_offset(style, owner_width, layout_direction),
     relative_axis_offset(style, "top", "bottom", owner_height)
 end
 
-local function resolve_edge(style, prefix, edge, axis, owner_size)
+local function resolve_edge(style, prefix, edge, axis, owner_size, layout_direction)
   local edge_key = prefix .. edge:sub(1, 1):upper() .. edge:sub(2)
   local axis_key = prefix .. axis:sub(1, 1):upper() .. axis:sub(2)
 
   local edge_value = resolve_value(style[edge_key], owner_size)
   if edge_value ~= nil then
     return edge_value
+  end
+
+  if edge == "left" or edge == "right" then
+    local logical_key = prefix .. logical_horizontal_edge(edge, layout_direction)
+    local logical_value = resolve_value(style[logical_key], owner_size)
+    if logical_value ~= nil then
+      return logical_value
+    end
   end
 
   local axis_value = resolve_value(style[axis_key], owner_size)
@@ -216,12 +266,12 @@ local function resolve_edge(style, prefix, edge, axis, owner_size)
   return resolve_value(style[prefix], owner_size) or number_or_zero(style[prefix])
 end
 
-local function resolve_edges(style, prefix, owner_size)
+local function resolve_edges(style, prefix, owner_size, layout_direction)
   return {
-    left = resolve_edge(style, prefix, "left", "horizontal", owner_size),
-    right = resolve_edge(style, prefix, "right", "horizontal", owner_size),
-    top = resolve_edge(style, prefix, "top", "vertical", owner_size),
-    bottom = resolve_edge(style, prefix, "bottom", "vertical", owner_size),
+    left = resolve_edge(style, prefix, "left", "horizontal", owner_size, layout_direction),
+    right = resolve_edge(style, prefix, "right", "horizontal", owner_size, layout_direction),
+    top = resolve_edge(style, prefix, "top", "vertical", owner_size, layout_direction),
+    bottom = resolve_edge(style, prefix, "bottom", "vertical", owner_size, layout_direction),
   }
 end
 
@@ -376,7 +426,7 @@ local function has_auto_cross_size(style, direction, cross_owner_size, measured)
     and not ratio
 end
 
-local function build_child_specs(children, direction, gap, inner_width, inner_height)
+local function build_child_specs(children, direction, gap, inner_width, inner_height, layout_direction)
   local specs = {}
   local total_grow = 0
   local used_main = 0
@@ -400,7 +450,7 @@ local function build_child_specs(children, direction, gap, inner_width, inner_he
       }
     else
       local style = child.style or {}
-      local margin = resolve_edges(style, "margin", inner_width)
+      local margin = resolve_edges(style, "margin", inner_width, layout_direction)
       local grow = flex_grow(style)
       local shrink = flex_shrink(style)
       local measured = measure_node(child, inner_width, inner_height)
@@ -767,9 +817,8 @@ end
 local function layout_absolute_node(child, parent_style, padding, border, parent_width, parent_height, inner_width, inner_height, layout_direction)
   local style = child.style or {}
   local measured = measure_node(child, inner_width, inner_height)
-  local margin = resolve_edges(style, "margin", inner_width)
-  local left_offset = resolve_value(style.left, inner_width)
-  local right_offset = resolve_value(style.right, inner_width)
+  local margin = resolve_edges(style, "margin", inner_width, layout_direction)
+  local left_offset, right_offset = resolve_horizontal_position_offsets(style, inner_width, layout_direction)
   local top_offset = resolve_value(style.top, inner_height)
   local bottom_offset = resolve_value(style.bottom, inner_height)
   local explicit_width_available = clamp_size(parent_width - border.left - border.right)
@@ -1170,7 +1219,7 @@ local function layout_wrapped_children(
       specs[index] = { absolute = true, child = child }
     else
       local child_style = child.style or {}
-      local margin = resolve_edges(child_style, "margin", inner_width)
+      local margin = resolve_edges(child_style, "margin", inner_width, layout_direction)
       local measured = measure_node(child, inner_width, inner_height)
       local base_main = main_size(child_style, direction, available_main, available_cross, measured)
       local spec = {
@@ -1284,7 +1333,7 @@ local function layout_wrapped_children(
         main_cursor = main_cursor + margin.top + child.layout.height + margin.bottom + between
       end
 
-      local relative_left, relative_top = relative_offsets(child_style, inner_width, inner_height)
+      local relative_left, relative_top = relative_offsets(child_style, inner_width, inner_height, layout_direction)
       offset_layout_box(child, relative_left, relative_top)
     end
 
@@ -1374,8 +1423,8 @@ function layout_node(node, left, top, available_width, available_height, owner_w
   node.layout.height = constrain_size(height, style, "height", owner_height)
   node.dirty = false
 
-  local border = resolve_edges(style, "border", node.layout.width)
-  local padding = resolve_edges(style, "padding", node.layout.width)
+  local border = resolve_edges(style, "border", node.layout.width, layout_direction)
+  local padding = resolve_edges(style, "padding", node.layout.width, layout_direction)
   local direction = style.flexDirection or "column"
   local gap = main_axis_gap(style, direction)
   local cursor = 0
@@ -1414,7 +1463,7 @@ function layout_node(node, left, top, available_width, available_height, owner_w
   end
 
   local layout_items = collect_layout_items(children)
-  local specs = build_child_specs(layout_items, direction, gap, inner_width, inner_height)
+  local specs = build_child_specs(layout_items, direction, gap, inner_width, inner_height, layout_direction)
   local leading, between = justify_offsets(style, specs, direction, gap, inner_width, inner_height)
   local has_auto_children = visible_spec_count(specs) > 0
   local auto_main_size = has_auto_children
@@ -1476,7 +1525,7 @@ function layout_node(node, left, top, available_width, available_height, owner_w
         if child_auto_main then
           spec.main = child.layout.width
         end
-        local relative_left, relative_top = relative_offsets(child_style, inner_width, inner_height)
+        local relative_left, relative_top = relative_offsets(child_style, inner_width, inner_height, layout_direction)
         offset_layout_box(child, relative_left, relative_top)
         cursor = cursor + margin.left + child.layout.width + margin.right + between
       else
@@ -1512,7 +1561,7 @@ function layout_node(node, left, top, available_width, available_height, owner_w
         if child_auto_main then
           spec.main = child.layout.height
         end
-        local relative_left, relative_top = relative_offsets(child_style, inner_width, inner_height)
+        local relative_left, relative_top = relative_offsets(child_style, inner_width, inner_height, layout_direction)
         offset_layout_box(child, relative_left, relative_top)
         cursor = cursor + margin.top + child.layout.height + margin.bottom + between
       end
@@ -1560,17 +1609,28 @@ local function root_absolute_axis_offset(style, start_key, end_key, owner_size, 
   return 0
 end
 
-local function root_offsets(root, owner_width, owner_height)
+local function root_offsets(root, owner_width, owner_height, layout_direction)
   local style = root.style or {}
-  local margin = resolve_edges(style, "margin", owner_width or root.layout.width)
+  local margin = resolve_edges(style, "margin", owner_width or root.layout.width, layout_direction)
   local left
   local top
 
   if is_absolute_position(root) then
-    left = root_absolute_axis_offset(style, "left", "right", owner_width, root.layout.width)
+    local left_offset, right_offset = resolve_horizontal_position_offsets(style, owner_width, layout_direction)
+    if left_offset ~= nil then
+      left = left_offset
+    elseif right_offset ~= nil then
+      if owner_width ~= nil and root.layout.width ~= nil then
+        left = owner_width - right_offset - root.layout.width
+      else
+        left = -right_offset
+      end
+    else
+      left = 0
+    end
     top = root_absolute_axis_offset(style, "top", "bottom", owner_height, root.layout.height)
   else
-    left, top = relative_offsets(style, owner_width, owner_height)
+    left, top = relative_offsets(style, owner_width, owner_height, layout_direction)
   end
 
   return left + margin.left, top + margin.top
@@ -1579,7 +1639,7 @@ end
 function yoga.calculateLayout(root, width, height, layout_direction)
   layout_direction = normalize_layout_direction(layout_direction)
   layout_node(root, 0, 0, width, height, width, height, nil, nil, layout_direction)
-  local root_left, root_top = root_offsets(root, width, height)
+  local root_left, root_top = root_offsets(root, width, height, layout_direction)
   offset_layout_box(root, root_left, root_top)
   round_layout_tree(root)
   return root

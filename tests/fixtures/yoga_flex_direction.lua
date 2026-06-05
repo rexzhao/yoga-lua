@@ -108,7 +108,7 @@ local function row_no_width()
   }
 end
 
-local function row_reverse_spacing(name, style, lefts)
+local function row_reverse_spacing(name, style, lefts, root_left)
   style.position = "absolute"
   style.width = 100
   style.height = 100
@@ -126,7 +126,7 @@ local function row_reverse_spacing(name, style, lefts)
       },
     },
     expect = {
-      { left = style.marginLeft or 0, top = 0, width = 100, height = 100 },
+      { left = root_left or style.marginLeft or 0, top = 0, width = 100, height = 100 },
       { left = lefts[1], top = 0, width = 10, height = 100 },
       { left = lefts[2], top = 0, width = 10, height = 100 },
       { left = lefts[3], top = 0, width = 10, height = 100 },
@@ -296,15 +296,6 @@ local function alternating_with_percent()
   }
 end
 
-local function unsupported_logical_edge(name)
-  return {
-    name = name,
-    source = source(name),
-    skip = true,
-    unsupportedReason = "logical start/end edges and RTL direction are not implemented",
-  }
-end
-
 return {
   column_no_height(),
   row_no_width(),
@@ -361,20 +352,20 @@ return {
   inner_absolute_spacing("flex_direction_col_reverse_inner_padding_top", "column-reverse", { paddingTop = 10 }, 0, 90, { 0, 0 }, 100),
   inner_absolute_spacing("flex_direction_col_reverse_inner_padding_bottom", "column-reverse", { paddingBottom = 10 }, 0, 90, { 0, 0 }, 100),
   alternating_with_percent(),
-  unsupported_logical_edge("flex_direction_row_reverse_margin_start"),
-  unsupported_logical_edge("flex_direction_row_reverse_margin_end"),
-  unsupported_logical_edge("flex_direction_row_reverse_padding_start"),
-  unsupported_logical_edge("flex_direction_row_reverse_padding_end"),
-  unsupported_logical_edge("flex_direction_row_reverse_border_start"),
-  unsupported_logical_edge("flex_direction_row_reverse_border_end"),
-  unsupported_logical_edge("flex_direction_row_reverse_pos_start"),
-  unsupported_logical_edge("flex_direction_row_reverse_pos_end"),
-  unsupported_logical_edge("flex_direction_row_reverse_inner_pos_start"),
-  unsupported_logical_edge("flex_direction_row_reverse_inner_pos_end"),
-  unsupported_logical_edge("flex_direction_row_reverse_inner_marign_start"),
-  unsupported_logical_edge("flex_direction_row_reverse_inner_margin_end"),
-  unsupported_logical_edge("flex_direction_row_reverse_inner_border_start"),
-  unsupported_logical_edge("flex_direction_row_reverse_inner_border_end"),
-  unsupported_logical_edge("flex_direction_row_reverse_inner_padding_start"),
-  unsupported_logical_edge("flex_direction_row_reverse_inner_padding_end"),
+  row_reverse_spacing("flex_direction_row_reverse_margin_start", { marginStart = 100 }, { 90, 80, 70 }, 100),
+  row_reverse_spacing("flex_direction_row_reverse_margin_end", { marginEnd = 100 }, { 90, 80, 70 }),
+  row_reverse_spacing("flex_direction_row_reverse_padding_start", { paddingStart = 100 }, { 90, 80, 70 }),
+  row_reverse_spacing("flex_direction_row_reverse_padding_end", { paddingEnd = 100 }, { -10, -20, -30 }),
+  row_reverse_spacing("flex_direction_row_reverse_border_start", { borderStart = 100 }, { 90, 80, 70 }),
+  row_reverse_spacing("flex_direction_row_reverse_border_end", { borderEnd = 100 }, { -10, -20, -30 }),
+  reverse_position("flex_direction_row_reverse_pos_start", "row-reverse", { start = 100 }, 100, 0, { 90, 80, 70 }, 0),
+  reverse_position("flex_direction_row_reverse_pos_end", "row-reverse", { ["end"] = 100 }, -100, 0, { 90, 80, 70 }, 0),
+  inner_absolute_position("flex_direction_row_reverse_inner_pos_start", "row-reverse", { start = 10 }, 10, 0, { 90, 80 }, 0),
+  inner_absolute_position("flex_direction_row_reverse_inner_pos_end", "row-reverse", { ["end"] = 10 }, 80, 0, { 90, 80 }, 0),
+  inner_absolute_spacing("flex_direction_row_reverse_inner_marign_start", "row-reverse", { marginStart = 10 }, 90, 0, { 90, 80 }, 0),
+  inner_absolute_spacing("flex_direction_row_reverse_inner_margin_end", "row-reverse", { marginEnd = 10 }, 80, 0, { 90, 80 }, 0),
+  inner_absolute_spacing("flex_direction_row_reverse_inner_border_start", "row-reverse", { borderStart = 10 }, 90, 0, { 90, 80 }, 0),
+  inner_absolute_spacing("flex_direction_row_reverse_inner_border_end", "row-reverse", { borderEnd = 10 }, 90, 0, { 90, 80 }, 0),
+  inner_absolute_spacing("flex_direction_row_reverse_inner_padding_start", "row-reverse", { paddingStart = 10 }, 90, 0, { 90, 80 }, 0),
+  inner_absolute_spacing("flex_direction_row_reverse_inner_padding_end", "row-reverse", { paddingEnd = 10 }, 90, 0, { 90, 80 }, 0),
 }
