@@ -1,5 +1,14 @@
 local yoga = require("yoga")
 
+local function source(test)
+  return {
+    repo = "facebook/yoga",
+    fixture = "YGMeasureModeTest.cpp",
+    generated = false,
+    test = test,
+  }
+end
+
 return function(runner, helper)
   runner:test("overflow scroll column measures child with undefined main axis", function()
     local calls = {}
@@ -32,7 +41,7 @@ return function(runner, helper)
     helper.assert_equal(calls[1].height, nil, "column scroll height")
     helper.assert_equal(calls[1].height_mode, yoga.MEASURE_MODE_UNDEFINED, "column scroll height mode")
     helper.assert_layout(child, { left = 0, top = 0, width = 50, height = 150 }, "column scroll child")
-  end)
+  end, source("overflow_scroll_column"))
 
   runner:test("overflow scroll row measures child with undefined main axis", function()
     local calls = {}
@@ -66,5 +75,5 @@ return function(runner, helper)
     helper.assert_equal(calls[1].height, 100, "row scroll height")
     helper.assert_equal(calls[1].height_mode, yoga.MEASURE_MODE_AT_MOST, "row scroll height mode")
     helper.assert_layout(child, { left = 0, top = 0, width = 150, height = 50 }, "row scroll child")
-  end)
+  end, source("overflow_scroll_row"))
 end
