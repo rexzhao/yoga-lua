@@ -50,6 +50,10 @@ local function measure_100()
   return { width = 100, height = 100 }
 end
 
+local function measure_half(width, _, height)
+  return { width = 0.5 * width, height = 0.5 * height }
+end
+
 return function(runner, helper)
   runner:test("single grow/shrink child does not need measure", function()
     local calls = { count = 0 }
@@ -473,6 +477,56 @@ return function(runner, helper)
     helper.assert_layout(grandchild, { left = 0, top = 0, width = 100, height = 50 }, "min width grandchild")
   end, source("min_width_larger_than_width_propagates_to_auto_parent"))
 
+  runner:test("measured child inside content-box parent uses content size", function()
+    local calls = { count = 0 }
+    local child = yoga.node({
+      measure = function(width, width_mode, height, height_mode)
+        calls.count = calls.count + 1
+        return measure_half(width, width_mode, height, height_mode)
+      end,
+    })
+    local root = yoga.node({
+      width = 100,
+      height = 200,
+      boxSizing = "content-box",
+      padding = 5,
+      border = 10,
+    }, {
+      child,
+    })
+
+    yoga.calculateLayout(root)
+
+    helper.assert_equal(calls.count, 1, "content-box measure count")
+    helper.assert_layout(root, { left = 0, top = 0, width = 130, height = 230 }, "content-box root")
+    helper.assert_layout(child, { left = 15, top = 15, width = 100, height = 100 }, "content-box child")
+  end, source("measure_content_box"))
+
+  runner:test("measured child inside border-box parent uses inner size", function()
+    local calls = { count = 0 }
+    local child = yoga.node({
+      measure = function(width, width_mode, height, height_mode)
+        calls.count = calls.count + 1
+        return measure_half(width, width_mode, height, height_mode)
+      end,
+    })
+    local root = yoga.node({
+      width = 100,
+      height = 200,
+      boxSizing = "border-box",
+      padding = 5,
+      border = 10,
+    }, {
+      child,
+    })
+
+    yoga.calculateLayout(root)
+
+    helper.assert_equal(calls.count, 1, "border-box measure count")
+    helper.assert_layout(root, { left = 0, top = 0, width = 100, height = 200 }, "border-box root")
+    helper.assert_layout(child, { left = 15, top = 15, width = 70, height = 85 }, "border-box child")
+  end, source("measure_border_box"))
+
   runner:skip(
     "fixture cannot_add_child_to_node_with_measure_func [cannot_add_child_to_node_with_measure_func]",
     "Lua API does not enforce Yoga's measure-node leaf invariant yet",
@@ -485,15 +539,4 @@ return function(runner, helper)
     source("cannot_add_nonnull_measure_func_to_non_leaf_node")
   )
 
-  runner:skip(
-    "fixture measure_content_box [measure_content_box]",
-    "boxSizing = content-box is not implemented yet",
-    source("measure_content_box")
-  )
-
-  runner:skip(
-    "fixture measure_border_box [measure_border_box]",
-    "boxSizing style support is not implemented yet",
-    source("measure_border_box")
-  )
 end

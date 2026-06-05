@@ -1924,6 +1924,25 @@ function layout_node(node, left, top, available_width, available_height, owner_w
   local edge_owner_width = owner_width or node.layout.width
   local border = resolve_edges(style, "border", edge_owner_width, layout_direction)
   local padding = resolve_edges(style, "padding", edge_owner_width, layout_direction)
+  if style.boxSizing == "content-box" then
+    if explicit_width ~= nil and not options.useAvailableWidth then
+      node.layout.width = constrain_size(
+        explicit_width + padding.left + padding.right + border.left + border.right,
+        style,
+        "width",
+        owner_width
+      )
+    end
+
+    if explicit_height ~= nil and not options.useAvailableHeight then
+      node.layout.height = constrain_size(
+        explicit_height + padding.top + padding.bottom + border.top + border.bottom,
+        style,
+        "height",
+        owner_height
+      )
+    end
+  end
   if width_unspecified then
     node.layout.width = constrain_size(border.left + padding.left + padding.right + border.right, style, "width", owner_width)
   end
