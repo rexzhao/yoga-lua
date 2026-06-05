@@ -22,21 +22,46 @@ local function flatten(node, out)
   return out
 end
 
+local function source_label(source)
+  if not source then
+    return "local"
+  end
+
+  if source.test then
+    return source.test
+  end
+
+  if source.fixture then
+    return source.fixture
+  end
+
+  return "upstream"
+end
+
+local function fixture_name(case)
+  return "fixture " .. case.name .. " [" .. source_label(case.source) .. "]"
+end
+
 function fixture_runner.register(runner, helper, cases)
   for _, case in ipairs(cases) do
-    runner:test("fixture " .. case.name, function()
-      local root = build_node(case.root)
-      yoga.calculateLayout(root, case.width, case.height)
+    local name = fixture_name(case)
 
-      local nodes = flatten(root, {})
-      helper.assert_equal(#nodes, #case.expect, case.name .. " node count")
+    if case.skip then
+      runner:skip(name, case.unsupportedReason or "unsupported", case.source)
+    else
+      runner:test(name, function()
+        local root = build_node(case.root)
+        yoga.calculateLayout(root, case.width, case.height)
 
-      for index, expected in ipairs(case.expect) do
-        helper.assert_layout(nodes[index], expected, case.name .. "[" .. index .. "]")
-      end
-    end)
+        local nodes = flatten(root, {})
+        helper.assert_equal(#nodes, #case.expect, case.name .. " node count")
+
+        for index, expected in ipairs(case.expect) do
+          helper.assert_layout(nodes[index], expected, case.name .. "[" .. index .. "]")
+        end
+      end, case.source)
+    end
   end
 end
 
 return fixture_runner
-

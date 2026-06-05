@@ -6,13 +6,23 @@ Runner.__index = Runner
 function helper.new_runner()
   return setmetatable({
     tests = {},
+    skipped = {},
   }, Runner)
 end
 
-function Runner:test(name, fn)
+function Runner:test(name, fn, metadata)
   self.tests[#self.tests + 1] = {
     name = name,
     fn = fn,
+    metadata = metadata,
+  }
+end
+
+function Runner:skip(name, reason, metadata)
+  self.skipped[#self.skipped + 1] = {
+    name = name,
+    reason = reason,
+    metadata = metadata,
   }
 end
 
@@ -21,7 +31,11 @@ function Runner:run()
     test.fn()
   end
 
-  print(string.format("ok - %d tests", #self.tests))
+  if #self.skipped > 0 then
+    print(string.format("ok - %d tests, %d skipped", #self.tests, #self.skipped))
+  else
+    print(string.format("ok - %d tests", #self.tests))
+  end
 end
 
 function helper.assert_equal(actual, expected, label)
@@ -48,4 +62,3 @@ function helper.assert_layout(node, expected, label)
 end
 
 return helper
-
