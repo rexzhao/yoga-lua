@@ -20,6 +20,7 @@
 - DOM selectors, cascading specificity, computed style inheritance, or CSS parsing in the first milestone.
 - A React-compatible runtime with hooks, reconciliation, or async rendering.
 - Drawing widgets directly from the layout engine.
+- Managing scroll offsets, data fetching, or list virtualization inside the layout core.
 
 ## Architecture
 
@@ -90,6 +91,21 @@ Milestone 1 should cover:
 - `display = "flex" | "none"`
 - point values and percentage strings such as `"50%"`
 
+## Scroll and Virtualized Lists
+
+Scroll layout semantics should follow upstream Yoga where Yoga has matching behavior:
+
+- `overflow = "visible" | "hidden" | "scroll"` belongs to the layout core.
+- Scroll containers should use Yoga-compatible measurement behavior along the scroll axis.
+- The layout result should be able to report when content overflowed, matching Yoga's `hadOverflow` concept.
+
+Lazy loading and virtualized lists belong above the layout core:
+
+- A virtualized scroll view should build only visible items plus a small overscan range.
+- Spacer nodes should preserve the full scrollable content size, so Yoga still lays out an ordinary tree.
+- Fast jumps should set the target scroll offset directly instead of incrementally scrolling through skipped items.
+- Fixed-height item virtualization is the first supported target; variable-height lists need an item height cache and can come later.
+
 ## Test Strategy
 
 Tests are grouped into:
@@ -113,4 +129,3 @@ Yoga migration order:
 - Text and image nodes can participate in layout through measure callbacks.
 - Re-layout after a style change updates only dirty trees once dirty tracking is implemented.
 - The project has a single command that runs all tests.
-

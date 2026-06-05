@@ -105,6 +105,9 @@ Implement:
 - Layout caching.
 - Measure caching.
 - Benchmarks for large UI trees.
+- Yoga-compatible `overflow = "hidden" | "scroll"` layout semantics.
+- UI-level virtualized scroll lists that build visible rows, overscan rows, and spacer nodes.
+- Fast fixed-height list jumps that avoid laying out skipped rows.
 
 Yoga tests to migrate:
 
@@ -112,8 +115,11 @@ Yoga tests to migrate:
 - Measure cache tests.
 - Dirty marking tests.
 - Relayout tests.
+- Overflow and scroll-container measure mode tests.
+- Had-overflow layout result tests.
 
 Verification:
 
 - Repeated layout avoids unnecessary measure calls.
 - Benchmark records layout time for 100, 1,000, and 5,000 nodes.
+- Virtualized list scroll and jump benchmarks stay bounded by visible item count.

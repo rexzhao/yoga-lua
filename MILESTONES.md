@@ -166,12 +166,21 @@ Status: partially complete.
 - [ ] Dirty marking for style/tree changes.
 - [ ] Layout caching.
 - [ ] Measure caching.
+- [ ] Yoga-compatible `overflow = "hidden" | "scroll"` style semantics.
+- [ ] Scroll-container measure behavior matches upstream Yoga on the scroll axis.
+- [ ] Layout results expose Yoga-compatible `hadOverflow`.
+- [ ] UI-level virtualized scroll list builds visible rows, overscan rows, and spacer nodes only.
+- [ ] Fixed-height virtualized list supports direct jumps without laying out skipped rows.
+- [ ] Love2D visual demo for a large virtualized scroll list.
 - [ ] Relayout behavior tests.
 - [ ] Dirty marking tests.
 - [ ] Measure tests.
 - [ ] Measure cache tests.
+- [ ] Overflow and scroll-container measure mode tests.
+- [ ] `hadOverflow` behavior tests.
 - [ ] Benchmarks for 100 nodes.
 - [ ] Benchmarks for 1,000 nodes.
 - [ ] Benchmarks for 5,000 nodes.
+- [ ] Virtualized list scroll and jump benchmark.
 
 Status: not started.
