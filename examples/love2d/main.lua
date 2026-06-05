@@ -64,11 +64,8 @@ end
 local function build_inventory(width, height)
   local outer_padding = 16
   local toolbar_height = 48
-  local body_height = height - outer_padding * 2 - toolbar_height - 12
-  local body_width = width - outer_padding * 2
   local sidebar_width = 230
   local detail_width = 300
-  local grid_width = body_width - sidebar_width - detail_width - 24
 
   local styles = ui.stylesheet({
     screen = {
@@ -85,21 +82,19 @@ local function build_inventory(width, height)
       gap = 8,
     },
     body = {
-      width = body_width,
-      height = body_height,
+      flex = 1,
       flexDirection = "row",
       gap = 12,
     },
     sidebar = {
       width = sidebar_width,
-      height = body_height,
       flexDirection = "column",
-      padding = 10,
+      paddingHorizontal = 10,
+      paddingVertical = 10,
       gap = 8,
     },
     grid = {
-      width = grid_width,
-      height = body_height,
+      flex = 1,
       flexDirection = "column",
       padding = 10,
       gap = 8,
@@ -115,13 +110,15 @@ local function build_inventory(width, height)
     },
     detail = {
       width = detail_width,
-      height = body_height,
       flexDirection = "column",
       padding = 12,
       gap = 10,
     },
     detail_block = {
       height = 92,
+    },
+    detail_flex_block = {
+      flex = 1,
     },
   })
 
@@ -154,7 +151,7 @@ local function build_inventory(width, height)
       with_styles(styles, "detail", { debugName = "item detail", fill = palette.panel }, {
         label("Selected Item", { style = { height = 28 }, fill = palette.accent }),
         with_styles(styles, "detail_block", { debugName = "item preview", fill = palette.panel_alt }),
-        with_styles(styles, "detail_block", { debugName = "item stats", fill = palette.panel_alt }),
+        with_styles(styles, "detail_flex_block", { debugName = "item stats flex=1", fill = palette.panel_alt }),
         with_styles(styles, "detail_block", { debugName = "item actions", fill = palette.panel_alt }),
       }),
     }),
@@ -178,7 +175,8 @@ local function build_settings(width, height)
     row = {
       height = row_height,
       flexDirection = "row",
-      padding = 8,
+      paddingHorizontal = 8,
+      paddingVertical = 8,
       gap = 8,
     },
     title = {
@@ -186,7 +184,7 @@ local function build_settings(width, height)
       height = 38,
     },
     control = {
-      width = 180,
+      flex = 1,
       height = 38,
     },
   })
@@ -213,52 +211,88 @@ local function build_settings(width, height)
   })
 end
 
-local function build_row_wrap_placeholder(width, height)
+local function build_spacing_flex(width, height)
   local outer_padding = 18
-  local content_width = width - outer_padding * 2
   local styles = ui.stylesheet({
     screen = {
       width = width,
       height = height,
       flexDirection = "column",
-      padding = outer_padding,
+      paddingHorizontal = outer_padding,
+      paddingVertical = outer_padding,
       gap = 12,
     },
+    header = {
+      height = 44,
+      flexDirection = "row",
+      paddingHorizontal = 10,
+      paddingVertical = 8,
+      gap = 10,
+    },
     strip = {
-      width = content_width,
       height = 96,
       flexDirection = "row",
-      padding = 10,
+      paddingHorizontal = 10,
+      paddingVertical = 10,
       gap = 10,
     },
     chip = {
       width = 132,
       height = 76,
     },
+    small_chip = {
+      width = 96,
+      height = 76,
+    },
+    flex_chip = {
+      flex = 1,
+      height = 76,
+    },
+    double_flex_chip = {
+      flex = 2,
+      height = 76,
+    },
+    margin_chip = {
+      width = 132,
+      height = 76,
+      marginLeft = 24,
+      marginRight = 8,
+    },
   })
 
-  local strips = {}
-  for strip_index = 1, 5 do
-    local chips = {}
-    for chip_index = 1, 6 do
-      chips[#chips + 1] = with_styles(styles, "chip", {
-        debugName = "chip " .. strip_index .. "." .. chip_index,
-        fill = ({ palette.accent, palette.green, palette.gold, palette.red })[((chip_index - 1) % 4) + 1],
-      })
-    end
-    strips[#strips + 1] = with_styles(styles, "strip", {
-      debugName = "row layout strip " .. strip_index,
-      fill = strip_index % 2 == 0 and palette.panel or palette.panel_alt,
-    }, chips)
-  end
-
-  return with_styles(styles, "screen", { debugName = "row layout screen", fill = palette.background }, strips)
+  return with_styles(styles, "screen", { debugName = "spacing and flex screen", fill = palette.background }, {
+    with_styles(styles, "header", { debugName = "supported layout header", fill = palette.panel }, {
+      label("Now showing: paddingHorizontal, paddingVertical, gap, marginLeft, flex=1, flex=2", {
+        style = { flex = 1, height = 28 },
+      }),
+    }),
+    with_styles(styles, "strip", { debugName = "gap and padding strip", fill = palette.panel_alt }, {
+      with_styles(styles, "chip", { debugName = "fixed 132", fill = palette.accent }),
+      with_styles(styles, "chip", { debugName = "gap 10", fill = palette.green }),
+      with_styles(styles, "chip", { debugName = "padding edges", fill = palette.gold }),
+    }),
+    with_styles(styles, "strip", { debugName = "flex grow strip", fill = palette.panel }, {
+      with_styles(styles, "small_chip", { debugName = "fixed 96", fill = palette.accent }),
+      with_styles(styles, "flex_chip", { debugName = "flex=1", fill = palette.green }),
+      with_styles(styles, "double_flex_chip", { debugName = "flex=2", fill = palette.gold }),
+    }),
+    with_styles(styles, "strip", { debugName = "margin strip", fill = palette.panel_alt }, {
+      with_styles(styles, "small_chip", { debugName = "fixed", fill = palette.accent }),
+      with_styles(styles, "margin_chip", { debugName = "marginLeft 24", fill = palette.red }),
+      with_styles(styles, "flex_chip", { debugName = "flex fills rest", fill = palette.green }),
+    }),
+    with_styles(styles, "strip", { debugName = "mixed inventory-like strip", fill = palette.panel }, {
+      with_styles(styles, "small_chip", { debugName = "icon", fill = palette.gold }),
+      with_styles(styles, "flex_chip", { debugName = "name flex=1", fill = palette.panel_alt }),
+      with_styles(styles, "chip", { debugName = "action 132", fill = palette.accent }),
+    }),
+  })
 end
 
 local cases = {
   { name = "Inventory", build = build_inventory },
   { name = "Settings", build = build_settings },
-  { name = "Rows", build = build_row_wrap_placeholder },
+  { name = "Flex/Spacing", build = build_spacing_flex },
 }
 
 local function offset_layout(node, dx, dy)
