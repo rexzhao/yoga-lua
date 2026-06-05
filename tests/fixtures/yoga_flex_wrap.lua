@@ -87,8 +87,30 @@ return {
   {
     name = "flex_wrap_wrap_to_child_height",
     source = source("flex_wrap_wrap_to_child_height"),
-    skip = true,
-    unsupportedReason = "auto content sizing from nested wrapped children is not implemented",
+    root = {
+      style = { position = "absolute" },
+      children = {
+        {
+          style = { flexDirection = "row", alignItems = "flex-start", flexWrap = "wrap" },
+          children = {
+            {
+              style = { width = 100 },
+              children = {
+                box(100, 100),
+              },
+            },
+          },
+        },
+        box(100, 100),
+      },
+    },
+    expect = {
+      { left = 0, top = 0, width = 100, height = 200 },
+      { left = 0, top = 0, width = 100, height = 100 },
+      { left = 0, top = 0, width = 100, height = 100 },
+      { left = 0, top = 0, width = 100, height = 100 },
+      { left = 0, top = 100, width = 100, height = 100 },
+    },
   },
   {
     name = "flex_wrap_align_stretch_fits_one_row",

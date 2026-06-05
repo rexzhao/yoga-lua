@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 221 tests, 5 skipped`
+- `lua tests/run.lua` -> `ok - 222 tests, 4 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 
 ## Milestone 0: Project Skeleton
@@ -112,7 +112,6 @@ Known skipped cases:
 - [ ] `absolute_layout_column_reverse_margin_border`: skipped pending column-reverse support.
 - [ ] `aspect_ratio_does_not_stretch_cross_axis_dim`: skipped because upstream generated test is disabled.
 - [ ] `wrap_column`: skipped because upstream generated test is disabled.
-- [ ] `flex_wrap_wrap_to_child_height`: skipped pending auto content sizing from nested wrapped children.
 
 Status: partially complete.
 
@@ -125,9 +124,10 @@ Status: partially complete.
 - [x] Partial `flexGrow` remaining-space distribution when total grow is below 1.
 - [x] `flexBasis`.
 - [x] Love2D visual demo for `flexBasis`.
-- [ ] `flexWrap`.
+- [x] `flexWrap` supported row and wrap-reverse behavior.
 - [x] Basic row `flexWrap = "wrap"` without `alignContent`.
 - [x] `flexWrap = "wrap-reverse"` cross-axis placement.
+- [x] Nested wrapped children contribute to auto content size.
 - [x] Love2D visual demo for basic row `flexWrap`.
 - [x] Love2D visual demo for `flexWrap = "wrap-reverse"`.
 - [ ] `alignContent`.

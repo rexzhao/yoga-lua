@@ -312,6 +312,42 @@ local function main_size(style, direction, owner_size, cross_owner_size, measure
   return constrain_size(height, style, "height", owner_size)
 end
 
+local function has_auto_main_size(style, direction, owner_size, cross_owner_size, measured)
+  if resolve_value(style.flexBasis, owner_size) ~= nil then
+    return false
+  end
+
+  local ratio = aspect_ratio(style)
+
+  if direction == "row" then
+    if resolve_value(style.width, owner_size) ~= nil or (measured and measured.width) ~= nil then
+      return false
+    end
+
+    return not (ratio and resolve_value(style.height, cross_owner_size) ~= nil)
+  end
+
+  if resolve_value(style.height, owner_size) ~= nil or (measured and measured.height) ~= nil then
+    return false
+  end
+
+  return not (ratio and resolve_value(style.width, cross_owner_size) ~= nil)
+end
+
+local function has_auto_cross_size(style, direction, cross_owner_size, measured)
+  local ratio = aspect_ratio(style)
+
+  if direction == "row" then
+    return resolve_value(style.height, cross_owner_size) == nil
+      and not (measured and measured.height)
+      and not ratio
+  end
+
+  return resolve_value(style.width, cross_owner_size) == nil
+    and not (measured and measured.width)
+    and not ratio
+end
+
 local function build_child_specs(children, direction, gap, inner_width, inner_height)
   local specs = {}
   local total_grow = 0
@@ -350,6 +386,8 @@ local function build_child_specs(children, direction, gap, inner_width, inner_he
         grow = grow,
         shrink = shrink,
         base_main = base_main,
+        auto_main = has_auto_main_size(style, direction, available_main, available_cross, measured),
+        auto_cross = has_auto_cross_size(style, direction, available_cross, measured),
         measured = measured,
       }
 
@@ -858,12 +896,47 @@ local function cross_axis_size_in_line(child_style, direction, measured, main)
   return clamp_size(measured and measured.width)
 end
 
-local function line_cross_size(line, direction)
+local function needs_auto_cross_measure(child_style, direction, measured)
+  if aspect_ratio(child_style) then
+    return false
+  end
+
+  if direction == "row" then
+    return resolve_value(child_style.height) == nil and not (measured and measured.height)
+  end
+
+  return resolve_value(child_style.width) == nil and not (measured and measured.width)
+end
+
+local function auto_cross_size_from_child(spec, direction, owner_width, owner_height)
+  if not needs_auto_cross_measure(spec.style, direction, spec.measured) then
+    return nil
+  end
+
+  if #(spec.child.children or {}) == 0 then
+    return nil
+  end
+
+  if direction == "row" then
+    layout_node(spec.child, 0, 0, spec.main, nil, owner_width, owner_height, spec.measured, {
+      useAvailableWidth = true,
+    })
+    return spec.child.layout.height
+  end
+
+  layout_node(spec.child, 0, 0, nil, spec.main, owner_width, owner_height, spec.measured, {
+    useAvailableHeight = true,
+  })
+  return spec.child.layout.width
+end
+
+local function line_cross_size(line, direction, owner_width, owner_height)
   local cross = 0
 
   for _, spec in ipairs(line.items) do
     local margin = spec.margin
-    local size = cross_axis_size_in_line(spec.style, direction, spec.measured, spec.main)
+    local size = auto_cross_size_from_child(spec, direction, owner_width, owner_height)
+      or cross_axis_size_in_line(spec.style, direction, spec.measured, spec.main)
 
     if direction == "row" then
       cross = math.max(cross, margin.top + size + margin.bottom)
@@ -948,7 +1021,7 @@ local function cross_axis_layout_in_line(parent_style, child_style, direction, m
   return cross_axis_layout(parent_style, child_style, direction, margin, line_cross, line_cross, measured, main)
 end
 
-local function layout_wrapped_children(node, padding, border, inner_width, inner_height, auto_cross_size)
+local function layout_wrapped_children(node, padding, border, inner_width, inner_height, auto_main_size, auto_cross_size)
   local style = node.style or {}
   local direction = style.flexDirection or "column"
   local wrap_reverse = style.flexWrap == "wrap-reverse"
@@ -987,6 +1060,8 @@ local function layout_wrapped_children(node, padding, border, inner_width, inner
         shrink = flex_shrink(child_style),
         base_main = base_main,
         main = base_main,
+        auto_main = has_auto_main_size(child_style, direction, available_main, available_cross, measured),
+        auto_cross = has_auto_cross_size(child_style, direction, available_cross, measured),
         measured = measured,
       }
       local outer_main = main_outer_size(spec, direction)
@@ -1009,7 +1084,7 @@ local function layout_wrapped_children(node, padding, border, inner_width, inner
 
   for _, line in ipairs(lines) do
     distribute_line_main(line, direction, gap, available_main)
-    line.cross = line_cross_size(line, direction)
+    line.cross = line_cross_size(line, direction, inner_width, inner_height)
   end
 
   local cross_leading, cross_between =
@@ -1037,6 +1112,11 @@ local function layout_wrapped_children(node, padding, border, inner_width, inner
       if direction == "row" then
         local child_height, cross_offset =
           cross_axis_layout_in_line(style, child_style, direction, margin, line.cross, spec.measured, spec.main)
+        if spec.auto_cross then
+          child_height = auto_cross_size_from_child(spec, direction, inner_width, inner_height)
+            or clamp_size(line.cross - margin.top - margin.bottom)
+          cross_offset = margin.top
+        end
         if wrap_reverse then
           cross_offset = line.cross - cross_offset - child_height
         end
@@ -1057,6 +1137,11 @@ local function layout_wrapped_children(node, padding, border, inner_width, inner
       else
         local child_width, cross_offset =
           cross_axis_layout_in_line(style, child_style, direction, margin, line.cross, spec.measured, spec.main)
+        if spec.auto_cross then
+          child_width = auto_cross_size_from_child(spec, direction, inner_width, inner_height)
+            or clamp_size(line.cross - margin.left - margin.right)
+          cross_offset = margin.left
+        end
         if wrap_reverse then
           cross_offset = line.cross - cross_offset - child_width
         end
@@ -1108,6 +1193,21 @@ local function layout_wrapped_children(node, padding, border, inner_width, inner
       node.layout.width = border.left + padding.left + used_cross + padding.right + border.right
     end
   end
+
+  if auto_main_size then
+    local used_main = 0
+
+    for _, line in ipairs(lines) do
+      used_main = math.max(used_main, used_main_size(line.items, direction, gap))
+    end
+
+    if direction == "row" then
+      node.layout.width = border.left + padding.left + used_main + padding.right + border.right
+    else
+      node.layout.height = border.top + padding.top + used_main + padding.bottom + border.bottom
+    end
+  end
+
 end
 
 function layout_node(node, left, top, available_width, available_height, owner_width, owner_height, measured, options)
@@ -1154,11 +1254,21 @@ function layout_node(node, left, top, available_width, available_height, owner_w
   local inner_width = clamp_size(node.layout.width - border.left - padding.left - padding.right - border.right)
   local inner_height = clamp_size(node.layout.height - border.top - padding.top - padding.bottom - border.bottom)
   local children = node.children or {}
+  local auto_main_available = (direction == "row" and inner_width == 0) or (direction == "column" and inner_height == 0)
+  local auto_cross_available = (direction == "row" and inner_height == 0) or (direction == "column" and inner_width == 0)
 
   if style.flexWrap == "wrap" or style.flexWrap == "wrap-reverse" then
-    local auto_cross_size = (direction == "row" and explicit_height == nil and available_height == nil and not options.useAvailableHeight)
-      or (direction == "column" and explicit_width == nil and available_width == nil and not options.useAvailableWidth)
-    layout_wrapped_children(node, padding, border, inner_width, inner_height, auto_cross_size)
+    local auto_main_size = auto_main_available
+      and (
+        (direction == "row" and explicit_width == nil and available_width == nil and not options.useAvailableWidth)
+        or (direction == "column" and explicit_height == nil and available_height == nil and not options.useAvailableHeight)
+      )
+    local auto_cross_size = auto_cross_available
+      and (
+        (direction == "row" and explicit_height == nil and available_height == nil and not options.useAvailableHeight)
+        or (direction == "column" and explicit_width == nil and available_width == nil and not options.useAvailableWidth)
+      )
+    layout_wrapped_children(node, padding, border, inner_width, inner_height, auto_main_size, auto_cross_size)
     return node
   end
 
@@ -1167,11 +1277,13 @@ function layout_node(node, left, top, available_width, available_height, owner_w
   local leading, between = justify_offsets(style, specs, direction, gap, inner_width, inner_height)
   local has_auto_children = visible_spec_count(specs) > 0
   local auto_main_size = has_auto_children
+    and auto_main_available
     and (
       (direction == "row" and explicit_width == nil and available_width == nil and not options.useAvailableWidth)
       or (direction == "column" and explicit_height == nil and available_height == nil and not options.useAvailableHeight)
     )
   local auto_cross_size = has_auto_children
+    and auto_cross_available
     and (
       (direction == "row" and explicit_height == nil and available_height == nil and not options.useAvailableHeight)
       or (direction == "column" and explicit_width == nil and available_width == nil and not options.useAvailableWidth)
@@ -1193,25 +1305,46 @@ function layout_node(node, left, top, available_width, available_height, owner_w
       if direction == "row" then
         local child_height, cross_offset =
           cross_axis_layout(style, child_style, direction, margin, inner_width, inner_height, spec.measured, spec.main)
+        local child_auto_main = auto_main_size and spec.auto_main
+        local child_width = spec.main
+        if auto_cross_size and spec.auto_cross then
+          child_height = nil
+          cross_offset = margin.top
+        end
+        if child_auto_main then
+          child_width = nil
+        end
         child_left = child_left + leading + cursor + margin.left
         child_top = child_top + cross_offset
         layout_node(
           child,
           child_left,
           child_top,
-          spec.main,
+          child_width,
           child_height,
           inner_width,
           inner_height,
           spec.measured,
-          { useAvailableWidth = true }
+          { useAvailableWidth = not child_auto_main }
         )
+        if child_auto_main then
+          spec.main = child.layout.width
+        end
         local relative_left, relative_top = relative_offsets(child_style, inner_width, inner_height)
         offset_layout_box(child, relative_left, relative_top)
         cursor = cursor + margin.left + child.layout.width + margin.right + between
       else
         local child_width, cross_offset =
           cross_axis_layout(style, child_style, direction, margin, inner_width, inner_height, spec.measured, spec.main)
+        local child_auto_main = auto_main_size and spec.auto_main
+        local child_height = spec.main
+        if auto_cross_size and spec.auto_cross then
+          child_width = nil
+          cross_offset = margin.left
+        end
+        if child_auto_main then
+          child_height = nil
+        end
         child_left = child_left + cross_offset
         child_top = child_top + leading + cursor + margin.top
         layout_node(
@@ -1219,12 +1352,15 @@ function layout_node(node, left, top, available_width, available_height, owner_w
           child_left,
           child_top,
           child_width,
-          spec.main,
+          child_height,
           inner_width,
           inner_height,
           spec.measured,
-          { useAvailableHeight = true }
+          { useAvailableHeight = not child_auto_main }
         )
+        if child_auto_main then
+          spec.main = child.layout.height
+        end
         local relative_left, relative_top = relative_offsets(child_style, inner_width, inner_height)
         offset_layout_box(child, relative_left, relative_top)
         cursor = cursor + margin.top + child.layout.height + margin.bottom + between
