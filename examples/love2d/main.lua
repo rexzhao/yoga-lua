@@ -10,6 +10,8 @@ local hovered_rect
 local screenshot_path
 local screenshot_requested = false
 local fonts = {}
+local images = {}
+local debug_layout = false
 
 local palette = {
   background = { 0.08, 0.09, 0.10, 1.0 },
@@ -188,6 +190,7 @@ end
 local function apply_startup_args(args)
   local requested_case = arg_value(args, "--case") or arg_value(args, "--ui")
   screenshot_path = arg_value(args, "--screenshot")
+  debug_layout = has_flag(args, "--debug-layout")
   local requested_screen = arg_value(args, "--screen")
 
   if requested_case then
@@ -266,6 +269,75 @@ local function set_color(color)
   love.graphics.setColor(color[1], color[2], color[3], color[4] or 1.0)
 end
 
+local function load_images()
+  local names = {
+    "bar_bg",
+    "bar_fill",
+    "button",
+    "button_gold",
+    "map_camp",
+    "map_forest",
+    "map_river",
+    "map_ruins",
+    "panel",
+    "parchment",
+    "portrait",
+    "pouch",
+    "slot",
+  }
+
+  for _, name in ipairs(names) do
+    local path = "assets/ui/" .. name .. ".png"
+    if love.filesystem.getInfo(path) then
+      local image = love.graphics.newImage(path)
+      image:setFilter("linear", "linear")
+      images[name] = image
+    end
+  end
+end
+
+local function draw_image(name, left, top, width, height, tint, fit)
+  local image = images[name]
+  if not image then
+    return false
+  end
+
+  set_color(tint or { 1, 1, 1, 1 })
+  if fit == "contain" then
+    local scale = math.min(width / image:getWidth(), height / image:getHeight())
+    local draw_width = image:getWidth() * scale
+    local draw_height = image:getHeight() * scale
+    love.graphics.draw(image, left + (width - draw_width) / 2, top + (height - draw_height) / 2, 0, scale, scale)
+  elseif fit == "cover" then
+    local previous_x, previous_y, previous_width, previous_height = love.graphics.getScissor()
+    local scale = math.max(width / image:getWidth(), height / image:getHeight())
+    local draw_width = image:getWidth() * scale
+    local draw_height = image:getHeight() * scale
+    local clip_left = math.floor(left)
+    local clip_top = math.floor(top)
+    local clip_right = math.ceil(left + width)
+    local clip_bottom = math.ceil(top + height)
+
+    if previous_x then
+      clip_left = math.max(clip_left, previous_x)
+      clip_top = math.max(clip_top, previous_y)
+      clip_right = math.min(clip_right, previous_x + previous_width)
+      clip_bottom = math.min(clip_bottom, previous_y + previous_height)
+    end
+
+    love.graphics.setScissor(clip_left, clip_top, math.max(0, clip_right - clip_left), math.max(0, clip_bottom - clip_top))
+    love.graphics.draw(image, left + (width - draw_width) / 2, top + (height - draw_height) / 2, 0, scale, scale)
+    if previous_x then
+      love.graphics.setScissor(previous_x, previous_y, previous_width, previous_height)
+    else
+      love.graphics.setScissor()
+    end
+  else
+    love.graphics.draw(image, left, top, 0, width / image:getWidth(), height / image:getHeight())
+  end
+  return true
+end
+
 local function draw_label(text, x, y, max_width, color)
   if not text or text == "" then
     return
@@ -285,7 +357,7 @@ local function node_label(node, include_containers)
     return node.label
   end
 
-  if include_containers or #(node.children or {}) == 0 then
+  if debug_layout and (include_containers or #(node.children or {}) == 0) then
     return node.props and node.props.debugName
   end
 
@@ -304,7 +376,7 @@ local function draw_node_label(node, left, top)
 end
 
 local function hover_label(node)
-  return node_label(node, true) or node.type or "node"
+  return node_label(node, true) or (node.props and node.props.debugName) or node.type or "node"
 end
 
 local function case_action_node(node)
@@ -327,13 +399,22 @@ local function draw_node(node, depth, parent_left, parent_top)
   if has_box then
     local fill = props.fill or palette.panel
     local radius = node.type == "text" and 0 or 6
+    local filled = false
 
-    if fill[4] ~= 0 then
+    if props.image and props.imageFit == "contain" and fill[4] ~= 0 then
+      set_color(fill)
+      love.graphics.rectangle("fill", left, top, width, height, radius, radius)
+      filled = true
+    end
+
+    local has_image = props.image and draw_image(props.image, left, top, width, height, props.tint, props.imageFit)
+
+    if not has_image and not filled and fill[4] ~= 0 then
       set_color(fill)
       love.graphics.rectangle("fill", left, top, width, height, radius, radius)
     end
 
-    if props.stroke ~= false then
+    if debug_layout and props.stroke ~= false then
       local line = node == hovered and palette.hover or palette.line
       set_color(line)
       love.graphics.setLineWidth(node == hovered and 3 or 1)
@@ -383,7 +464,7 @@ local function draw_overlay()
     hint = case.hint(case.state)
   end
 
-  if hovered and hovered_rect then
+  if debug_layout and hovered and hovered_rect then
     local name = hover_label(hovered)
     hover_text = string.format(
       "%s  x=%d y=%d w=%d h=%d",
@@ -412,6 +493,7 @@ function love.load(args)
 
   fonts.normal = love.graphics.newFont(14)
   fonts.small = love.graphics.newFont(12)
+  load_images()
   love.graphics.setBackgroundColor(palette.background)
 
   load_cases()

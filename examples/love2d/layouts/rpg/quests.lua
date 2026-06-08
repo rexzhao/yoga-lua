@@ -9,6 +9,8 @@ local function quest_row(ctx, styles, quest, selected)
     action = "select-quest",
     questId = quest.id,
     debugName = quest.name,
+    image = "button",
+    tint = selected and { 0.62, 0.82, 1, 1 } or { 0.88, 0.82, 0.66, 1 },
     fill = selected and palette.accent or palette.panel_alt,
     style = { height = 58, padding = 8 },
   }, {
@@ -33,6 +35,8 @@ local function objective_rows(ctx, styles, quest)
   for _, objective in ipairs(quest.objectives) do
     rows[#rows + 1] = common.box(ctx, styles, "row", {
       debugName = objective.text,
+      image = "button",
+      tint = { 0.70, 0.74, 0.78, 1 },
       fill = ctx.palette.panel_alt,
       style = { height = 34, padding = 8 },
     }, {

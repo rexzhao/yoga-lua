@@ -9,6 +9,8 @@ local function item_slot(ctx, styles, item, selected)
     action = "select-item",
     itemId = item.id,
     debugName = item.name,
+    image = "slot",
+    tint = selected and { 0.62, 0.82, 1, 1 } or (item.rarity == "rare" and { 1, 0.86, 0.48, 1 } or nil),
     fill = fill,
     style = { width = 96, height = 76, padding = 8, gap = 4 },
   }, {
@@ -89,6 +91,7 @@ return {
           }),
           common.panel(ctx, styles, {
             debugName = "item preview",
+            image = "pouch",
             fill = selected.rarity == "rare" and palette.gold or palette.panel_alt,
             style = { height = 110 },
           }),

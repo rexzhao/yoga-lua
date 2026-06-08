@@ -79,13 +79,13 @@ return {
             style = { flex = 1, padding = 12, gap = 10 },
           }, {
             common.box(ctx, styles, "row", { debugName = "map row 1", fill = { 0, 0, 0, 0 }, style = { flex = 1 } }, {
-              common.panel(ctx, styles, { debugName = "old bridge", fill = { 0.34, 0.28, 0.20, 1 }, style = { flex = 1 } }),
-              common.panel(ctx, styles, { debugName = "forest path", fill = { 0.10, 0.34, 0.21, 1 }, style = { flex = 2 } }),
+              common.panel(ctx, styles, { debugName = "old bridge", image = "map_ruins", fill = { 0.34, 0.28, 0.20, 1 }, style = { flex = 1 } }),
+              common.panel(ctx, styles, { debugName = "forest path", image = "map_forest", fill = { 0.10, 0.34, 0.21, 1 }, style = { flex = 2 } }),
             }),
             common.box(ctx, styles, "row", { debugName = "map row 2", fill = { 0, 0, 0, 0 }, style = { flex = 1 } }, {
-              common.panel(ctx, styles, { debugName = "camp fire", fill = palette.gold, style = { flex = 1 } }),
-              common.panel(ctx, styles, { debugName = "ruins gate", fill = { 0.20, 0.22, 0.31, 1 }, style = { flex = 1 } }),
-              common.panel(ctx, styles, { debugName = "river", fill = palette.accent, style = { flex = 1 } }),
+              common.panel(ctx, styles, { debugName = "camp fire", image = "map_camp", fill = palette.gold, style = { flex = 1 } }),
+              common.panel(ctx, styles, { debugName = "ruins gate", image = "map_ruins", fill = { 0.20, 0.22, 0.31, 1 }, style = { flex = 1 } }),
+              common.panel(ctx, styles, { debugName = "river", image = "map_river", fill = palette.accent, style = { flex = 1 } }),
             }),
           }),
           quick_actions,

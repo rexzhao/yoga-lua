@@ -83,6 +83,9 @@ function common.panel(ctx, styles, props, children)
   props = props or {}
   props.fill = props.fill or ctx.palette.panel
   props.debugName = props.debugName or "panel"
+  if props.image ~= false then
+    props.image = props.image or "panel"
+  end
   return common.box(ctx, styles, "panel", props, children)
 end
 
@@ -91,6 +94,8 @@ function common.button(ctx, styles, label, action, props)
   props.action = action
   props.debugName = props.debugName or label
   props.fill = props.fill or ctx.palette.panel_alt
+  props.image = props.image or "button"
+  props.tint = props.tint or props.fill
   props.stroke = props.stroke
   return common.box(ctx, styles, props.small and "small_button" or "button", props, {
     common.text(ctx, label, {
@@ -131,6 +136,7 @@ function common.nav(ctx, styles, state, active)
   buttons[#buttons + 1] = common.box(ctx, styles, "button", {
     debugName = "gold",
     fill = palette.gold,
+    image = "button_gold",
     style = { flex = 1, height = 34 },
   }, {
     common.text(ctx, "Gold " .. state.hero.gold, { style = { height = 20 }, fill = transparent() }),
@@ -154,9 +160,16 @@ function common.stat_bar(ctx, styles, label, value, max_value, color)
       style = { height = 18 },
       fill = transparent(),
     }),
-    common.box(ctx, styles, "bar", { debugName = label .. " bar", fill = ctx.palette.panel_alt }, {
+    common.box(ctx, styles, "bar", {
+      debugName = label .. " bar",
+      fill = ctx.palette.panel_alt,
+      image = "bar_bg",
+      tint = { 0.45, 0.46, 0.48, 1 },
+    }, {
       common.box(ctx, styles, "bar_fill", {
         fill = color,
+        image = "bar_fill",
+        tint = color,
         style = { width = tostring(math.floor(percent * 100)) .. "%", height = 12 },
         stroke = false,
       }),

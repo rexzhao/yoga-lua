@@ -8,6 +8,8 @@ local function shop_row(ctx, styles, item)
     action = "buy-item",
     shopId = item.id,
     debugName = item.name,
+    image = "button",
+    tint = { 0.88, 0.82, 0.66, 1 },
     fill = palette.panel_alt,
     style = { height = 52, padding = 8 },
   }, {
@@ -62,6 +64,7 @@ return {
           }),
           common.panel(ctx, styles, {
             debugName = "camp fire illustration",
+            image = "map_camp",
             fill = { 0.46, 0.25, 0.16, 1 },
             style = { flex = 1 },
           }),
@@ -86,11 +89,12 @@ return {
             common.text(ctx, "Crystal Dust: " .. state.materials.dust, { style = { height = 28 }, fill = palette.panel_alt }),
             common.panel(ctx, styles, {
               debugName = "recipe cards",
+              image = "parchment",
               fill = { 0.14, 0.16, 0.19, 1 },
-              style = { flex = 1 },
+              style = { flex = 1, paddingTop = 34, paddingHorizontal = 26, gap = 8 },
             }, {
-              common.text(ctx, "Recipe: Trail Tonic", { style = { height = 24 }, fill = { 0, 0, 0, 0 } }),
-              common.text(ctx, "Recipe: Warden Arrow", { style = { height = 24 }, fill = { 0, 0, 0, 0 } }),
+              common.text(ctx, "Recipe: Trail Tonic", { style = { height = 24 }, fill = { 0, 0, 0, 0 }, textColor = { 0.18, 0.12, 0.07, 1 } }),
+              common.text(ctx, "Recipe: Warden Arrow", { style = { height = 24 }, fill = { 0, 0, 0, 0 }, textColor = { 0.18, 0.12, 0.07, 1 } }),
             }),
           }),
           common.panel(ctx, styles, {

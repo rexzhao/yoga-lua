@@ -15,6 +15,8 @@ end
 local function slot(ctx, styles, label, item)
   return common.panel(ctx, styles, {
     debugName = label,
+    image = "slot",
+    tint = item and { 1, 1, 1, 1 } or { 0.55, 0.58, 0.62, 1 },
     fill = item and ctx.palette.panel_alt or { 0.12, 0.13, 0.15, 1 },
     style = { height = 50, padding = 8 },
   }, {
@@ -40,11 +42,13 @@ return {
           common.panel(ctx, styles, {
             debugName = "portrait",
             fill = palette.panel,
-            style = { height = 220, padding = 12, gap = 10 },
+            style = { height = 310, padding = 12, gap = 10 },
           }, {
             common.text(ctx, hero.name, { style = { height = 30 }, fill = { 0, 0, 0, 0 } }),
             common.panel(ctx, styles, {
               debugName = "portrait art",
+              image = "portrait",
+              imageFit = "cover",
               fill = { 0.21, 0.30, 0.38, 1 },
               style = { flex = 1 },
             }),

@@ -7,6 +7,8 @@ local function skill_row(ctx, styles, skill, selected)
     action = "select-skill",
     skillId = skill.id,
     debugName = skill.name,
+    image = "button",
+    tint = selected and { 0.62, 0.82, 1, 1 } or { 0.82, 0.84, 0.86, 1 },
     fill = selected and palette.accent or palette.panel_alt,
     style = { height = 54, padding = 8 },
   }, {
@@ -29,6 +31,8 @@ end
 local function hotbar_slot(ctx, styles, index, skill)
   return common.panel(ctx, styles, {
     debugName = "hotbar " .. index,
+    image = "slot",
+    tint = skill and { 0.72, 0.88, 1, 1 } or { 0.62, 0.64, 0.68, 1 },
     fill = skill and ctx.palette.accent or ctx.palette.panel_alt,
     style = { flex = 1, height = 58, padding = 8 },
   }, {

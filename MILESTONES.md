@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 509 tests, 1 skipped`
+- `lua tests/run.lua` -> `ok - 510 tests, 1 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 - `lua benchmarks/run.lua` and `.\LOVE\lovec.exe .\benchmarks\love2d` -> record 100, 1,000, and 5,000 node layout timings in `BENCHMARKS.md`
 
@@ -289,6 +289,8 @@ Status: complete.
 - [x] Add RPG field HUD, character, skills, inventory, quests, and camp/shop screens.
 - [x] Add clickable UI actions for item selection/use/inspection, quest accept/abandon/track, skill selection, rest, and shop purchase.
 - [x] Add `--screen` startup support for targeted Love2D screenshot checks.
+- [x] Add imagegen-derived base UI PNG assets for panels, buttons, slots, bars, portraits, item art, and map tiles.
+- [x] Hide layout helper frames by default while keeping `--debug-layout` for targeted layout inspection.
 - [x] Verify `lua tests/run.lua` after implementation.
 - [x] Verify `.\LOVE\lovec.exe .\examples\love2d --smoke` after implementation.
 - [x] Verify targeted Love2D screenshots for the major RPG screens.

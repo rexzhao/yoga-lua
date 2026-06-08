@@ -21,14 +21,22 @@ Open a specific RPG screen or capture it for review:
 .\LOVE\lovec.exe .\examples\love2d --screen quests --screenshot $env:TEMP\yoga-rpg-quests.png
 ```
 
+Show layout helper frames and hover geometry while developing:
+
+```powershell
+.\LOVE\lovec.exe .\examples\love2d --debug-layout
+```
+
 Controls:
 
 - The app starts directly in the RPG field HUD.
 - Click top navigation buttons to open Character, Skills, Bag, Quests, or Camp.
 - `C`, `K`, `I`, `Q`, `M`, `H`: open Character, Skills, Bag, Quests, Camp, or Field.
 - `Esc`: close the current RPG panel back to the field HUD.
-- Move the mouse over a rectangle to inspect its computed layout.
+- Run with `--debug-layout` and move the mouse over a node to inspect its computed layout.
 
 The app imports the project modules from `../../src`; the `LOVE/` directory remains only the local Love2D runtime and is ignored by git.
 
 The active RPG layout entry is `layouts/rpg_game.lua`. RPG interface descriptions live in `layouts/rpg/`, with each screen kept in its own file.
+
+Generated base UI resources live in `assets/ui/`. They are imagegen-derived PNGs used by the Love2D renderer for panels, buttons, slots, bars, portraits, item art, and map tiles.
