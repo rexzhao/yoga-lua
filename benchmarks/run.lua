@@ -6,7 +6,49 @@ local ui = require("ui")
 local sizes = { 100, 1000, 5000 }
 local incremental_size = 5000
 local measured_incremental_size = 1000
-local iterations = tonumber(arg and arg[1]) or 20
+local iterations = math.max(1, tonumber(arg and arg[1]) or 20)
+local sample_count = math.max(1, tonumber(arg and arg[2]) or 5)
+
+local function now()
+  if love and love.timer and love.timer.getTime then
+    return love.timer.getTime()
+  end
+
+  return os.clock()
+end
+
+local function metric_stats(samples, getter)
+  local values = {}
+
+  for index, sample in ipairs(samples) do
+    values[index] = getter(sample)
+  end
+
+  table.sort(values)
+
+  local count = #values
+  local middle = math.floor((count + 1) / 2)
+  local median = values[middle]
+  if count % 2 == 0 then
+    median = (values[middle] + values[middle + 1]) / 2
+  end
+
+  return {
+    median = median,
+    min = values[1],
+    max = values[count],
+  }
+end
+
+local function run_samples(factory)
+  local samples = {}
+
+  for index = 1, sample_count do
+    samples[index] = factory()
+  end
+
+  return samples
+end
 
 local function make_leaf(index)
   return yoga.node({
@@ -106,12 +148,12 @@ local function benchmark(count)
 
   yoga.calculateLayout(root)
 
-  local start = os.clock()
+  local start = now()
   for _ = 1, iterations do
     yoga.markDirty(root)
     yoga.calculateLayout(root)
   end
-  local elapsed = os.clock() - start
+  local elapsed = now() - start
 
   return {
     count = count,
@@ -126,12 +168,12 @@ end
 local function time_incremental(root, step)
   yoga.calculateLayout(root)
 
-  local start = os.clock()
+  local start = now()
   for index = 1, iterations do
     step(index)
     yoga.calculateLayout(root)
   end
-  local elapsed = os.clock() - start
+  local elapsed = now() - start
 
   return {
     iterations = iterations,
@@ -180,12 +222,12 @@ local function time_measured_incremental(root, counter, step)
   yoga.calculateLayout(root)
   counter.calls = 0
 
-  local start = os.clock()
+  local start = now()
   for index = 1, iterations do
     step(index)
     yoga.calculateLayout(root)
   end
-  local elapsed = os.clock() - start
+  local elapsed = now() - start
 
   return {
     iterations = iterations,
@@ -320,7 +362,7 @@ local function benchmark_virtual_jumps()
 
   local rendered_total = 0
   local visible_total = 0
-  local start = os.clock()
+  local start = now()
 
   for _, offset in ipairs(offsets) do
     local root, rendered = make_virtual_list(offset)
@@ -329,7 +371,7 @@ local function benchmark_virtual_jumps()
     visible_total = visible_total + (root.virtual.visibleEnd - root.virtual.visibleStart + 1)
   end
 
-  local elapsed = os.clock() - start
+  local elapsed = now() - start
 
   return {
     iterations = jump_iterations,
@@ -340,106 +382,139 @@ local function benchmark_virtual_jumps()
   }
 end
 
-print(string.format("layout benchmark (%d iterations)", iterations))
-for _, size in ipairs(sizes) do
-  local result = benchmark(size)
+local function print_time_stats(label, samples, getter)
+  local stats = metric_stats(samples, function(sample)
+    return getter(sample).average
+  end)
+  local result = getter(samples[1])
+
   print(string.format(
-    "%5d nodes: total %.4fs, avg %.6fs, root %.0fx%.0f",
-    result.count,
-    result.total,
-    result.average,
+    "%s: avg median %.6fs, min %.6fs, max %.6fs, root %.0fx%.0f",
+    label,
+    stats.median,
+    stats.min,
+    stats.max,
     result.width,
     result.height
   ))
 end
 
-local virtual = benchmark_virtual_jumps()
+local function print_heap_stats(label, samples, getter)
+  local stats = metric_stats(samples, function(sample)
+    return getter(sample).averageKb
+  end)
+  local result = getter(samples[1])
+
+  print(string.format(
+    "%s: heap avg median %.3fKB, min %.3fKB, max %.3fKB, root %.0fx%.0f",
+    label,
+    stats.median,
+    stats.min,
+    stats.max,
+    result.width,
+    result.height
+  ))
+end
+
+local function print_measured_time_stats(label, samples, getter)
+  local call_stats = metric_stats(samples, function(sample)
+    return getter(sample).measureCalls
+  end)
+  print_time_stats(label, samples, getter)
+  print(string.format("    measure calls median %.0f, min %.0f, max %.0f", call_stats.median, call_stats.min, call_stats.max))
+end
+
 print(string.format(
-  "virtual list jumps (%d jumps): total %.4fs, avg %.6fs, rendered avg %.1f, visible avg %.1f",
-  virtual.iterations,
-  virtual.total,
-  virtual.average,
-  virtual.renderedAverage,
-  virtual.visibleAverage
+  "layout benchmark (%d iterations, %d samples, per-iteration avg median/min/max)",
+  iterations,
+  sample_count
+))
+for _, size in ipairs(sizes) do
+  local samples = run_samples(function()
+    return benchmark(size)
+  end)
+  print_time_stats(string.format("%5d nodes", size), samples, function(sample)
+    return sample
+  end)
+end
+
+local virtual_samples = run_samples(benchmark_virtual_jumps)
+local virtual_average = metric_stats(virtual_samples, function(sample)
+  return sample.average
+end)
+local rendered_average = metric_stats(virtual_samples, function(sample)
+  return sample.renderedAverage
+end)
+local visible_average = metric_stats(virtual_samples, function(sample)
+  return sample.visibleAverage
+end)
+print(string.format(
+  "virtual list jumps (%d jumps, %d samples): avg median %.6fs, min %.6fs, max %.6fs, rendered median %.1f, visible median %.1f",
+  virtual_samples[1].iterations,
+  sample_count,
+  virtual_average.median,
+  virtual_average.min,
+  virtual_average.max,
+  rendered_average.median,
+  visible_average.median
 ))
 
-local incremental = benchmark_incremental(incremental_size)
-print(string.format("incremental layout benchmark (%d nodes, %d iterations)", incremental.count, iterations))
+local incremental_samples = run_samples(function()
+  return benchmark_incremental(incremental_size)
+end)
 print(string.format(
-  "  clean cache hits: total %.4fs, avg %.6fs, root %.0fx%.0f",
-  incremental.clean.total,
-  incremental.clean.average,
-  incremental.clean.width,
-  incremental.clean.height
+  "incremental layout benchmark (%d nodes, %d iterations, %d samples, per-iteration avg median/min/max)",
+  incremental_size,
+  iterations,
+  sample_count
 ))
-print(string.format(
-  "  root dirty relayout: total %.4fs, avg %.6fs, root %.0fx%.0f",
-  incremental.rootDirty.total,
-  incremental.rootDirty.average,
-  incremental.rootDirty.width,
-  incremental.rootDirty.height
-))
-print(string.format(
-  "  single leaf dirty: total %.4fs, avg %.6fs, root %.0fx%.0f",
-  incremental.leafDirty.total,
-  incremental.leafDirty.average,
-  incremental.leafDirty.width,
-  incremental.leafDirty.height
-))
-print(string.format(
-  "  single style change: total %.4fs, avg %.6fs, root %.0fx%.0f",
-  incremental.styleChange.total,
-  incremental.styleChange.average,
-  incremental.styleChange.width,
-  incremental.styleChange.height
-))
+print_time_stats("  clean cache hits", incremental_samples, function(sample)
+  return sample.clean
+end)
+print_time_stats("  root dirty relayout", incremental_samples, function(sample)
+  return sample.rootDirty
+end)
+print_time_stats("  single leaf dirty", incremental_samples, function(sample)
+  return sample.leafDirty
+end)
+print_time_stats("  single style change", incremental_samples, function(sample)
+  return sample.styleChange
+end)
 
-local allocations = benchmark_allocations(incremental_size)
-print(string.format("allocation benchmark (%d nodes, %d iterations, steady-state KB)", allocations.count, iterations))
+local allocation_samples = run_samples(function()
+  return benchmark_allocations(incremental_size)
+end)
 print(string.format(
-  "  clean cache hits: total %.3fKB, avg %.3fKB, root %.0fx%.0f",
-  allocations.clean.totalKb,
-  allocations.clean.averageKb,
-  allocations.clean.width,
-  allocations.clean.height
+  "heap growth benchmark (%d nodes, %d iterations, %d samples, steady-state KB growth median/min/max)",
+  incremental_size,
+  iterations,
+  sample_count
 ))
-print(string.format(
-  "  single leaf dirty: total %.3fKB, avg %.3fKB, root %.0fx%.0f",
-  allocations.leafDirty.totalKb,
-  allocations.leafDirty.averageKb,
-  allocations.leafDirty.width,
-  allocations.leafDirty.height
-))
-print(string.format(
-  "  branch dirty relayout: total %.3fKB, avg %.3fKB, root %.0fx%.0f",
-  allocations.branchDirty.totalKb,
-  allocations.branchDirty.averageKb,
-  allocations.branchDirty.width,
-  allocations.branchDirty.height
-))
-print(string.format(
-  "  full subtree relayout: total %.3fKB, avg %.3fKB, root %.0fx%.0f",
-  allocations.fullRelayout.totalKb,
-  allocations.fullRelayout.averageKb,
-  allocations.fullRelayout.width,
-  allocations.fullRelayout.height
-))
+print_heap_stats("  clean cache hits", allocation_samples, function(sample)
+  return sample.clean
+end)
+print_heap_stats("  single leaf dirty", allocation_samples, function(sample)
+  return sample.leafDirty
+end)
+print_heap_stats("  branch dirty relayout", allocation_samples, function(sample)
+  return sample.branchDirty
+end)
+print_heap_stats("  full subtree relayout", allocation_samples, function(sample)
+  return sample.fullRelayout
+end)
 
-local measured_incremental = benchmark_measured_incremental(measured_incremental_size)
-print(string.format("measured-node incremental benchmark (%d nodes, %d iterations)", measured_incremental.count, iterations))
+local measured_incremental_samples = run_samples(function()
+  return benchmark_measured_incremental(measured_incremental_size)
+end)
 print(string.format(
-  "  root dirty measure cache: total %.4fs, avg %.6fs, measure calls %d, root %.0fx%.0f",
-  measured_incremental.rootDirty.total,
-  measured_incremental.rootDirty.average,
-  measured_incremental.rootDirty.measureCalls,
-  measured_incremental.rootDirty.width,
-  measured_incremental.rootDirty.height
+  "measured-node incremental benchmark (%d nodes, %d iterations, %d samples, per-iteration avg median/min/max)",
+  measured_incremental_size,
+  iterations,
+  sample_count
 ))
-print(string.format(
-  "  single measured leaf dirty: total %.4fs, avg %.6fs, measure calls %d, root %.0fx%.0f",
-  measured_incremental.leafDirty.total,
-  measured_incremental.leafDirty.average,
-  measured_incremental.leafDirty.measureCalls,
-  measured_incremental.leafDirty.width,
-  measured_incremental.leafDirty.height
-))
+print_measured_time_stats("  root dirty measure cache", measured_incremental_samples, function(sample)
+  return sample.rootDirty
+end)
+print_measured_time_stats("  single measured leaf dirty", measured_incremental_samples, function(sample)
+  return sample.leafDirty
+end)

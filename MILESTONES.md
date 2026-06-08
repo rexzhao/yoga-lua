@@ -255,6 +255,7 @@ Status: complete.
 ## Milestone 7: Allocation Reduction
 
 - [x] Add allocation-focused benchmark coverage for clean-tree, leaf-dirty, branch-dirty, and full relayout scenarios.
+- [x] Report benchmark timing and heap growth with multi-sample median/min/max statistics.
 - [x] Record allocation benchmark results for Lua 5.4 and Love2D/LuaJIT in `BENCHMARKS.md`.
 - [x] Reduce per-layout temporary allocations by reusing scratch child specs where safe.
 - [x] Reduce repeated edge/margin result allocations without changing auto-margin mutation semantics.
