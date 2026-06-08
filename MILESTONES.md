@@ -245,12 +245,28 @@ Status: complete.
 - [x] Add tests mirroring upstream cached layout/cache hit behavior from `EventsTest` where practical in Lua.
 - [x] Add tests proving a dirty leaf relayout does not remeasure or relayout unaffected sibling subtrees when constraints are unchanged.
 - [x] Add tests proving changed parent constraints can force clean children to relayout when their cache key no longer matches.
-- [ ] Future optimization: reduce per-layout temporary allocations by reusing scratch specs and edge/margin result storage after the incremental baseline is stable.
-- [ ] Future optimization: preprocess style metadata on `node`, `setStyle`, and `updateStyle` so layout can skip repeated hot-path style discovery.
-- [ ] Future optimization: add a conservative simple row/column layout fast path for common game UI nodes after compatibility tests cover the general path.
 - [x] Verify `lua tests/run.lua` after implementation.
 - [x] Verify `lua benchmarks/run.lua` and `.\LOVE\lovec.exe .\benchmarks\love2d` after implementation.
 
 Known skipped cases: none.
 
-Status: complete for the incremental layout cache scope; future optimization directions remain tracked.
+Status: complete.
+
+## Milestone 7: Allocation Reduction
+
+- [ ] Add allocation-focused benchmark coverage for clean-tree, leaf-dirty, branch-dirty, and full relayout scenarios.
+- [ ] Record allocation benchmark results for Lua 5.4 and Love2D/LuaJIT in `BENCHMARKS.md`.
+- [ ] Reduce per-layout temporary allocations by reusing scratch child specs where safe.
+- [ ] Reduce repeated edge/margin result allocations without changing auto-margin mutation semantics.
+- [ ] Preserve existing incremental layout correctness and dirty propagation behavior.
+- [ ] Verify `lua tests/run.lua` after implementation.
+- [ ] Verify `lua benchmarks/run.lua` and `.\LOVE\lovec.exe .\benchmarks\love2d` after implementation.
+
+Known skipped cases: none.
+
+Status: planned.
+
+## Future Optimization Directions
+
+- [ ] Preprocess style metadata on `node`, `setStyle`, and `updateStyle` so layout can skip repeated hot-path style discovery.
+- [ ] Add a conservative simple row/column layout fast path for common game UI nodes after compatibility tests cover the general path.
