@@ -50,4 +50,14 @@ return function(runner, helper)
     helper.assert_layout(root.children[1], { left = 0, top = 0, width = 50, height = 40 }, "first basis shrink child")
     helper.assert_layout(root.children[2], { left = 50, top = 0, width = 50, height = 40 }, "second basis shrink child")
   end)
+
+  runner:test("negative flex shorthand resolves to flex shrink", function()
+    local root = yoga.node({ width = 100, height = 40, flexDirection = "row" }, {
+      yoga.node({ flex = -1, width = 200 }),
+    })
+
+    yoga.calculateLayout(root)
+
+    helper.assert_layout(root.children[1], { left = 0, top = 0, width = 100, height = 40 }, "negative flex child")
+  end)
 end

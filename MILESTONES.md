@@ -95,10 +95,12 @@ Status: complete.
 - [x] Percentage `height`.
 - [x] Percentage `padding`.
 - [x] Percentage `margin`.
+- [x] Percentage parser supports leading-dot values while preserving trailing-dot numeric values.
 - [x] `minWidth`.
 - [x] `maxWidth`.
 - [x] `minHeight`.
 - [x] `maxHeight`.
+- [x] Conflicting min/max constraints honor Yoga-compatible min-wins behavior.
 - [x] Love2D visual demo for min/max constraints.
 - [x] `position = "absolute"`.
 - [x] Love2D visual demo for `position = "absolute"`.
@@ -133,11 +135,13 @@ Status: complete for the supported Milestone 3 scope; one upstream-disabled Yoga
 ## Milestone 4: Advanced Flex Behavior
 
 - [x] `flexShrink`.
+- [x] Negative `flex` shorthand maps to Yoga-compatible shrink behavior.
 - [x] Love2D visual demo for `flexShrink`.
 - [x] Auto cross-size from non-wrapped flex children.
 - [x] Auto main-size from non-wrapped flex children.
 - [x] Partial `flexGrow` remaining-space distribution when total grow is below 1.
 - [x] `flexBasis`.
+- [x] Positive `flex` shorthand uses Yoga-compatible zero flex basis.
 - [x] Love2D visual demo for `flexBasis`.
 - [x] `flexWrap` supported row and wrap-reverse behavior.
 - [x] Basic row `flexWrap = "wrap"` without `alignContent`.

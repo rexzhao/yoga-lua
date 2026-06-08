@@ -36,6 +36,17 @@ return function(runner, helper)
     helper.assert_layout(child, { left = 10, top = 5, width = 75, height = 50 }, "inset child")
   end)
 
+  runner:test("absolute child derives width from opposing insets when height is explicit", function()
+    local child = yoga.node({ position = "absolute", left = 10, right = 20, height = 30 })
+    local root = yoga.node({ width = 200, height = 100 }, {
+      child,
+    })
+
+    yoga.calculateLayout(root)
+
+    helper.assert_layout(child, { left = 10, top = 0, width = 170, height = 30 }, "mixed inset child")
+  end)
+
   runner:test("absolute child supports percentage offsets and size", function()
     local child = yoga.node({
       position = "absolute",

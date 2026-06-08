@@ -62,4 +62,16 @@ return function(runner, helper)
     helper.assert_layout(root.children[2], { left = 0, top = 132, width = 200, height = 92 }, "second partial grow child")
     helper.assert_layout(root.children[3], { left = 0, top = 224, width = 200, height = 184 }, "third partial grow child")
   end)
+
+  runner:test("positive flex uses zero as implicit flex basis", function()
+    local root = yoga.node({ width = 300, height = 40, flexDirection = "row" }, {
+      yoga.node({ flex = 1, width = 100 }),
+      yoga.node({ flex = 1, width = 200 }),
+    })
+
+    yoga.calculateLayout(root)
+
+    helper.assert_layout(root.children[1], { left = 0, top = 0, width = 150, height = 40 }, "first flex shorthand child")
+    helper.assert_layout(root.children[2], { left = 150, top = 0, width = 150, height = 40 }, "second flex shorthand child")
+  end)
 end

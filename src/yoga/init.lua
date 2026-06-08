@@ -429,7 +429,7 @@ local function resolve_value(value, owner_size)
   end
 
   if value_type == "string" then
-    local percent = value:match("^%s*([+-]?%d+%.?%d*)%%%s*$")
+    local percent = value:match("^%s*([+-]?%d+%.?%d*)%%%s*$") or value:match("^%s*([+-]?%.%d+)%%%s*$")
     if percent and type(owner_size) == "number" then
       return owner_size * tonumber(percent) / 100
     end
@@ -661,12 +661,12 @@ local function constrain_size(value, style, dimension, owner_size)
   local min_value = resolve_value(style[min_key], owner_size)
   local max_value = resolve_value(style[max_key], owner_size)
 
-  if min_value ~= nil then
-    value = math.max(value, min_value)
-  end
-
   if max_value ~= nil then
     value = math.min(value, max_value)
+  end
+
+  if min_value ~= nil then
+    value = math.max(value, min_value)
   end
 
   return math.max(0, value)
@@ -709,11 +709,32 @@ local function locked_min_max_measure(style, owner_width, owner_height)
 end
 
 local function flex_grow(style)
-  return number_or_zero(style.flexGrow or style.flex)
+  if style.flexGrow ~= nil then
+    return number_or_zero(style.flexGrow)
+  end
+
+  return type(style.flex) == "number" and style.flex > 0 and style.flex or 0
 end
 
 local function flex_shrink(style)
-  return number_or_zero(style.flexShrink)
+  if style.flexShrink ~= nil then
+    return number_or_zero(style.flexShrink)
+  end
+
+  return type(style.flex) == "number" and style.flex < 0 and -style.flex or 0
+end
+
+local function flex_basis(style, owner_size)
+  local basis = resolve_value(style.flexBasis, owner_size)
+  if basis ~= nil then
+    return basis
+  end
+
+  if type(style.flex) == "number" and style.flex > 0 then
+    return 0
+  end
+
+  return nil
 end
 
 local function aspect_ratio(style)
@@ -802,7 +823,7 @@ local function main_size(style, direction, owner_size, cross_owner_size, measure
   local ratio = aspect_ratio(style)
 
   if is_row_direction(direction) then
-    local basis = resolve_value(style.flexBasis, owner_size)
+    local basis = flex_basis(style, owner_size)
     if basis ~= nil then
       return constrain_size(basis, style, "width", owner_size)
     end
@@ -823,7 +844,7 @@ local function main_size(style, direction, owner_size, cross_owner_size, measure
     return constrain_size(width, style, "width", owner_size)
   end
 
-  local basis = resolve_value(style.flexBasis, owner_size)
+  local basis = flex_basis(style, owner_size)
   if basis ~= nil then
     return constrain_size(basis, style, "height", owner_size)
   end
@@ -845,7 +866,7 @@ local function main_size(style, direction, owner_size, cross_owner_size, measure
 end
 
 local function has_auto_main_size(style, direction, owner_size, cross_owner_size, measured)
-  if resolve_value(style.flexBasis, owner_size) ~= nil then
+  if flex_basis(style, owner_size) ~= nil then
     return false
   end
 
@@ -1578,7 +1599,8 @@ local function cross_axis_offset(parent_style, child_style, available, size)
 end
 
 local function absolute_axis_size(style, dimension, owner_size, start_offset, end_offset, measured_size, start_margin, end_margin)
-  local explicit = dimension == "width" and resolve_value(style.width, owner_size) or resolve_value(style.height, owner_size)
+  local size_key = dimension == "width" and "width" or "height"
+  local explicit = resolve_value(style[size_key], owner_size)
   start_margin = start_margin or 0
   end_margin = end_margin or 0
 
