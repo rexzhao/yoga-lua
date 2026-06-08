@@ -282,6 +282,21 @@ Known skipped cases: none.
 
 Status: complete.
 
+## Milestone 9: Love2D RPG UI Demo
+
+- [x] Replace the static Love2D layout showcase entrypoint with a simple RPG UI demo.
+- [x] Keep each RPG interface in its own layout description file.
+- [x] Add RPG field HUD, character, skills, inventory, quests, and camp/shop screens.
+- [x] Add clickable UI actions for item selection/use/inspection, quest accept/abandon/track, skill selection, rest, and shop purchase.
+- [x] Add `--screen` startup support for targeted Love2D screenshot checks.
+- [x] Verify `lua tests/run.lua` after implementation.
+- [x] Verify `.\LOVE\lovec.exe .\examples\love2d --smoke` after implementation.
+- [x] Verify targeted Love2D screenshots for the major RPG screens.
+
+Known skipped cases: none.
+
+Status: complete.
+
 ## Future Optimization Directions
 
 - [ ] Preprocess style metadata on `node`, `setStyle`, and `updateStyle` so layout can skip repeated hot-path style discovery.

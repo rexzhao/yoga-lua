@@ -5,11 +5,8 @@ local unpack = table.unpack or unpack
 
 local root
 local current_case = 1
-local mode = "menu"
 local hovered
 local hovered_rect
-local menu_scroll = 0
-local menu_scroll_max = 0
 local screenshot_path
 local screenshot_requested = false
 local fonts = {}
@@ -70,31 +67,11 @@ local function label(text, props)
 end
 
 local layout_modules = {
-  "layouts.inventory",
-  "layouts.settings",
-  "layouts.flex_spacing",
-  "layouts.axis_gap",
-  "layouts.flex_basis",
-  "layouts.flex_shrink",
-  "layouts.flex_wrap",
-  "layouts.align_content",
-  "layouts.aspect_ratio",
-  "layouts.justify",
-  "layouts.align",
-  "layouts.baseline",
-  "layouts.percent",
-  "layouts.measure",
-  "layouts.virtual_list",
-  "layouts.overflow",
-  "layouts.minmax",
-  "layouts.display",
-  "layouts.absolute",
-  "layouts.relative",
+  "layouts.rpg_game",
 }
 
 local cases = {}
 local layout_ctx
-local menu_layout
 local overlay_layout
 
 local function layout_context()
@@ -114,18 +91,23 @@ end
 
 local function load_cases()
   layout_ctx = layout_context()
-  menu_layout = require("layouts.menu")
   overlay_layout = require("layouts.overlay")
   cases = {}
 
   for _, module_name in ipairs(layout_modules) do
     local layout = require(module_name)
+    local state = layout.createState and layout.createState(layout_ctx) or nil
     cases[#cases + 1] = {
       id = layout.id,
       name = layout.name,
+      state = state,
       build = function(width, height)
-        return layout.build(layout_ctx, width, height)
+        return layout.build(layout_ctx, width, height, state)
       end,
+      handleClick = layout.handleClick,
+      keypressed = layout.keypressed,
+      applyArgs = layout.applyArgs,
+      hint = layout.hint,
     }
   end
 end
@@ -135,49 +117,14 @@ local function offset_layout(node, dx, dy)
   node.layout.top = node.layout.top + dy
 end
 
-local function offset_children(node, dx, dy)
-  for _, child in ipairs(node.children or {}) do
-    offset_layout(child, dx, dy)
-  end
-end
-
-local function clamp_menu_scroll()
-  menu_scroll = math.max(0, math.min(menu_scroll, menu_scroll_max))
-end
-
-local function update_menu_scroll_limits()
-  if mode ~= "menu" or not root then
-    menu_scroll = 0
-    menu_scroll_max = 0
-    return
-  end
-
-  local content_bottom = 0
-  for _, child in ipairs(root.children or {}) do
-    content_bottom = math.max(content_bottom, child.layout.top + child.layout.height)
-  end
-
-  menu_scroll_max = math.max(0, content_bottom - root.layout.height)
-  clamp_menu_scroll()
-end
-
 local function rebuild()
   local width, window_height = love.graphics.getDimensions()
   local layout_height = math.max(1, window_height - chrome.top - chrome.bottom)
 
-  if mode == "menu" then
-    root = menu_layout.build(layout_ctx, width, layout_height, cases, current_case)
-  else
-    root = cases[current_case].build(width, layout_height)
-  end
+  root = cases[current_case].build(width, layout_height)
 
   yoga.calculateLayout(root, width, layout_height)
   offset_layout(root, 0, chrome.top)
-
-  if mode == "menu" then
-    update_menu_scroll_limits()
-    offset_children(root, 0, -menu_scroll)
-  end
 end
 
 local function has_flag(args, flag)
@@ -241,18 +188,23 @@ end
 local function apply_startup_args(args)
   local requested_case = arg_value(args, "--case") or arg_value(args, "--ui")
   screenshot_path = arg_value(args, "--screenshot")
+  local requested_screen = arg_value(args, "--screen")
 
-  if not requested_case then
-    return
+  if requested_case then
+    local index = find_case_index(requested_case)
+    if not index then
+      error("unknown Love2D UI case: " .. tostring(requested_case))
+    end
+
+    current_case = index
   end
 
-  local index = find_case_index(requested_case)
-  if not index then
-    error("unknown Love2D UI case: " .. tostring(requested_case))
+  local case = cases[current_case]
+  if case and case.applyArgs then
+    case.applyArgs(case.state, {
+      screen = requested_screen,
+    })
   end
-
-  current_case = index
-  mode = "case"
 end
 
 local function save_screenshot(path, image_data)
@@ -310,105 +262,6 @@ local function find_deepest(node, x, y, parent_left, parent_top)
   return nil
 end
 
-local function find_case_at(node, x, y, parent_left, parent_top)
-  local left, top, width, height = absolute_rect(node, parent_left, parent_top)
-  local has_box = width > 0 and height > 0
-
-  if has_box and not point_in_rect(x, y, left, top, width, height) then
-    return nil
-  end
-
-  for index = #(node.children or {}), 1, -1 do
-    local child_case = find_case_at(node.children[index], x, y, left, top)
-    if child_case then
-      return child_case
-    end
-  end
-
-  local props = node.props or {}
-  return props.caseIndex
-end
-
-local function selected_menu_node()
-  if mode ~= "menu" or not root then
-    return nil
-  end
-
-  for _, child in ipairs(root.children or {}) do
-    local props = child.props or {}
-    if props.caseIndex == current_case then
-      return child
-    end
-  end
-
-  return nil
-end
-
-local function ensure_current_case_visible()
-  local selected = selected_menu_node()
-  if not selected then
-    return
-  end
-
-  local padding = 8
-  local viewport_top = root.layout.top + padding
-  local viewport_bottom = root.layout.top + root.layout.height - padding
-  local item_top = root.layout.top + selected.layout.top
-  local item_bottom = item_top + selected.layout.height
-  local next_scroll = menu_scroll
-
-  if item_top < viewport_top then
-    next_scroll = menu_scroll - (viewport_top - item_top)
-  elseif item_bottom > viewport_bottom then
-    next_scroll = menu_scroll + (item_bottom - viewport_bottom)
-  end
-
-  next_scroll = math.max(0, math.min(next_scroll, menu_scroll_max))
-  if next_scroll ~= menu_scroll then
-    menu_scroll = next_scroll
-    rebuild()
-  end
-end
-
-local function select_next(delta)
-  current_case = (current_case + delta - 1) % #cases + 1
-  rebuild()
-  ensure_current_case_visible()
-end
-
-local function jump_to_case(index)
-  current_case = math.max(1, math.min(index, #cases))
-  rebuild()
-  ensure_current_case_visible()
-end
-
-local function scroll_menu(delta)
-  if mode ~= "menu" then
-    return
-  end
-
-  local next_scroll = math.max(0, math.min(menu_scroll + delta, menu_scroll_max))
-  if next_scroll ~= menu_scroll then
-    menu_scroll = next_scroll
-    rebuild()
-  end
-end
-
-local function open_case(index)
-  if not cases[index] then
-    return
-  end
-
-  current_case = index
-  mode = "case"
-  rebuild()
-end
-
-local function show_menu()
-  mode = "menu"
-  rebuild()
-end
-
 local function set_color(color)
   love.graphics.setColor(color[1], color[2], color[3], color[4] or 1.0)
 end
@@ -452,6 +305,18 @@ end
 
 local function hover_label(node)
   return node_label(node, true) or node.type or "node"
+end
+
+local function case_action_node(node)
+  while node do
+    if node.props and node.props.action then
+      return node
+    end
+
+    node = node.parent
+  end
+
+  return nil
 end
 
 local function draw_node(node, depth, parent_left, parent_top)
@@ -509,9 +374,14 @@ end
 local function draw_overlay()
   local width = love.graphics.getWidth()
   local height = love.graphics.getHeight()
-  local title = mode == "menu" and "Select UI" or cases[current_case].name
-  local hint = mode == "menu" and "Wheel, click, Up/Down, Enter" or "Esc to menu"
+  local case = cases[current_case]
+  local title = case.name
+  local hint = "C K I Q M H switch panels"
   local hover_text = ""
+
+  if case.hint then
+    hint = case.hint(case.state)
+  end
 
   if hovered and hovered_rect then
     local name = hover_label(hovered)
@@ -584,41 +454,27 @@ function love.resize()
 end
 
 function love.keypressed(key)
-  if mode == "menu" and (key == "right" or key == "down") then
-    select_next(1)
-  elseif mode == "menu" and (key == "left" or key == "up") then
-    select_next(-1)
-  elseif mode == "menu" and key == "pagedown" then
-    scroll_menu(240)
-  elseif mode == "menu" and key == "pageup" then
-    scroll_menu(-240)
-  elseif mode == "menu" and key == "home" then
-    jump_to_case(1)
-  elseif mode == "menu" and key == "end" then
-    jump_to_case(#cases)
-  elseif mode == "menu" and (key == "return" or key == "kpenter" or key == "space") then
-    open_case(current_case)
-  elseif mode == "menu" and tonumber(key) then
-    local index = tonumber(key)
-    open_case(index)
-  elseif mode == "case" and key == "escape" then
-    show_menu()
+  local case = cases[current_case]
+
+  if case and case.keypressed and case.keypressed(case.state, key) then
+    rebuild()
+  elseif key == "escape" then
+    rebuild()
   elseif key == "r" then
     rebuild()
   end
 end
 
-function love.wheelmoved(_, y)
-  scroll_menu(-y * 64)
-end
-
 function love.mousepressed(x, y, button)
-  if mode ~= "menu" or button ~= 1 then
+  if button ~= 1 then
     return
   end
 
-  local index = root and find_case_at(root, x, y)
-  if index then
-    open_case(index)
+  local case = cases[current_case]
+  local node = root and find_deepest(root, x, y)
+  local action_node = case_action_node(node)
+
+  if case and case.handleClick and action_node and case.handleClick(case.state, action_node.props, action_node) then
+    rebuild()
   end
 end
