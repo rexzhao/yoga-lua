@@ -267,6 +267,21 @@ Known skipped cases: none.
 
 Status: complete for the low-GC common-path scope.
 
+## Milestone 8: Incremental Post-Processing
+
+- [ ] Add timing coverage for true full-subtree dirty relayout, distinct from root-dirty relayout.
+- [ ] Add benchmark diagnostics that separate layout traversal from rounding/post-processing cost where practical.
+- [ ] Skip clean subtree pixel rounding when cached absolute offsets and rounded layout output are still valid.
+- [ ] Preserve Yoga-compatible rounding behavior for dirty nodes, relative offsets, RTL, absolute children, and display contents.
+- [ ] Keep overflow/hadOverflow behavior correct after any skipped post-processing.
+- [ ] Record updated Lua 5.4 and Love2D/LuaJIT benchmark results in `BENCHMARKS.md`.
+- [ ] Verify `lua tests/run.lua` after implementation.
+- [ ] Verify `lua benchmarks/run.lua` and `.\LOVE\lovec.exe .\benchmarks\love2d` after implementation.
+
+Known skipped cases: none.
+
+Status: planned.
+
 ## Future Optimization Directions
 
 - [ ] Preprocess style metadata on `node`, `setStyle`, and `updateStyle` so layout can skip repeated hot-path style discovery.
