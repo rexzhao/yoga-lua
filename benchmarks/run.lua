@@ -147,6 +147,7 @@ local function benchmark(count)
   local root = make_tree(count)
 
   yoga.calculateLayout(root)
+  yoga._resetDebugStats()
 
   local start = now()
   for _ = 1, iterations do
@@ -154,6 +155,8 @@ local function benchmark(count)
     yoga.calculateLayout(root)
   end
   local elapsed = now() - start
+  local stats = yoga._debugStats()
+  yoga._clearDebugStats()
 
   return {
     count = count,
@@ -162,11 +165,13 @@ local function benchmark(count)
     average = elapsed / iterations,
     width = root.layout.width,
     height = root.layout.height,
+    stats = stats,
   }
 end
 
 local function time_incremental(root, step)
   yoga.calculateLayout(root)
+  yoga._resetDebugStats()
 
   local start = now()
   for index = 1, iterations do
@@ -174,6 +179,8 @@ local function time_incremental(root, step)
     yoga.calculateLayout(root)
   end
   local elapsed = now() - start
+  local stats = yoga._debugStats()
+  yoga._clearDebugStats()
 
   return {
     iterations = iterations,
@@ -181,8 +188,11 @@ local function time_incremental(root, step)
     average = elapsed / iterations,
     width = root.layout.width,
     height = root.layout.height,
+    stats = stats,
   }
 end
+
+local mark_subtree_dirty_for_benchmark
 
 local function benchmark_incremental(count)
   local clean_root = make_tree(count)
@@ -209,18 +219,25 @@ local function benchmark_incremental(count)
     yoga.updateStyle(styled_leaf, style_updates[(index % 2) + 1])
   end)
 
+  local full_relayout_root = make_tree(count)
+  local full_relayout = time_incremental(full_relayout_root, function()
+    mark_subtree_dirty_for_benchmark(full_relayout_root)
+  end)
+
   return {
     count = count,
     clean = clean,
     rootDirty = root_dirty,
     leafDirty = leaf_dirty,
     styleChange = style_change,
+    fullRelayout = full_relayout,
   }
 end
 
 local function time_measured_incremental(root, counter, step)
   yoga.calculateLayout(root)
   counter.calls = 0
+  yoga._resetDebugStats()
 
   local start = now()
   for index = 1, iterations do
@@ -228,6 +245,8 @@ local function time_measured_incremental(root, counter, step)
     yoga.calculateLayout(root)
   end
   local elapsed = now() - start
+  local stats = yoga._debugStats()
+  yoga._clearDebugStats()
 
   return {
     iterations = iterations,
@@ -236,6 +255,7 @@ local function time_measured_incremental(root, counter, step)
     measureCalls = counter.calls,
     width = root.layout.width,
     height = root.layout.height,
+    stats = stats,
   }
 end
 
@@ -258,7 +278,7 @@ local function benchmark_measured_incremental(count)
   }
 end
 
-local function mark_subtree_dirty_for_benchmark(node)
+function mark_subtree_dirty_for_benchmark(node)
   node.dirty = true
 
   for _, child in ipairs(node.children or {}) do
@@ -267,6 +287,7 @@ local function mark_subtree_dirty_for_benchmark(node)
 end
 
 local function measure_allocated_kb(root, step)
+  yoga._clearDebugStats()
   yoga.calculateLayout(root)
 
   for index = 1, iterations do
@@ -424,6 +445,35 @@ local function print_measured_time_stats(label, samples, getter)
   print(string.format("    measure calls median %.0f, min %.0f, max %.0f", call_stats.median, call_stats.min, call_stats.max))
 end
 
+local function print_debug_stats(label, samples, getter)
+  local function per_iteration_stat(sample, key)
+    local result = getter(sample)
+    return (result.stats and result.stats[key] or 0) / result.iterations
+  end
+
+  local layout_nodes = metric_stats(samples, function(sample)
+    return per_iteration_stat(sample, "layoutNodes")
+  end)
+  local cache_hits = metric_stats(samples, function(sample)
+    return per_iteration_stat(sample, "layoutCacheHits")
+  end)
+  local rounded_nodes = metric_stats(samples, function(sample)
+    return per_iteration_stat(sample, "roundedNodes")
+  end)
+  local rounded_skipped = metric_stats(samples, function(sample)
+    return per_iteration_stat(sample, "roundedSkippedSubtrees")
+  end)
+
+  print(string.format(
+    "%s stats: layout nodes %.1f, cache hits %.1f, rounded nodes %.1f, skipped rounded subtrees %.1f per iter median",
+    label,
+    layout_nodes.median,
+    cache_hits.median,
+    rounded_nodes.median,
+    rounded_skipped.median
+  ))
+end
+
 print(string.format(
   "layout benchmark (%d iterations, %d samples, per-iteration avg median/min/max)",
   iterations,
@@ -479,6 +529,18 @@ print_time_stats("  single leaf dirty", incremental_samples, function(sample)
 end)
 print_time_stats("  single style change", incremental_samples, function(sample)
   return sample.styleChange
+end)
+print_time_stats("  full subtree relayout", incremental_samples, function(sample)
+  return sample.fullRelayout
+end)
+print_debug_stats("  root dirty relayout", incremental_samples, function(sample)
+  return sample.rootDirty
+end)
+print_debug_stats("  single leaf dirty", incremental_samples, function(sample)
+  return sample.leafDirty
+end)
+print_debug_stats("  full subtree relayout", incremental_samples, function(sample)
+  return sample.fullRelayout
 end)
 
 local allocation_samples = run_samples(function()

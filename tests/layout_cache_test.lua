@@ -90,6 +90,35 @@ return function(runner, helper)
     helper.assert_equal(clean_leaf._debugLayoutCount, 1, "clean leaf skipped after unrelated dirty leaf")
   end)
 
+  runner:test("dirty leaf relayout skips clean sibling subtree rounding", function()
+    local dirty_leaf = yoga.node({ width = 10.2, height = 10.2 })
+    local dirty_branch = yoga.node({ width = 20.2, height = 20.2 }, {
+      dirty_leaf,
+    })
+    local clean_leaf = yoga.node({ width = 10.2, height = 10.2, marginLeft = 0.25 })
+    local clean_branch = yoga.node({ width = 20.2, height = 20.2 }, {
+      clean_leaf,
+    })
+    local root = yoga.node({ width = 100.2, height = 20.2, flexDirection = "row" }, {
+      dirty_branch,
+      clean_branch,
+    })
+
+    yoga.calculateLayout(root)
+    local clean_left = clean_leaf.layout.left
+    local clean_width = clean_leaf.layout.width
+
+    yoga.markDirty(dirty_leaf)
+    yoga._resetDebugStats()
+    yoga.calculateLayout(root)
+    local stats = yoga._debugStats()
+    yoga._clearDebugStats()
+
+    helper.assert_equal(stats.roundedSkippedSubtrees > 0, true, "clean subtree rounding skipped")
+    helper.assert_near(clean_leaf.layout.left, clean_left, "clean leaf left after skipped rounding")
+    helper.assert_near(clean_leaf.layout.width, clean_width, "clean leaf width after skipped rounding")
+  end)
+
   runner:test("changed parent constraints relayout clean child", function()
     local child = yoga.node({ height = 10 })
     child._debugCountLayout = true

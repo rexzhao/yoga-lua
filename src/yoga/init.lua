@@ -5,6 +5,33 @@ yoga.MEASURE_MODE_AT_MOST = "at-most"
 yoga.MEASURE_MODE_EXACTLY = "exactly"
 
 local empty_children = {}
+local current_layout_pass = 0
+local debug_stats
+
+local function add_debug_stat(key, amount)
+  if debug_stats then
+    debug_stats[key] = (debug_stats[key] or 0) + (amount or 1)
+  end
+end
+
+function yoga._resetDebugStats()
+  debug_stats = {
+    layoutNodes = 0,
+    layoutCacheHits = 0,
+    roundedNodes = 0,
+    roundedSkippedSubtrees = 0,
+  }
+
+  return debug_stats
+end
+
+function yoga._debugStats()
+  return debug_stats
+end
+
+function yoga._clearDebugStats()
+  debug_stats = nil
+end
 
 local function clear_array(items)
   for index = #items, 1, -1 do
@@ -204,6 +231,7 @@ end
 local function round_layout_tree(node, absolute_left, absolute_top)
   absolute_left = absolute_left or 0
   absolute_top = absolute_top or 0
+  add_debug_stat("roundedNodes")
 
   local raw_left = node.layout.left
   local raw_top = node.layout.top
@@ -221,9 +249,29 @@ local function round_layout_tree(node, absolute_left, absolute_top)
   node.layout.width = math.max(0, rounded_right - rounded_left)
   node.layout.height = math.max(0, rounded_bottom - rounded_top)
 
-  for _, child in ipairs(node.children or {}) do
+  local children = node.children or empty_children
+  local round_cache = node._round_cache
+
+  if #children > 0
+    and node._layout_cache_hit_pass == current_layout_pass
+    and round_cache
+    and round_cache.absolute_left == node_absolute_left
+    and round_cache.absolute_top == node_absolute_top
+    and round_cache.child_count == #children
+  then
+    add_debug_stat("roundedSkippedSubtrees")
+    return
+  end
+
+  for _, child in ipairs(children) do
     round_layout_tree(child, node_absolute_left, node_absolute_top)
   end
+
+  round_cache = round_cache or {}
+  node._round_cache = round_cache
+  round_cache.absolute_left = node_absolute_left
+  round_cache.absolute_top = node_absolute_top
+  round_cache.child_count = #children
 end
 
 local function style_without_measure(style)
@@ -1418,6 +1466,8 @@ end
 
 local function apply_cached_layout(node)
   local cache = node._layout_node_cache
+  node._layout_cache_hit_pass = current_layout_pass
+  add_debug_stat("layoutCacheHits")
   node.layout.left = cache.left
   node.layout.top = cache.top
   node.layout.width = cache.width
@@ -2312,6 +2362,9 @@ function layout_node(node, left, top, available_width, available_height, owner_w
     return apply_cached_layout(node)
   end
 
+  node._layout_cache_hit_pass = nil
+  add_debug_stat("layoutNodes")
+
   if node._debugCountLayout then
     node._debugLayoutCount = (node._debugLayoutCount or 0) + 1
   end
@@ -2695,6 +2748,7 @@ function yoga.calculateLayout(root, width, height, layout_direction)
     return root
   end
 
+  current_layout_pass = current_layout_pass + 1
   layout_node(root, 0, 0, width, height, width, height, nil, nil, layout_direction)
   local root_left, root_top = root_offsets(root, width, height, layout_direction)
   offset_layout_box(root, root_left, root_top)
