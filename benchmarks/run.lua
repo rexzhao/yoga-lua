@@ -48,7 +48,7 @@ local function make_tree(count)
     flexDirection = "column",
     padding = 8,
     gap = 2,
-  }, rows), leaves
+  }, rows), leaves, rows
 end
 
 local function make_measured_leaf(index, counter)
@@ -159,10 +159,12 @@ local function benchmark_incremental(count)
 
   local style_change_root, style_change_leaves = make_tree(count)
   local styled_leaf = style_change_leaves[math.floor(#style_change_leaves / 2)]
+  local style_updates = {
+    { width = 20 },
+    { width = 21 },
+  }
   local style_change = time_incremental(style_change_root, function(index)
-    yoga.updateStyle(styled_leaf, {
-      width = 20 + (index % 2),
-    })
+    yoga.updateStyle(styled_leaf, style_updates[(index % 2) + 1])
   end)
 
   return {
@@ -211,6 +213,77 @@ local function benchmark_measured_incremental(count)
     count = count,
     rootDirty = root_dirty,
     leafDirty = leaf_dirty,
+  }
+end
+
+local function mark_subtree_dirty_for_benchmark(node)
+  node.dirty = true
+
+  for _, child in ipairs(node.children or {}) do
+    mark_subtree_dirty_for_benchmark(child)
+  end
+end
+
+local function measure_allocated_kb(root, step)
+  yoga.calculateLayout(root)
+
+  for index = 1, iterations do
+    step(index)
+    yoga.calculateLayout(root)
+  end
+
+  collectgarbage("restart")
+  collectgarbage("collect")
+  collectgarbage("collect")
+  collectgarbage("stop")
+
+  local before = collectgarbage("count")
+  for index = 1, iterations do
+    step(index)
+    yoga.calculateLayout(root)
+  end
+  local allocated = collectgarbage("count") - before
+
+  collectgarbage("restart")
+  collectgarbage("collect")
+
+  allocated = math.max(0, allocated)
+  return {
+    iterations = iterations,
+    totalKb = allocated,
+    averageKb = allocated / iterations,
+    width = root.layout.width,
+    height = root.layout.height,
+  }
+end
+
+local function benchmark_allocations(count)
+  local clean_root = make_tree(count)
+  local clean = measure_allocated_kb(clean_root, function() end)
+
+  local leaf_dirty_root, leaf_dirty_leaves = make_tree(count)
+  local dirty_leaf = leaf_dirty_leaves[math.floor(#leaf_dirty_leaves / 2)]
+  local leaf_dirty = measure_allocated_kb(leaf_dirty_root, function()
+    yoga.markDirty(dirty_leaf)
+  end)
+
+  local branch_dirty_root, _, branch_dirty_rows = make_tree(count)
+  local dirty_branch = branch_dirty_rows[math.floor(#branch_dirty_rows / 2)]
+  local branch_dirty = measure_allocated_kb(branch_dirty_root, function()
+    yoga.markDirty(dirty_branch)
+  end)
+
+  local full_relayout_root = make_tree(count)
+  local full_relayout = measure_allocated_kb(full_relayout_root, function()
+    mark_subtree_dirty_for_benchmark(full_relayout_root)
+  end)
+
+  return {
+    count = count,
+    clean = clean,
+    leafDirty = leaf_dirty,
+    branchDirty = branch_dirty,
+    fullRelayout = full_relayout,
   }
 end
 
@@ -319,6 +392,37 @@ print(string.format(
   incremental.styleChange.average,
   incremental.styleChange.width,
   incremental.styleChange.height
+))
+
+local allocations = benchmark_allocations(incremental_size)
+print(string.format("allocation benchmark (%d nodes, %d iterations, steady-state KB)", allocations.count, iterations))
+print(string.format(
+  "  clean cache hits: total %.3fKB, avg %.3fKB, root %.0fx%.0f",
+  allocations.clean.totalKb,
+  allocations.clean.averageKb,
+  allocations.clean.width,
+  allocations.clean.height
+))
+print(string.format(
+  "  single leaf dirty: total %.3fKB, avg %.3fKB, root %.0fx%.0f",
+  allocations.leafDirty.totalKb,
+  allocations.leafDirty.averageKb,
+  allocations.leafDirty.width,
+  allocations.leafDirty.height
+))
+print(string.format(
+  "  branch dirty relayout: total %.3fKB, avg %.3fKB, root %.0fx%.0f",
+  allocations.branchDirty.totalKb,
+  allocations.branchDirty.averageKb,
+  allocations.branchDirty.width,
+  allocations.branchDirty.height
+))
+print(string.format(
+  "  full subtree relayout: total %.3fKB, avg %.3fKB, root %.0fx%.0f",
+  allocations.fullRelayout.totalKb,
+  allocations.fullRelayout.averageKb,
+  allocations.fullRelayout.width,
+  allocations.fullRelayout.height
 ))
 
 local measured_incremental = benchmark_measured_incremental(measured_incremental_size)

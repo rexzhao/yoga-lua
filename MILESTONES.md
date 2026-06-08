@@ -254,19 +254,20 @@ Status: complete.
 
 ## Milestone 7: Allocation Reduction
 
-- [ ] Add allocation-focused benchmark coverage for clean-tree, leaf-dirty, branch-dirty, and full relayout scenarios.
-- [ ] Record allocation benchmark results for Lua 5.4 and Love2D/LuaJIT in `BENCHMARKS.md`.
-- [ ] Reduce per-layout temporary allocations by reusing scratch child specs where safe.
-- [ ] Reduce repeated edge/margin result allocations without changing auto-margin mutation semantics.
-- [ ] Preserve existing incremental layout correctness and dirty propagation behavior.
-- [ ] Verify `lua tests/run.lua` after implementation.
-- [ ] Verify `lua benchmarks/run.lua` and `.\LOVE\lovec.exe .\benchmarks\love2d` after implementation.
+- [x] Add allocation-focused benchmark coverage for clean-tree, leaf-dirty, branch-dirty, and full relayout scenarios.
+- [x] Record allocation benchmark results for Lua 5.4 and Love2D/LuaJIT in `BENCHMARKS.md`.
+- [x] Reduce per-layout temporary allocations by reusing scratch child specs where safe.
+- [x] Reduce repeated edge/margin result allocations without changing auto-margin mutation semantics.
+- [x] Preserve existing incremental layout correctness and dirty propagation behavior.
+- [x] Verify `lua tests/run.lua` after implementation.
+- [x] Verify `lua benchmarks/run.lua` and `.\LOVE\lovec.exe .\benchmarks\love2d` after implementation.
 
 Known skipped cases: none.
 
-Status: planned.
+Status: complete for the low-GC common-path scope.
 
 ## Future Optimization Directions
 
 - [ ] Preprocess style metadata on `node`, `setStyle`, and `updateStyle` so layout can skip repeated hot-path style discovery.
 - [ ] Add a conservative simple row/column layout fast path for common game UI nodes after compatibility tests cover the general path.
+- [ ] Low priority: investigate a strict GC-free layout mode after low-GC common-path work is stable.

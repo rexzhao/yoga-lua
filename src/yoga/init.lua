@@ -4,6 +4,16 @@ yoga.MEASURE_MODE_UNDEFINED = "undefined"
 yoga.MEASURE_MODE_AT_MOST = "at-most"
 yoga.MEASURE_MODE_EXACTLY = "exactly"
 
+local empty_children = {}
+
+local function clear_array(items)
+  for index = #items, 1, -1 do
+    items[index] = nil
+  end
+
+  return items
+end
+
 local function shallow_copy(source)
   local copy = {}
   if source then
@@ -124,7 +134,7 @@ end
 local function zero_layout_tree(node)
   zero_layout_box(node)
 
-  for _, child in ipairs(node.children or {}) do
+  for _, child in ipairs(node.children or empty_children) do
     zero_layout_tree(child)
   end
 end
@@ -132,7 +142,7 @@ end
 local function collect_layout_items(children, out)
   out = out or {}
 
-  for _, child in ipairs(children or {}) do
+  for _, child in ipairs(children or empty_children) do
     if is_display_contents(child) then
       zero_layout_box(child)
       collect_layout_items(child.children, out)
@@ -142,6 +152,32 @@ local function collect_layout_items(children, out)
   end
 
   return out
+end
+
+local function has_display_contents_child(children)
+  for _, child in ipairs(children or empty_children) do
+    if is_display_contents(child) then
+      return true
+    end
+  end
+
+  return false
+end
+
+local function layout_items_for_node(node, children)
+  if not has_display_contents_child(children) then
+    return children
+  end
+
+  local items = node._layout_items
+  if not items then
+    items = {}
+    node._layout_items = items
+  else
+    clear_array(items)
+  end
+
+  return collect_layout_items(children, items)
 end
 
 local function offset_layout_box(node, dx, dy)
@@ -493,18 +529,26 @@ local function resolve_edge(style, keys, prefix, edge, axis, owner_size, layout_
   return resolve_value(style[prefix], owner_size) or 0
 end
 
-local function resolve_edges(style, prefix, owner_size, layout_direction)
+local function resolve_edges_into(out, style, prefix, owner_size, layout_direction)
   local keys = edge_style_keys[prefix]
   if not has_edge_values(style, keys, prefix) then
     return zero_edges
   end
 
-  return {
-    left = resolve_edge(style, keys, prefix, "left", "horizontal", owner_size, layout_direction),
-    right = resolve_edge(style, keys, prefix, "right", "horizontal", owner_size, layout_direction),
-    top = resolve_edge(style, keys, prefix, "top", "vertical", owner_size, layout_direction),
-    bottom = resolve_edge(style, keys, prefix, "bottom", "vertical", owner_size, layout_direction),
-  }
+  if out == nil or out == zero_edges then
+    out = {}
+  end
+
+  out.left = resolve_edge(style, keys, prefix, "left", "horizontal", owner_size, layout_direction)
+  out.right = resolve_edge(style, keys, prefix, "right", "horizontal", owner_size, layout_direction)
+  out.top = resolve_edge(style, keys, prefix, "top", "vertical", owner_size, layout_direction)
+  out.bottom = resolve_edge(style, keys, prefix, "bottom", "vertical", owner_size, layout_direction)
+
+  return out
+end
+
+local function resolve_edges(style, prefix, owner_size, layout_direction)
+  return resolve_edges_into(nil, style, prefix, owner_size, layout_direction)
 end
 
 local function resolve_auto_edge(style, keys, prefix, edge, axis, layout_direction)
@@ -533,7 +577,7 @@ local function resolve_auto_edge(style, keys, prefix, edge, axis, layout_directi
   return false
 end
 
-local function resolve_auto_edges(style, prefix, layout_direction)
+local function resolve_auto_edges_into(out, style, prefix, layout_direction)
   local keys = edge_style_keys[prefix]
   if not has_edge_values(style, keys, prefix) then
     return nil
@@ -545,12 +589,13 @@ local function resolve_auto_edges(style, prefix, layout_direction)
   local bottom = resolve_auto_edge(style, keys, prefix, "bottom", "vertical", layout_direction)
 
   if left or right or top or bottom then
-    return {
-      left = left,
-      right = right,
-      top = top,
-      bottom = bottom,
-    }
+    out = out or {}
+    out.left = left
+    out.right = right
+    out.top = top
+    out.bottom = bottom
+
+    return out
   end
 
   return nil
@@ -579,9 +624,12 @@ local function constrain_size(value, style, dimension, owner_size)
   return math.max(0, value)
 end
 
+local padding_border_axis_padding = {}
+local padding_border_axis_border = {}
+
 local function padding_border_axis(style, axis, owner_width, layout_direction)
-  local padding = resolve_edges(style, "padding", owner_width, layout_direction)
-  local border = resolve_edges(style, "border", owner_width, layout_direction)
+  local padding = resolve_edges_into(padding_border_axis_padding, style, "padding", owner_width, layout_direction)
+  local border = resolve_edges_into(padding_border_axis_border, style, "border", owner_width, layout_direction)
 
   if axis == "row" then
     return padding.left + padding.right + border.left + border.right
@@ -664,35 +712,40 @@ local function measure_node(node, available_width, available_height, width_mode,
     and cache.width_mode == width_mode
     and cache.height_mode == height_mode
   then
-    return {
-      width = cache.width,
-      height = cache.height,
-    }
+    local cached = node._measure_result
+    if not cached then
+      cached = {}
+      node._measure_result = cached
+    end
+
+    cached.width = cache.width
+    cached.height = cache.height
+    return cached
   end
 
   local width, height = node.measure(available_width, width_mode, available_height, height_mode, node)
-  local measured
-
-  if type(width) == "table" then
-    measured = {
-      width = width.width,
-      height = width.height,
-    }
-  else
-    measured = {
-      width = width,
-      height = height,
-    }
+  local measured = node._measure_result
+  if not measured then
+    measured = {}
+    node._measure_result = measured
   end
 
-  node._measure_cache = {
-    available_width = available_width,
-    available_height = available_height,
-    width_mode = width_mode,
-    height_mode = height_mode,
-    width = measured.width,
-    height = measured.height,
-  }
+  if type(width) == "table" then
+    measured.width = width.width
+    measured.height = width.height
+  else
+    measured.width = width
+    measured.height = height
+  end
+
+  cache = cache or {}
+  node._measure_cache = cache
+  cache.available_width = available_width
+  cache.available_height = available_height
+  cache.width_mode = width_mode
+  cache.height_mode = height_mode
+  cache.width = measured.width
+  cache.height = measured.height
 
   return measured
 end
@@ -846,8 +899,62 @@ end
 
 local intrinsic_main_size_from_child
 
-local function build_child_specs(children, parent_style, direction, gap, inner_width, inner_height, layout_direction)
-  local specs = {}
+local function clear_child_spec(spec)
+  spec.child = nil
+  spec.style = nil
+  spec.margin = nil
+  spec.auto_margin = nil
+  spec.grow = 0
+  spec.shrink = 0
+  spec.base_main = 0
+  spec.main = 0
+  spec.auto_main = nil
+  spec.auto_cross = nil
+  spec.measured = nil
+  spec.skip_measure = nil
+  spec.scaled_shrink = nil
+  spec.baseline = nil
+  spec.hidden = nil
+  spec.absolute = nil
+
+  return spec
+end
+
+local function child_spec_at(specs, index)
+  local spec = specs[index]
+  if not spec then
+    spec = {}
+    specs[index] = spec
+  end
+
+  return clear_child_spec(spec)
+end
+
+local function resolve_spec_margin(spec, style, inner_width, layout_direction)
+  local margin = resolve_edges_into(spec._margin, style, "margin", inner_width, layout_direction)
+  if margin ~= zero_edges then
+    spec._margin = margin
+  end
+
+  return margin
+end
+
+local function resolve_spec_auto_margin(spec, style, layout_direction)
+  local auto_margin = resolve_auto_edges_into(spec._auto_margin, style, "margin", layout_direction)
+  if auto_margin then
+    spec._auto_margin = auto_margin
+  end
+
+  return auto_margin
+end
+
+local function build_child_specs(children, parent_style, direction, gap, inner_width, inner_height, layout_direction, specs)
+  specs = specs or {}
+
+  for index = #children + 1, #specs do
+    specs[index] = nil
+  end
+
   local total_grow = 0
   local used_main = 0
   local visible_count = 0
@@ -855,24 +962,16 @@ local function build_child_specs(children, parent_style, direction, gap, inner_w
   local available_main = is_row_direction(direction) and inner_width or inner_height
 
   for index, child in ipairs(children) do
+    local spec = child_spec_at(specs, index)
+
     if is_display_none(child) then
-      specs[index] = {
-        hidden = true,
-        grow = 0,
-        base_main = 0,
-        main = 0,
-      }
+      spec.hidden = true
     elseif is_absolute_position(child) then
-      specs[index] = {
-        absolute = true,
-        grow = 0,
-        main = 0,
-        base_main = 0,
-      }
+      spec.absolute = true
     else
       local style = child.style or {}
-      local margin = resolve_edges(style, "margin", inner_width, layout_direction)
-      local auto_margin = resolve_auto_edges(style, "margin", layout_direction)
+      local margin = resolve_spec_margin(spec, style, inner_width, layout_direction)
+      local auto_margin = resolve_spec_auto_margin(spec, style, layout_direction)
       local grow = flex_grow(style)
       local shrink = flex_shrink(style)
       local skip_measure =
@@ -897,19 +996,17 @@ local function build_child_specs(children, parent_style, direction, gap, inner_w
         base_main = constrain_size(intrinsic_main, style, is_row_direction(direction) and "width" or "height", available_main)
       end
 
-      specs[index] = {
-        child = child,
-        style = style,
-        margin = margin,
-        auto_margin = auto_margin,
-        grow = grow,
-        shrink = shrink,
-        base_main = base_main,
-        auto_main = auto_main,
-        auto_cross = has_auto_cross_size(style, direction, available_cross, measured),
-        measured = measured,
-        skip_measure = skip_measure,
-      }
+      spec.child = child
+      spec.style = style
+      spec.margin = margin
+      spec.auto_margin = auto_margin
+      spec.grow = grow
+      spec.shrink = shrink
+      spec.base_main = base_main
+      spec.auto_main = auto_main
+      spec.auto_cross = has_auto_cross_size(style, direction, available_cross, measured)
+      spec.measured = measured
+      spec.skip_measure = skip_measure
 
       if visible_count > 0 then
         used_main = used_main + gap
@@ -1240,6 +1337,7 @@ local layout_node
 local empty_options = {}
 local use_available_width_options = { useAvailableWidth = true }
 local use_available_height_options = { useAvailableHeight = true }
+local use_available_width_height_options = { useAvailableWidth = true, useAvailableHeight = true }
 local skip_measure_options = { skipMeasure = true }
 local use_available_width_skip_measure_options = { useAvailableWidth = true, skipMeasure = true }
 local use_available_height_skip_measure_options = { useAvailableHeight = true, skipMeasure = true }
@@ -1258,6 +1356,22 @@ local function child_height_layout_options(use_available_height, skip_measure)
   end
 
   return skip_measure and skip_measure_options or nil
+end
+
+local function available_size_layout_options(use_available_width, use_available_height)
+  if use_available_width and use_available_height then
+    return use_available_width_height_options
+  end
+
+  if use_available_width then
+    return use_available_width_options
+  end
+
+  if use_available_height then
+    return use_available_height_options
+  end
+
+  return nil
 end
 
 local function measured_width(measured)
@@ -1324,23 +1438,27 @@ local function cache_layout_node(
   options,
   layout_direction
 )
-  node._layout_node_cache = {
-    left = left,
-    top = top,
-    available_width = available_width,
-    available_height = available_height,
-    owner_width = owner_width,
-    owner_height = owner_height,
-    measured_width = measured_width(measured),
-    measured_height = measured_height(measured),
-    use_available_width = cache_option(options, "useAvailableWidth"),
-    use_available_height = cache_option(options, "useAvailableHeight"),
-    skip_measure = cache_option(options, "skipMeasure"),
-    layout_direction = layout_direction,
-    width = node.layout.width,
-    height = node.layout.height,
-    hadOverflow = node.layout.hadOverflow,
-  }
+  local cache = node._layout_node_cache
+  if not cache then
+    cache = {}
+    node._layout_node_cache = cache
+  end
+
+  cache.left = left
+  cache.top = top
+  cache.available_width = available_width
+  cache.available_height = available_height
+  cache.owner_width = owner_width
+  cache.owner_height = owner_height
+  cache.measured_width = measured_width(measured)
+  cache.measured_height = measured_height(measured)
+  cache.use_available_width = cache_option(options, "useAvailableWidth")
+  cache.use_available_height = cache_option(options, "useAvailableHeight")
+  cache.skip_measure = cache_option(options, "skipMeasure")
+  cache.layout_direction = layout_direction
+  cache.width = node.layout.width
+  cache.height = node.layout.height
+  cache.hadOverflow = node.layout.hadOverflow
 end
 
 intrinsic_main_size_from_child = function(child, parent_direction, owner_width, owner_height, layout_direction)
@@ -1507,7 +1625,10 @@ local function layout_absolute_node(child, parent_style, padding, border, parent
   local measure_width, measure_height = child_measure_available(parent_style, parent_direction, inner_width, inner_height)
   local measured = locked_min_max_measure(style, inner_width, inner_height)
     or measure_node(child, measure_width, measure_height)
-  local margin = resolve_edges(style, "margin", inner_width, layout_direction)
+  local margin = resolve_edges_into(child._absolute_margin, style, "margin", inner_width, layout_direction)
+  if margin ~= zero_edges then
+    child._absolute_margin = margin
+  end
   local left_offset, right_offset = resolve_horizontal_position_offsets(style, inner_width, layout_direction)
   local top_offset = resolve_value(style.top, inner_height)
   local bottom_offset = resolve_value(style.bottom, inner_height)
@@ -1571,10 +1692,18 @@ local function layout_absolute_node(child, parent_style, padding, border, parent
     layout_direction
   )
 
-  layout_node(child, child_left, child_top, width, height, inner_width, inner_height, measured, {
-    useAvailableWidth = width ~= nil,
-    useAvailableHeight = height ~= nil,
-  }, layout_direction)
+  layout_node(
+    child,
+    child_left,
+    child_top,
+    width,
+    height,
+    inner_width,
+    inner_height,
+    measured,
+    available_size_layout_options(width ~= nil, height ~= nil),
+    layout_direction
+  )
 end
 
 local function main_outer_size(spec, direction)
@@ -1821,7 +1950,10 @@ local function child_overflows_content_box(child, padding, border, inner_width, 
   end
 
   local style = child.style or {}
-  local margin = resolve_edges(style, "margin", inner_width, layout_direction)
+  local margin = resolve_edges_into(child._overflow_margin, style, "margin", inner_width, layout_direction)
+  if margin ~= zero_edges then
+    child._overflow_margin = margin
+  end
   local content_left = border.left + padding.left
   local content_top = border.top + padding.top
   local content_right = content_left + inner_width
@@ -1949,7 +2081,7 @@ local function layout_wrapped_children(
     end
   end
 
-  local children = collect_layout_items(node.children)
+  local children = layout_items_for_node(node, node.children or empty_children)
 
   for index, child in ipairs(children) do
     if is_display_none(child) then
@@ -2217,8 +2349,14 @@ function layout_node(node, left, top, available_width, available_height, owner_w
   node.dirty = false
 
   local edge_owner_width = owner_width or node.layout.width
-  local border = resolve_edges(style, "border", edge_owner_width, layout_direction)
-  local padding = resolve_edges(style, "padding", edge_owner_width, layout_direction)
+  local border = resolve_edges_into(node._layout_border, style, "border", edge_owner_width, layout_direction)
+  if border ~= zero_edges then
+    node._layout_border = border
+  end
+  local padding = resolve_edges_into(node._layout_padding, style, "padding", edge_owner_width, layout_direction)
+  if padding ~= zero_edges then
+    node._layout_padding = padding
+  end
   if style.boxSizing == "content-box" then
     if explicit_width ~= nil and not options.useAvailableWidth then
       node.layout.width = constrain_size(
@@ -2249,7 +2387,7 @@ function layout_node(node, left, top, available_width, available_height, owner_w
   local cursor = 0
   local inner_width = clamp_size(node.layout.width - border.left - padding.left - padding.right - border.right)
   local inner_height = clamp_size(node.layout.height - border.top - padding.top - padding.bottom - border.bottom)
-  local children = node.children or {}
+  local children = node.children or empty_children
   local auto_main_available = (is_row_direction(direction) and inner_width == 0)
     or (not is_row_direction(direction) and inner_height == 0)
   local auto_cross_available = (is_row_direction(direction) and inner_height == 0)
@@ -2293,8 +2431,13 @@ function layout_node(node, left, top, available_width, available_height, owner_w
     return node
   end
 
-  local layout_items = collect_layout_items(children)
-  local specs = build_child_specs(layout_items, style, direction, gap, inner_width, inner_height, layout_direction)
+  local layout_items = layout_items_for_node(node, children)
+  local specs = node._layout_specs
+  if not specs then
+    specs = {}
+    node._layout_specs = specs
+  end
+  specs = build_child_specs(layout_items, style, direction, gap, inner_width, inner_height, layout_direction, specs)
   local has_auto_children = visible_spec_count(specs) > 0
   local available_main = is_row_direction(direction) and inner_width or inner_height
   local content_overflows_main = used_main_size(specs, direction, gap) > available_main
@@ -2511,7 +2654,10 @@ end
 
 local function root_offsets(root, owner_width, owner_height, layout_direction)
   local style = root.style or {}
-  local margin = resolve_edges(style, "margin", owner_width or root.layout.width, layout_direction)
+  local margin = resolve_edges_into(root._layout_margin, style, "margin", owner_width or root.layout.width, layout_direction)
+  if margin ~= zero_edges then
+    root._layout_margin = margin
+  end
   local left
   local top
 
@@ -2553,11 +2699,11 @@ function yoga.calculateLayout(root, width, height, layout_direction)
   local root_left, root_top = root_offsets(root, width, height, layout_direction)
   offset_layout_box(root, root_left, root_top)
   round_layout_tree(root)
-  root._layout_cache = {
-    width = width,
-    height = height,
-    layout_direction = layout_direction,
-  }
+  cache = cache or {}
+  root._layout_cache = cache
+  cache.width = width
+  cache.height = height
+  cache.layout_direction = layout_direction
   return root
 end
 
