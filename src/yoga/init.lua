@@ -97,7 +97,7 @@ local function normalize_layout_direction(direction)
 end
 
 local function is_rtl(layout_direction)
-  return normalize_layout_direction(layout_direction) == "rtl"
+  return layout_direction == "rtl"
 end
 
 local function is_main_axis_reversed(direction, layout_direction)
@@ -338,11 +338,13 @@ local function number_or_zero(value)
 end
 
 local function resolve_value(value, owner_size)
-  if type(value) == "number" then
+  local value_type = type(value)
+
+  if value_type == "number" then
     return value
   end
 
-  if type(value) == "string" then
+  if value_type == "string" then
     local percent = value:match("^%s*([+-]?%d+%.?%d*)%%%s*$")
     if percent and type(owner_size) == "number" then
       return owner_size * tonumber(percent) / 100
@@ -368,14 +370,6 @@ local function relative_axis_offset(style, start_key, end_key, owner_size)
   end
 
   return 0
-end
-
-local function logical_horizontal_edge(edge, layout_direction)
-  if edge == "left" then
-    return is_rtl(layout_direction) and "End" or "Start"
-  end
-
-  return is_rtl(layout_direction) and "Start" or "End"
 end
 
 local function resolve_horizontal_position_offsets(style, owner_size, layout_direction)
@@ -417,55 +411,117 @@ local function relative_offsets(style, owner_width, owner_height, layout_directi
     relative_axis_offset(style, "top", "bottom", owner_height)
 end
 
-local function resolve_edge(style, prefix, edge, axis, owner_size, layout_direction)
-  local edge_key = prefix .. edge:sub(1, 1):upper() .. edge:sub(2)
-  local axis_key = prefix .. axis:sub(1, 1):upper() .. axis:sub(2)
+local edge_style_keys = {
+  border = {
+    left = "borderLeft",
+    right = "borderRight",
+    top = "borderTop",
+    bottom = "borderBottom",
+    horizontal = "borderHorizontal",
+    vertical = "borderVertical",
+    start = "borderStart",
+    ending = "borderEnd",
+  },
+  margin = {
+    left = "marginLeft",
+    right = "marginRight",
+    top = "marginTop",
+    bottom = "marginBottom",
+    horizontal = "marginHorizontal",
+    vertical = "marginVertical",
+    start = "marginStart",
+    ending = "marginEnd",
+  },
+  padding = {
+    left = "paddingLeft",
+    right = "paddingRight",
+    top = "paddingTop",
+    bottom = "paddingBottom",
+    horizontal = "paddingHorizontal",
+    vertical = "paddingVertical",
+    start = "paddingStart",
+    ending = "paddingEnd",
+  },
+}
 
-  local edge_value = resolve_value(style[edge_key], owner_size)
+local function horizontal_logical_key(keys, edge, layout_direction)
+  if edge == "left" then
+    return is_rtl(layout_direction) and keys.ending or keys.start
+  end
+
+  return is_rtl(layout_direction) and keys.start or keys.ending
+end
+
+local zero_edges = {
+  left = 0,
+  right = 0,
+  top = 0,
+  bottom = 0,
+}
+
+local function has_edge_values(style, keys, prefix)
+  return style[prefix] ~= nil
+    or style[keys.left] ~= nil
+    or style[keys.right] ~= nil
+    or style[keys.top] ~= nil
+    or style[keys.bottom] ~= nil
+    or style[keys.horizontal] ~= nil
+    or style[keys.vertical] ~= nil
+    or style[keys.start] ~= nil
+    or style[keys.ending] ~= nil
+end
+
+local function resolve_edge(style, keys, prefix, edge, axis, owner_size, layout_direction)
+  local edge_value = resolve_value(style[keys[edge]], owner_size)
   if edge_value ~= nil then
     return edge_value
   end
 
   if edge == "left" or edge == "right" then
-    local logical_key = prefix .. logical_horizontal_edge(edge, layout_direction)
+    local logical_key = horizontal_logical_key(keys, edge, layout_direction)
     local logical_value = resolve_value(style[logical_key], owner_size)
     if logical_value ~= nil then
       return logical_value
     end
   end
 
-  local axis_value = resolve_value(style[axis_key], owner_size)
+  local axis_value = resolve_value(style[keys[axis]], owner_size)
   if axis_value ~= nil then
     return axis_value
   end
 
-  return resolve_value(style[prefix], owner_size) or number_or_zero(style[prefix])
+  return resolve_value(style[prefix], owner_size) or 0
 end
 
 local function resolve_edges(style, prefix, owner_size, layout_direction)
+  local keys = edge_style_keys[prefix]
+  if not has_edge_values(style, keys, prefix) then
+    return zero_edges
+  end
+
   return {
-    left = resolve_edge(style, prefix, "left", "horizontal", owner_size, layout_direction),
-    right = resolve_edge(style, prefix, "right", "horizontal", owner_size, layout_direction),
-    top = resolve_edge(style, prefix, "top", "vertical", owner_size, layout_direction),
-    bottom = resolve_edge(style, prefix, "bottom", "vertical", owner_size, layout_direction),
+    left = resolve_edge(style, keys, prefix, "left", "horizontal", owner_size, layout_direction),
+    right = resolve_edge(style, keys, prefix, "right", "horizontal", owner_size, layout_direction),
+    top = resolve_edge(style, keys, prefix, "top", "vertical", owner_size, layout_direction),
+    bottom = resolve_edge(style, keys, prefix, "bottom", "vertical", owner_size, layout_direction),
   }
 end
 
-local function resolve_auto_edge(style, prefix, edge, axis, layout_direction)
-  local edge_key = prefix .. edge:sub(1, 1):upper() .. edge:sub(2)
-  local axis_key = prefix .. axis:sub(1, 1):upper() .. axis:sub(2)
+local function resolve_auto_edge(style, keys, prefix, edge, axis, layout_direction)
+  local edge_key = keys[edge]
 
   if style[edge_key] ~= nil then
     return is_auto_value(style[edge_key])
   end
 
   if edge == "left" or edge == "right" then
-    local logical_key = prefix .. logical_horizontal_edge(edge, layout_direction)
+    local logical_key = horizontal_logical_key(keys, edge, layout_direction)
     if style[logical_key] ~= nil then
       return is_auto_value(style[logical_key])
     end
   end
 
+  local axis_key = keys[axis]
   if style[axis_key] ~= nil then
     return is_auto_value(style[axis_key])
   end
@@ -478,16 +534,30 @@ local function resolve_auto_edge(style, prefix, edge, axis, layout_direction)
 end
 
 local function resolve_auto_edges(style, prefix, layout_direction)
-  return {
-    left = resolve_auto_edge(style, prefix, "left", "horizontal", layout_direction),
-    right = resolve_auto_edge(style, prefix, "right", "horizontal", layout_direction),
-    top = resolve_auto_edge(style, prefix, "top", "vertical", layout_direction),
-    bottom = resolve_auto_edge(style, prefix, "bottom", "vertical", layout_direction),
-  }
+  local keys = edge_style_keys[prefix]
+  if not has_edge_values(style, keys, prefix) then
+    return nil
+  end
+
+  local left = resolve_auto_edge(style, keys, prefix, "left", "horizontal", layout_direction)
+  local right = resolve_auto_edge(style, keys, prefix, "right", "horizontal", layout_direction)
+  local top = resolve_auto_edge(style, keys, prefix, "top", "vertical", layout_direction)
+  local bottom = resolve_auto_edge(style, keys, prefix, "bottom", "vertical", layout_direction)
+
+  if left or right or top or bottom then
+    return {
+      left = left,
+      right = right,
+      top = top,
+      bottom = bottom,
+    }
+  end
+
+  return nil
 end
 
 local function clamp_size(value, owner_size)
-  return math.max(0, resolve_value(value, owner_size) or number_or_zero(value))
+  return math.max(0, resolve_value(value, owner_size) or 0)
 end
 
 local function constrain_size(value, style, dimension, owner_size)
@@ -1167,6 +1237,29 @@ end
 
 local layout_node
 
+local empty_options = {}
+local use_available_width_options = { useAvailableWidth = true }
+local use_available_height_options = { useAvailableHeight = true }
+local skip_measure_options = { skipMeasure = true }
+local use_available_width_skip_measure_options = { useAvailableWidth = true, skipMeasure = true }
+local use_available_height_skip_measure_options = { useAvailableHeight = true, skipMeasure = true }
+
+local function child_width_layout_options(use_available_width, skip_measure)
+  if use_available_width then
+    return skip_measure and use_available_width_skip_measure_options or use_available_width_options
+  end
+
+  return skip_measure and skip_measure_options or nil
+end
+
+local function child_height_layout_options(use_available_height, skip_measure)
+  if use_available_height then
+    return skip_measure and use_available_height_skip_measure_options or use_available_height_options
+  end
+
+  return skip_measure and skip_measure_options or nil
+end
+
 intrinsic_main_size_from_child = function(child, parent_direction, owner_width, owner_height, layout_direction)
   if #(child.children or {}) == 0 or type(child.measure) == "function" then
     return nil
@@ -1176,16 +1269,34 @@ intrinsic_main_size_from_child = function(child, parent_direction, owner_width, 
 
   if is_row_direction(parent_direction) then
     local explicit_height = resolve_value(style.height, owner_height)
-    layout_node(child, 0, 0, nil, explicit_height or owner_height, owner_width, owner_height, nil, {
-      useAvailableHeight = explicit_height == nil,
-    }, layout_direction)
+    layout_node(
+      child,
+      0,
+      0,
+      nil,
+      explicit_height or owner_height,
+      owner_width,
+      owner_height,
+      nil,
+      child_height_layout_options(explicit_height == nil),
+      layout_direction
+    )
     return child.layout.width
   end
 
   local explicit_width = resolve_value(style.width, owner_width)
-  layout_node(child, 0, 0, explicit_width or owner_width, nil, owner_width, owner_height, nil, {
-    useAvailableWidth = explicit_width == nil,
-  }, layout_direction)
+  layout_node(
+    child,
+    0,
+    0,
+    explicit_width or owner_width,
+    nil,
+    owner_width,
+    owner_height,
+    nil,
+    child_width_layout_options(explicit_width == nil),
+    layout_direction
+  )
   return child.layout.height
 end
 
@@ -1513,15 +1624,11 @@ local function auto_cross_size_from_child(spec, direction, owner_width, owner_he
   end
 
   if is_row_direction(direction) then
-    layout_node(spec.child, 0, 0, spec.main, nil, owner_width, owner_height, spec.measured, {
-      useAvailableWidth = true,
-    })
+    layout_node(spec.child, 0, 0, spec.main, nil, owner_width, owner_height, spec.measured, use_available_width_options)
     return spec.child.layout.height
   end
 
-  layout_node(spec.child, 0, 0, nil, spec.main, owner_width, owner_height, spec.measured, {
-    useAvailableHeight = true,
-  })
+  layout_node(spec.child, 0, 0, nil, spec.main, owner_width, owner_height, spec.measured, use_available_height_options)
   return spec.child.layout.width
 end
 
@@ -1597,7 +1704,7 @@ local function relayout_stretched_auto_cross_children(node, specs, direction, pa
             inner_width,
             inner_height,
             spec.measured,
-            { useAvailableWidth = true },
+            use_available_width_options,
             layout_direction
           )
         else
@@ -1616,7 +1723,7 @@ local function relayout_stretched_auto_cross_children(node, specs, direction, pa
             inner_width,
             inner_height,
             spec.measured,
-            { useAvailableHeight = true },
+            use_available_height_options,
             layout_direction
           )
         end
@@ -1872,7 +1979,7 @@ local function layout_wrapped_children(
           inner_width,
           inner_height,
           spec.measured,
-          { useAvailableWidth = true },
+          use_available_width_options,
           layout_direction
         )
         main_cursor = main_cursor + margin.left + child.layout.width + margin.right + between
@@ -1902,7 +2009,7 @@ local function layout_wrapped_children(
           inner_width,
           inner_height,
           spec.measured,
-          { useAvailableHeight = true },
+          use_available_height_options,
           layout_direction
         )
         main_cursor = main_cursor + margin.top + child.layout.height + margin.bottom + between
@@ -1972,7 +2079,7 @@ function layout_node(node, left, top, available_width, available_height, owner_w
     return node
   end
 
-  options = options or {}
+  options = options or empty_options
   layout_direction = normalize_layout_direction(layout_direction)
 
   local style = node.style or {}
@@ -2171,7 +2278,7 @@ function layout_node(node, left, top, available_width, available_height, owner_w
           inner_width,
           inner_height,
           spec.measured,
-          { useAvailableWidth = not child_auto_main, skipMeasure = spec.skip_measure },
+          child_width_layout_options(not child_auto_main, spec.skip_measure),
           layout_direction
         )
         if child_auto_main then
@@ -2218,7 +2325,7 @@ function layout_node(node, left, top, available_width, available_height, owner_w
           inner_width,
           inner_height,
           spec.measured,
-          { useAvailableHeight = not child_auto_main, skipMeasure = spec.skip_measure },
+          child_height_layout_options(not child_auto_main, spec.skip_measure),
           layout_direction
         )
         if child_auto_main then
