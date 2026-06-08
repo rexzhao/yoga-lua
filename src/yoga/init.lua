@@ -1260,6 +1260,89 @@ local function child_height_layout_options(use_available_height, skip_measure)
   return skip_measure and skip_measure_options or nil
 end
 
+local function measured_width(measured)
+  return measured and measured.width or nil
+end
+
+local function measured_height(measured)
+  return measured and measured.height or nil
+end
+
+local function cache_option(options, key)
+  return options and options[key] == true
+end
+
+local function layout_cache_matches(
+  node,
+  left,
+  top,
+  available_width,
+  available_height,
+  owner_width,
+  owner_height,
+  measured,
+  options,
+  layout_direction
+)
+  local cache = node._layout_node_cache
+
+  return not node.dirty
+    and cache
+    and cache.left == left
+    and cache.top == top
+    and cache.available_width == available_width
+    and cache.available_height == available_height
+    and cache.owner_width == owner_width
+    and cache.owner_height == owner_height
+    and cache.measured_width == measured_width(measured)
+    and cache.measured_height == measured_height(measured)
+    and cache.use_available_width == cache_option(options, "useAvailableWidth")
+    and cache.use_available_height == cache_option(options, "useAvailableHeight")
+    and cache.skip_measure == cache_option(options, "skipMeasure")
+    and cache.layout_direction == layout_direction
+end
+
+local function apply_cached_layout(node)
+  local cache = node._layout_node_cache
+  node.layout.left = cache.left
+  node.layout.top = cache.top
+  node.layout.width = cache.width
+  node.layout.height = cache.height
+  node.layout.hadOverflow = cache.hadOverflow
+  return node
+end
+
+local function cache_layout_node(
+  node,
+  left,
+  top,
+  available_width,
+  available_height,
+  owner_width,
+  owner_height,
+  measured,
+  options,
+  layout_direction
+)
+  node._layout_node_cache = {
+    left = left,
+    top = top,
+    available_width = available_width,
+    available_height = available_height,
+    owner_width = owner_width,
+    owner_height = owner_height,
+    measured_width = measured_width(measured),
+    measured_height = measured_height(measured),
+    use_available_width = cache_option(options, "useAvailableWidth"),
+    use_available_height = cache_option(options, "useAvailableHeight"),
+    skip_measure = cache_option(options, "skipMeasure"),
+    layout_direction = layout_direction,
+    width = node.layout.width,
+    height = node.layout.height,
+    hadOverflow = node.layout.hadOverflow,
+  }
+end
+
 intrinsic_main_size_from_child = function(child, parent_direction, owner_width, owner_height, layout_direction)
   if #(child.children or {}) == 0 or type(child.measure) == "function" then
     return nil
@@ -2082,6 +2165,25 @@ function layout_node(node, left, top, available_width, available_height, owner_w
   options = options or empty_options
   layout_direction = normalize_layout_direction(layout_direction)
 
+  if layout_cache_matches(
+    node,
+    left,
+    top,
+    available_width,
+    available_height,
+    owner_width,
+    owner_height,
+    measured,
+    options,
+    layout_direction
+  ) then
+    return apply_cached_layout(node)
+  end
+
+  if node._debugCountLayout then
+    node._debugLayoutCount = (node._debugLayoutCount or 0) + 1
+  end
+
   local style = node.style or {}
   local measured_size = measured
     or locked_min_max_measure(style, owner_width, owner_height)
@@ -2174,6 +2276,18 @@ function layout_node(node, left, top, available_width, available_height, owner_w
       owner_height,
       auto_main_size,
       auto_cross_size,
+      layout_direction
+    )
+    cache_layout_node(
+      node,
+      left,
+      top,
+      available_width,
+      available_height,
+      owner_width,
+      owner_height,
+      measured,
+      options,
       layout_direction
     )
     return node
@@ -2361,6 +2475,18 @@ function layout_node(node, left, top, available_width, available_height, owner_w
   local final_inner_width = clamp_size(node.layout.width - border.left - padding.left - padding.right - border.right)
   local final_inner_height = clamp_size(node.layout.height - border.top - padding.top - padding.bottom - border.bottom)
   update_had_overflow(node, padding, border, final_inner_width, final_inner_height, layout_direction)
+  cache_layout_node(
+    node,
+    left,
+    top,
+    available_width,
+    available_height,
+    owner_width,
+    owner_height,
+    measured,
+    options,
+    layout_direction
+  )
 
   return node
 end

@@ -4,6 +4,8 @@ local yoga = require("yoga")
 local ui = require("ui")
 
 local sizes = { 100, 1000, 5000 }
+local incremental_size = 5000
+local measured_incremental_size = 1000
 local iterations = tonumber(arg and arg[1]) or 20
 
 local function make_leaf(index)
@@ -17,6 +19,7 @@ end
 
 local function make_tree(count)
   local rows = {}
+  local leaves = {}
   local remaining = count
   local index = 1
 
@@ -25,7 +28,9 @@ local function make_tree(count)
     local row_children = {}
 
     for child_index = 1, row_count do
-      row_children[child_index] = make_leaf(index)
+      local leaf = make_leaf(index)
+      leaves[#leaves + 1] = leaf
+      row_children[child_index] = leaf
       index = index + 1
     end
 
@@ -43,7 +48,57 @@ local function make_tree(count)
     flexDirection = "column",
     padding = 8,
     gap = 2,
-  }, rows)
+  }, rows), leaves
+end
+
+local function make_measured_leaf(index, counter)
+  return yoga.node({
+    marginRight = index % 3,
+    marginBottom = index % 4,
+    measure = function()
+      counter.calls = counter.calls + 1
+      return {
+        width = 18 + (index % 7),
+        height = 12 + (index % 5),
+      }
+    end,
+  })
+end
+
+local function make_measured_tree(count)
+  local rows = {}
+  local leaves = {}
+  local counter = { calls = 0 }
+  local remaining = count
+  local index = 1
+
+  while remaining > 0 do
+    local row_count = math.min(10, remaining)
+    local row_children = {}
+
+    for child_index = 1, row_count do
+      local leaf = make_measured_leaf(index, counter)
+      leaves[#leaves + 1] = leaf
+      row_children[child_index] = leaf
+      index = index + 1
+    end
+
+    rows[#rows + 1] = yoga.node({
+      flexDirection = "row",
+      alignItems = "flex-start",
+      height = 24,
+      gap = 2,
+      marginBottom = 2,
+    }, row_children)
+    remaining = remaining - row_count
+  end
+
+  return yoga.node({
+    width = 640,
+    flexDirection = "column",
+    padding = 8,
+    gap = 2,
+  }, rows), leaves, counter
 end
 
 local function benchmark(count)
@@ -65,6 +120,97 @@ local function benchmark(count)
     average = elapsed / iterations,
     width = root.layout.width,
     height = root.layout.height,
+  }
+end
+
+local function time_incremental(root, step)
+  yoga.calculateLayout(root)
+
+  local start = os.clock()
+  for index = 1, iterations do
+    step(index)
+    yoga.calculateLayout(root)
+  end
+  local elapsed = os.clock() - start
+
+  return {
+    iterations = iterations,
+    total = elapsed,
+    average = elapsed / iterations,
+    width = root.layout.width,
+    height = root.layout.height,
+  }
+end
+
+local function benchmark_incremental(count)
+  local clean_root = make_tree(count)
+  local clean = time_incremental(clean_root, function() end)
+
+  local root_dirty_root = make_tree(count)
+  local root_dirty = time_incremental(root_dirty_root, function()
+    yoga.markDirty(root_dirty_root)
+  end)
+
+  local leaf_dirty_root, leaf_dirty_leaves = make_tree(count)
+  local dirty_leaf = leaf_dirty_leaves[math.floor(#leaf_dirty_leaves / 2)]
+  local leaf_dirty = time_incremental(leaf_dirty_root, function()
+    yoga.markDirty(dirty_leaf)
+  end)
+
+  local style_change_root, style_change_leaves = make_tree(count)
+  local styled_leaf = style_change_leaves[math.floor(#style_change_leaves / 2)]
+  local style_change = time_incremental(style_change_root, function(index)
+    yoga.updateStyle(styled_leaf, {
+      width = 20 + (index % 2),
+    })
+  end)
+
+  return {
+    count = count,
+    clean = clean,
+    rootDirty = root_dirty,
+    leafDirty = leaf_dirty,
+    styleChange = style_change,
+  }
+end
+
+local function time_measured_incremental(root, counter, step)
+  yoga.calculateLayout(root)
+  counter.calls = 0
+
+  local start = os.clock()
+  for index = 1, iterations do
+    step(index)
+    yoga.calculateLayout(root)
+  end
+  local elapsed = os.clock() - start
+
+  return {
+    iterations = iterations,
+    total = elapsed,
+    average = elapsed / iterations,
+    measureCalls = counter.calls,
+    width = root.layout.width,
+    height = root.layout.height,
+  }
+end
+
+local function benchmark_measured_incremental(count)
+  local root_dirty_root, _, root_dirty_counter = make_measured_tree(count)
+  local root_dirty = time_measured_incremental(root_dirty_root, root_dirty_counter, function()
+    yoga.markDirty(root_dirty_root)
+  end)
+
+  local leaf_dirty_root, leaf_dirty_leaves, leaf_dirty_counter = make_measured_tree(count)
+  local dirty_leaf = leaf_dirty_leaves[math.floor(#leaf_dirty_leaves / 2)]
+  local leaf_dirty = time_measured_incremental(leaf_dirty_root, leaf_dirty_counter, function()
+    yoga.markDirty(dirty_leaf)
+  end)
+
+  return {
+    count = count,
+    rootDirty = root_dirty,
+    leafDirty = leaf_dirty,
   }
 end
 
@@ -142,4 +288,54 @@ print(string.format(
   virtual.average,
   virtual.renderedAverage,
   virtual.visibleAverage
+))
+
+local incremental = benchmark_incremental(incremental_size)
+print(string.format("incremental layout benchmark (%d nodes, %d iterations)", incremental.count, iterations))
+print(string.format(
+  "  clean cache hits: total %.4fs, avg %.6fs, root %.0fx%.0f",
+  incremental.clean.total,
+  incremental.clean.average,
+  incremental.clean.width,
+  incremental.clean.height
+))
+print(string.format(
+  "  root dirty relayout: total %.4fs, avg %.6fs, root %.0fx%.0f",
+  incremental.rootDirty.total,
+  incremental.rootDirty.average,
+  incremental.rootDirty.width,
+  incremental.rootDirty.height
+))
+print(string.format(
+  "  single leaf dirty: total %.4fs, avg %.6fs, root %.0fx%.0f",
+  incremental.leafDirty.total,
+  incremental.leafDirty.average,
+  incremental.leafDirty.width,
+  incremental.leafDirty.height
+))
+print(string.format(
+  "  single style change: total %.4fs, avg %.6fs, root %.0fx%.0f",
+  incremental.styleChange.total,
+  incremental.styleChange.average,
+  incremental.styleChange.width,
+  incremental.styleChange.height
+))
+
+local measured_incremental = benchmark_measured_incremental(measured_incremental_size)
+print(string.format("measured-node incremental benchmark (%d nodes, %d iterations)", measured_incremental.count, iterations))
+print(string.format(
+  "  root dirty measure cache: total %.4fs, avg %.6fs, measure calls %d, root %.0fx%.0f",
+  measured_incremental.rootDirty.total,
+  measured_incremental.rootDirty.average,
+  measured_incremental.rootDirty.measureCalls,
+  measured_incremental.rootDirty.width,
+  measured_incremental.rootDirty.height
+))
+print(string.format(
+  "  single measured leaf dirty: total %.4fs, avg %.6fs, measure calls %d, root %.0fx%.0f",
+  measured_incremental.leafDirty.total,
+  measured_incremental.leafDirty.average,
+  measured_incremental.leafDirty.measureCalls,
+  measured_incremental.leafDirty.width,
+  measured_incremental.leafDirty.height
 ))

@@ -14,6 +14,22 @@ return function(runner, helper)
     helper.assert_equal(root.dirty, true, "marked ancestor dirty")
   end)
 
+  runner:test("markDirty does not dirty unaffected siblings", function()
+    local first = yoga.node({ width = 20, height = 10 })
+    local second = yoga.node({ width = 20, height = 10 })
+    local root = yoga.node({ width = 100, height = 20, flexDirection = "row" }, {
+      first,
+      second,
+    })
+
+    yoga.calculateLayout(root)
+    yoga.markDirty(first)
+
+    helper.assert_equal(first.dirty, true, "marked child dirty")
+    helper.assert_equal(second.dirty, false, "sibling stays clean")
+    helper.assert_equal(root.dirty, true, "ancestor dirty")
+  end)
+
   runner:test("setStyle marks node and ancestors dirty", function()
     local child = yoga.node({ width = 20, height = 10 })
     local root = yoga.node({ width = 100, height = 20, flexDirection = "row" }, {

@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 506 tests, 1 skipped`
+- `lua tests/run.lua` -> `ok - 509 tests, 1 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 - `lua benchmarks/run.lua` and `.\LOVE\lovec.exe .\benchmarks\love2d` -> record 100, 1,000, and 5,000 node layout timings in `BENCHMARKS.md`
 
@@ -229,3 +229,28 @@ Status: complete for the supported Milestone 4 scope.
 Known skipped cases: none.
 
 Status: complete.
+
+## Milestone 6: Incremental Layout
+
+- [x] Add an incremental layout benchmark that compares clean cache hits, root-dirty relayout, single-leaf dirty relayout, and single-style-change relayout for the same large tree.
+- [x] Record incremental benchmark results for both system Lua 5.4 and Love2D/LuaJIT in `BENCHMARKS.md`.
+- [x] Add benchmark scenarios that distinguish measured-node cache reuse from ordinary layout subtree cache reuse.
+- [x] Define the cache key for ordinary node layout reuse, including available width, available height, owner size, layout direction, and layout options.
+- [x] Cache per-node layout inputs/results after layout, not only the root layout call.
+- [x] Skip clean child subtrees when their cached layout inputs still match the current parent constraints.
+- [x] Preserve dirty propagation so style/tree changes mark the changed node and ancestors dirty without dirtying unaffected siblings.
+- [x] Invalidate cached layout when child order, children, display, position, config, or relevant style constraints change.
+- [x] Keep measured-node cache behavior compatible with ordinary layout cache behavior.
+- [x] Add tests mirroring upstream dirty propagation behavior from `YGDirtyMarkingTest`.
+- [x] Add tests mirroring upstream cached layout/cache hit behavior from `EventsTest` where practical in Lua.
+- [x] Add tests proving a dirty leaf relayout does not remeasure or relayout unaffected sibling subtrees when constraints are unchanged.
+- [x] Add tests proving changed parent constraints can force clean children to relayout when their cache key no longer matches.
+- [ ] Future optimization: reduce per-layout temporary allocations by reusing scratch specs and edge/margin result storage after the incremental baseline is stable.
+- [ ] Future optimization: preprocess style metadata on `node`, `setStyle`, and `updateStyle` so layout can skip repeated hot-path style discovery.
+- [ ] Future optimization: add a conservative simple row/column layout fast path for common game UI nodes after compatibility tests cover the general path.
+- [x] Verify `lua tests/run.lua` after implementation.
+- [x] Verify `lua benchmarks/run.lua` and `.\LOVE\lovec.exe .\benchmarks\love2d` after implementation.
+
+Known skipped cases: none.
+
+Status: complete for the incremental layout cache scope; future optimization directions remain tracked.
