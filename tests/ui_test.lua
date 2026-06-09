@@ -21,6 +21,26 @@ return function(runner, helper)
     helper.assert_equal(root.children[2].layout.left, 76, "second component left")
   end)
 
+  runner:test("class lists merge left to right before inline style", function()
+    local styles = ui.stylesheet({
+      button = { width = 80, height = 24 },
+      button_active = { width = 96 },
+      button_disabled = { height = 18 },
+    })
+
+    local node = ui.div({
+      class = { "button", false, "button_active", nil, "button_disabled" },
+      styles = styles,
+      style = { height = 32 },
+    })
+
+    yoga.calculateLayout(node)
+
+    helper.assert_equal(node.style.width, 96, "later class overrides earlier class")
+    helper.assert_equal(node.style.height, 32, "inline style overrides classes")
+    helper.assert_layout(node, { left = 0, top = 0, width = 96, height = 32 }, "class list node")
+  end)
+
   runner:test("function components return reusable node trees", function()
     local styles = ui.stylesheet({
       screen = { width = 240, height = 80, flexDirection = "row", gap = 8 },

@@ -10,6 +10,30 @@ local function is_array(value)
   return value[1] ~= nil or next(value) == nil
 end
 
+local function class_names(class)
+  if type(class) ~= "table" then
+    return { class }
+  end
+
+  local indexes = {}
+  for index in pairs(class) do
+    if type(index) == "number" then
+      indexes[#indexes + 1] = index
+    end
+  end
+  table.sort(indexes)
+
+  local names = {}
+  for _, index in ipairs(indexes) do
+    local class_name = class[index]
+    if class_name then
+      names[#names + 1] = class_name
+    end
+  end
+
+  return names
+end
+
 local function merge_style(props)
   props = props or {}
   local style = {}
@@ -17,10 +41,12 @@ local function merge_style(props)
   local class = props.class
 
   if styles and class then
-    local class_style = styles[class]
-    if class_style then
-      for key, value in pairs(class_style) do
-        style[key] = value
+    for _, class_name in ipairs(class_names(class)) do
+      local class_style = styles[class_name]
+      if class_style then
+        for key, value in pairs(class_style) do
+          style[key] = value
+        end
       end
     end
   end

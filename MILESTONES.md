@@ -321,7 +321,7 @@ Planned checklist:
 
 - [ ] Define a virtual element model for `div`, `text`, `image`, `button`, and `virtualList` descriptions without immediately creating Yoga nodes.
 - [ ] Preserve a compatibility path so existing layouts can continue returning Yoga nodes until migrated.
-- [ ] Add class-list support that ignores `nil`/`false` entries and merges classes from left to right before inline `style`.
+- [x] Add class-list support that ignores `nil`/`false` entries and merges classes from left to right before inline `style`.
 - [ ] Move style resolution toward an external stylesheet/runtime step so ordinary nodes can specify class names without repeatedly passing `styles`.
 - [ ] Define mounted instances that hold `type`, resolved key/path identity, props, resolved style, a Yoga node, child instances, renderer handle, visual state, and last layout snapshots.
 - [ ] Implement mount behavior that converts virtual elements into mounted instances and Yoga nodes.
