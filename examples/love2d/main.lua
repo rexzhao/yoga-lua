@@ -4,6 +4,11 @@ local ui
 local unpack = table.unpack or unpack
 
 local root
+local root_instance
+local overlay_instance
+local content_runtime
+local overlay_runtime
+local layout_ctx
 local current_case = 1
 local hovered
 local hovered_rect
@@ -58,7 +63,8 @@ local function with_styles(styles, class, props, children)
   props = props or {}
   props.class = class
   props.styles = styles
-  return ui.div(props, children)
+  local active_ui = layout_ctx and layout_ctx.ui or ui
+  return active_ui.div(props, children)
 end
 
 local function label(text, props)
@@ -66,7 +72,8 @@ local function label(text, props)
   props.style = props.style or { height = 24 }
   props.debugName = props.debugName or text
   props.fill = props.fill or { 0, 0, 0, 0 }
-  return ui.text(text, props)
+  local active_ui = layout_ctx and layout_ctx.ui or ui
+  return active_ui.text(text, props)
 end
 
 local layout_modules = {
@@ -74,12 +81,11 @@ local layout_modules = {
 }
 
 local cases = {}
-local layout_ctx
 local overlay_layout
 
-local function layout_context()
+local function layout_context(active_ui)
   return {
-    ui = ui,
+    ui = active_ui or ui,
     palette = palette,
     chrome = chrome,
     with_styles = with_styles,
@@ -93,7 +99,7 @@ local function layout_context()
 end
 
 local function load_cases()
-  layout_ctx = layout_context()
+  layout_ctx = layout_context(content_runtime:ui())
   overlay_layout = require("layouts.overlay")
   cases = {}
 
@@ -124,9 +130,8 @@ local function rebuild()
   local width, window_height = love.graphics.getDimensions()
   local layout_height = math.max(1, window_height - chrome.top - chrome.bottom)
 
-  root = cases[current_case].build(width, layout_height)
-
-  yoga.calculateLayout(root, width, layout_height)
+  root_instance = content_runtime:render(cases[current_case].build(width, layout_height), width, layout_height)
+  root = root_instance.yogaNode
   offset_layout(root, 0, chrome.top)
 end
 
@@ -613,14 +618,16 @@ local function draw_overlay()
     hoverText = hover_text,
   })
 
-  yoga.calculateLayout(overlay, width, height)
-  draw_node(overlay, 0)
+  overlay_instance = overlay_runtime:render(overlay, width, height)
+  draw_node(overlay_instance.yogaNode, 0)
 end
 
 function love.load(args)
   configure_package_path()
   yoga = require("yoga")
   ui = require("ui")
+  content_runtime = ui.createRuntime()
+  overlay_runtime = ui.createRuntime()
 
   fonts.normal = love.graphics.newFont(14)
   fonts.small = love.graphics.newFont(12)

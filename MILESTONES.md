@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 510 tests, 1 skipped`
+- `lua tests/run.lua` -> `ok - 525 tests, 1 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 - `lua benchmarks/run.lua` and `.\LOVE\lovec.exe .\benchmarks\love2d` -> record 100, 1,000, and 5,000 node layout timings in `BENCHMARKS.md`
 
@@ -319,34 +319,34 @@ Assumptions:
 
 Planned checklist:
 
-- [ ] Define a virtual element model for `div`, `text`, `image`, `button`, and `virtualList` descriptions without immediately creating Yoga nodes.
-- [ ] Preserve a compatibility path so existing layouts can continue returning Yoga nodes until migrated.
+- [x] Define a virtual element model for `div`, `text`, `image`, `button`, and `virtualList` descriptions without immediately creating Yoga nodes.
+- [x] Preserve a compatibility path so existing layouts can continue returning Yoga nodes until migrated.
 - [x] Add class-list support that ignores `nil`/`false` entries and merges classes from left to right before inline `style`.
-- [ ] Move style resolution toward an external stylesheet/runtime step so ordinary nodes can specify class names without repeatedly passing `styles`.
-- [ ] Define mounted instances that hold `type`, resolved key/path identity, props, resolved style, a Yoga node, child instances, renderer handle, visual state, and last layout snapshots.
-- [ ] Implement mount behavior that converts virtual elements into mounted instances and Yoga nodes.
-- [ ] Implement reconcile behavior that reuses instances when `key` and `type` match.
-- [ ] Implement fallback matching by type and child path/index when no explicit key is present.
-- [ ] Implement child insertion, removal, and reordering without rebuilding unaffected sibling instances.
-- [ ] Diff resolved layout styles and call `yoga.updateStyle` only when style inputs changed.
-- [ ] Diff non-layout props such as text, image, event props, debug names, fill/tint, and clipping flags without dirtying Yoga unnecessarily.
-- [ ] Keep tree mutation dirty propagation compatible with existing incremental layout behavior.
-- [ ] Define a minimal backend renderer interface: `mount`, `update`, `unmount`, and optional `draw`/`applyLayout`.
-- [ ] Adapt the Love2D visualizer to render from the instance tree while preserving existing smoke, debug-layout, hover, click, screenshot, and clipping behavior.
-- [ ] Add tests for stable instance reuse across repeated renders of the same virtual tree.
-- [ ] Add tests for keyed dynamic list insertion, deletion, and reorder preserving item instances.
-- [ ] Add tests for unkeyed static children matching by type/path.
-- [ ] Add tests proving style-only changes dirty the expected Yoga path while prop-only changes do not force relayout.
-- [ ] Add tests proving removed instances are unmounted and new instances are mounted exactly once.
-- [ ] Add a small demo layout that uses class lists and runtime-managed styles without passing `styles` into every node.
-- [ ] Document the runtime model, key guidance, renderer adapter contract, and the future FLIP/animation hook points.
-- [ ] Verify `lua tests/run.lua` after implementation.
-- [ ] Verify `.\LOVE\lovec.exe .\examples\love2d --smoke` after implementation.
-- [ ] Verify at least one targeted Love2D screenshot after the visualizer is migrated to the instance tree.
+- [x] Move style resolution toward an external stylesheet/runtime step so ordinary nodes can specify class names without repeatedly passing `styles`.
+- [x] Define mounted instances that hold `type`, resolved key/path identity, props, resolved style, a Yoga node, child instances, renderer handle, visual state, and last layout snapshots.
+- [x] Implement mount behavior that converts virtual elements into mounted instances and Yoga nodes.
+- [x] Implement reconcile behavior that reuses instances when `key` and `type` match.
+- [x] Implement fallback matching by type and child path/index when no explicit key is present.
+- [x] Implement child insertion, removal, and reordering without rebuilding unaffected sibling instances.
+- [x] Diff resolved layout styles and update Yoga style only when style inputs changed.
+- [x] Diff non-layout props such as text, image, event props, debug names, fill/tint, and clipping flags without dirtying Yoga unnecessarily.
+- [x] Keep tree mutation dirty propagation compatible with existing incremental layout behavior.
+- [x] Define a minimal backend renderer interface: `mount`, `update`, `unmount`, and optional `applyLayout`.
+- [x] Adapt the Love2D visualizer to render from the instance tree while preserving existing smoke, debug-layout, hover, click, screenshot, and clipping behavior.
+- [x] Add tests for stable instance reuse across repeated renders of the same virtual tree.
+- [x] Add tests for keyed dynamic list insertion, deletion, and reorder preserving item instances.
+- [x] Add tests for unkeyed static children matching by type/path.
+- [x] Add tests proving style-only changes dirty the expected Yoga path while prop-only changes do not force relayout.
+- [x] Add tests proving removed instances are unmounted and new instances are mounted exactly once.
+- [x] Add a small demo layout that uses class lists and runtime-managed styles without passing `styles` into every node.
+- [x] Document the runtime model, key guidance, renderer adapter contract, and the future FLIP/animation hook points.
+- [x] Verify `lua tests/run.lua` after implementation.
+- [x] Verify `.\LOVE\lovec.exe .\examples\love2d --smoke` after implementation.
+- [x] Verify at least one targeted Love2D screenshot after the visualizer is migrated to the instance tree.
 
 Known skipped cases: none yet.
 
-Status: planned.
+Status: complete.
 
 ## Future Optimization Directions
 

@@ -5,6 +5,7 @@ local runner = helper.new_runner()
 
 require("core_test")(runner, helper)
 require("ui_test")(runner, helper)
+require("runtime_test")(runner, helper)
 require("measure_test")(runner, helper)
 require("measure_mode_test")(runner, helper)
 require("yoga_measure_test")(runner, helper)

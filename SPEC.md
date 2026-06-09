@@ -75,6 +75,80 @@ local function Inventory(props)
 end
 ```
 
+### Declarative Runtime
+
+The direct `ui.div`/`ui.text` constructors remain supported and continue to return Yoga nodes. A higher-level runtime can also be created when a host renderer needs stable mounted objects:
+
+```lua
+local ui = require("ui")
+
+local styles = ui.stylesheet({
+  screen = { width = 800, height = 600, flexDirection = "column" },
+  button = { width = 120, height = 32 },
+  button_active = { width = 140 },
+})
+
+local runtime = ui.createRuntime({ styles = styles })
+local tree = runtime:div({ class = "screen" }, {
+  runtime:button("Bag", {
+    key = "nav.bag",
+    class = { "button", is_active and "button_active" },
+  }),
+})
+
+local instance = runtime:render(tree, 800, 600)
+local root_node = instance.yogaNode
+```
+
+Runtime constructors create virtual element descriptions instead of immediately creating Yoga nodes. `render` reconciles a virtual tree into mounted instances. Each instance owns:
+
+- `type`, `key`, and path identity.
+- The latest props and resolved style.
+- A reusable `yogaNode`.
+- Child instances in render order.
+- An optional renderer handle returned by the host backend.
+- Visual state and layout snapshots for future animation work.
+
+The reconciler reuses an instance when `key` and `type` match. Unkeyed static children fall back to type plus child index/path matching. Dynamic lists, sortable content, cross-container moves, and nodes that need persistent animation or renderer identity should use explicit keys.
+
+Style resolution happens in the runtime before Yoga sees the node:
+
+- `class` may be a string or an array-like list.
+- `nil` and `false` class-list entries are ignored.
+- Classes merge from left to right.
+- Inline `style` overrides class style.
+- `props.styles` can override the runtime stylesheet for component-local styles.
+
+The runtime diffs resolved style separately from non-layout props. Style changes update the Yoga node and mark layout dirty through the existing Yoga mutation APIs. Non-layout prop changes such as text, fill, tint, debug names, image references, and event props update instance/node metadata without forcing layout when the resolved style is unchanged.
+
+Host renderers can provide a small retained-backend adapter:
+
+```lua
+local renderer = {
+  mount = function(self, instance, parent_handle, index)
+    return backend_create_object(instance, parent_handle, index)
+  end,
+  update = function(self, instance, changes)
+    backend_update_object(instance.handle, instance, changes)
+  end,
+  unmount = function(self, instance)
+    backend_destroy_object(instance.handle)
+  end,
+  applyLayout = function(self, instance, rect)
+    backend_apply_rect(instance.handle, rect)
+  end,
+}
+```
+
+Love2D can still draw the resulting Yoga node tree directly. Retained engines such as Unity can keep renderer-owned objects alive by storing them in the instance handle.
+
+The runtime records previous and current absolute layout snapshots for reused instances. That provides the hook needed for future FLIP-style animation:
+
+1. Record the first rectangle before reconcile.
+2. Reconcile and calculate the last rectangle.
+3. Derive visual transform deltas from old/new rectangles.
+4. Animate those visual deltas back to zero without changing the final Yoga layout.
+
 ## Initial Style Surface
 
 Milestone 1 should cover:
