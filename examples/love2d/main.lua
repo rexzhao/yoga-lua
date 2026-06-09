@@ -12,6 +12,7 @@ local screenshot_requested = false
 local fonts = {}
 local images = {}
 local debug_layout = false
+local ui_asset_spec = { assets = {} }
 
 local palette = {
   background = { 0.08, 0.09, 0.10, 1.0 },
@@ -270,45 +271,171 @@ local function set_color(color)
 end
 
 local function load_images()
-  local names = {
-    "bar_bg",
-    "bar_fill",
-    "button",
-    "button_gold",
-    "map_camp",
-    "map_forest",
-    "map_river",
-    "map_ruins",
-    "panel",
-    "parchment",
-    "portrait",
-    "pouch",
-    "slot",
-  }
+  ui_asset_spec = require("ui_assets")
 
-  for _, name in ipairs(names) do
-    local path = "assets/ui/" .. name .. ".png"
-    if love.filesystem.getInfo(path) then
-      local image = love.graphics.newImage(path)
-      image:setFilter("linear", "linear")
-      images[name] = image
+  for name, definition in pairs(ui_asset_spec.assets or {}) do
+    local file = definition.file or name
+    local path = "assets/ui/" .. file .. ".png"
+    if not love.filesystem.getInfo(path) then
+      error("missing Love2D UI asset: " .. path)
+    end
+
+    local image = love.graphics.newImage(path)
+    local expected_size = definition.size
+    if expected_size and (image:getWidth() ~= expected_size.width or image:getHeight() ~= expected_size.height) then
+      error(string.format(
+        "Love2D UI asset %s size mismatch: expected %dx%d, got %dx%d",
+        path,
+        expected_size.width,
+        expected_size.height,
+        image:getWidth(),
+        image:getHeight()
+      ))
+    end
+
+    local filter = definition.filter or "linear"
+    image:setFilter(filter, filter)
+    images[name] = {
+      image = image,
+      definition = definition,
+    }
+  end
+end
+
+local function edge_value(box, key)
+  return (box and box[key]) or 0
+end
+
+local function fit_edges(total, before, after)
+  if before + after <= total then
+    return before, after, math.max(0, total - before - after)
+  end
+
+  if before + after <= 0 then
+    return 0, 0, total
+  end
+
+  local scale = total / (before + after)
+  return before * scale, after * scale, 0
+end
+
+local function draw_quad(image, sx, sy, sw, sh, dx, dy, dw, dh)
+  if sw <= 0 or sh <= 0 or dw <= 0 or dh <= 0 then
+    return
+  end
+
+  local quad = love.graphics.newQuad(sx, sy, sw, sh, image:getWidth(), image:getHeight())
+  love.graphics.draw(image, quad, dx, dy, 0, dw / sw, dh / sh)
+end
+
+local function draw_nine_image(image, definition, left, top, width, height)
+  local source_width = image:getWidth()
+  local source_height = image:getHeight()
+  local slice = definition.slice or {}
+  local border = definition.border or slice
+  local source_left = math.min(edge_value(slice, "left"), source_width)
+  local source_right = math.min(edge_value(slice, "right"), source_width - source_left)
+  local source_top = math.min(edge_value(slice, "top"), source_height)
+  local source_bottom = math.min(edge_value(slice, "bottom"), source_height - source_top)
+  local target_left, target_right, target_center_width =
+    fit_edges(width, edge_value(border, "left"), edge_value(border, "right"))
+  local target_top, target_bottom, target_center_height =
+    fit_edges(height, edge_value(border, "top"), edge_value(border, "bottom"))
+
+  local source_center_width = math.max(0, source_width - source_left - source_right)
+  local source_center_height = math.max(0, source_height - source_top - source_bottom)
+  local source_x = { 0, source_left, source_width - source_right }
+  local source_y = { 0, source_top, source_height - source_bottom }
+  local source_w = { source_left, source_center_width, source_right }
+  local source_h = { source_top, source_center_height, source_bottom }
+  local target_x = { left, left + target_left, left + width - target_right }
+  local target_y = { top, top + target_top, top + height - target_bottom }
+  local target_w = { target_left, target_center_width, target_right }
+  local target_h = { target_top, target_center_height, target_bottom }
+
+  for row = 1, 3 do
+    for column = 1, 3 do
+      draw_quad(
+        image,
+        source_x[column],
+        source_y[row],
+        source_w[column],
+        source_h[row],
+        target_x[column],
+        target_y[row],
+        target_w[column],
+        target_h[row]
+      )
     end
   end
 end
 
-local function draw_image(name, left, top, width, height, tint, fit)
-  local image = images[name]
-  if not image then
-    return false
+local function draw_three_x_image(image, definition, left, top, width, height)
+  local source_width = image:getWidth()
+  local source_height = image:getHeight()
+  local slice = definition.slice or {}
+  local border = definition.border or slice
+  local source_left = math.min(edge_value(slice, "left"), source_width)
+  local source_right = math.min(edge_value(slice, "right"), source_width - source_left)
+  local target_left, target_right, target_center_width =
+    fit_edges(width, edge_value(border, "left"), edge_value(border, "right"))
+  local source_center_width = math.max(0, source_width - source_left - source_right)
+
+  draw_quad(image, 0, 0, source_left, source_height, left, top, target_left, height)
+  draw_quad(
+    image,
+    source_left,
+    0,
+    source_center_width,
+    source_height,
+    left + target_left,
+    top,
+    target_center_width,
+    height
+  )
+  draw_quad(
+    image,
+    source_width - source_right,
+    0,
+    source_right,
+    source_height,
+    left + width - target_right,
+    top,
+    target_right,
+    height
+  )
+end
+
+local function image_mode(name, fit)
+  if fit then
+    return fit
   end
 
+  local entry = images[name]
+  if entry and entry.definition then
+    return entry.definition.mode
+  end
+
+  error("unknown Love2D UI asset: " .. tostring(name))
+end
+
+local function draw_image(name, left, top, width, height, tint, fit)
+  local entry = images[name]
+  if not entry then
+    error("unknown Love2D UI asset: " .. tostring(name))
+  end
+
+  local image = entry.image
+  local definition = entry.definition or {}
+  local mode = image_mode(name, fit)
+
   set_color(tint or { 1, 1, 1, 1 })
-  if fit == "contain" then
+  if mode == "contain" then
     local scale = math.min(width / image:getWidth(), height / image:getHeight())
     local draw_width = image:getWidth() * scale
     local draw_height = image:getHeight() * scale
     love.graphics.draw(image, left + (width - draw_width) / 2, top + (height - draw_height) / 2, 0, scale, scale)
-  elseif fit == "cover" then
+  elseif mode == "cover" then
     local previous_x, previous_y, previous_width, previous_height = love.graphics.getScissor()
     local scale = math.max(width / image:getWidth(), height / image:getHeight())
     local draw_width = image:getWidth() * scale
@@ -332,6 +459,10 @@ local function draw_image(name, left, top, width, height, tint, fit)
     else
       love.graphics.setScissor()
     end
+  elseif mode == "nine" then
+    draw_nine_image(image, definition, left, top, width, height)
+  elseif mode == "threeX" then
+    draw_three_x_image(image, definition, left, top, width, height)
   else
     love.graphics.draw(image, left, top, 0, width / image:getWidth(), height / image:getHeight())
   end
@@ -401,7 +532,7 @@ local function draw_node(node, depth, parent_left, parent_top)
     local radius = node.type == "text" and 0 or 6
     local filled = false
 
-    if props.image and props.imageFit == "contain" and fill[4] ~= 0 then
+    if props.image and image_mode(props.image, props.imageFit) == "contain" and fill[4] ~= 0 then
       set_color(fill)
       love.graphics.rectangle("fill", left, top, width, height, radius, radius)
       filled = true

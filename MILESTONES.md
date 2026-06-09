@@ -294,6 +294,9 @@ Status: complete.
 - [x] Add clickable UI actions for item selection/use/inspection, quest accept/abandon/track, skill selection, rest, and shop purchase.
 - [x] Add `--screen` startup support for targeted Love2D screenshot checks.
 - [x] Add imagegen-derived base UI PNG assets for panels, buttons, slots, bars, portraits, item art, and map tiles.
+- [x] Define a manifest-driven UI asset contract for nine-slice, horizontal three-slice, cover, and contain rendering.
+- [x] Document the AI UI asset generation and screenshot QA workflow.
+- [x] Inventory item grid wraps slots through Yoga so item count per row responds to available width.
 - [x] Hide layout helper frames by default while keeping `--debug-layout` for targeted layout inspection.
 - [x] Verify `lua tests/run.lua` after implementation.
 - [x] Verify `.\LOVE\lovec.exe .\examples\love2d --smoke` after implementation.

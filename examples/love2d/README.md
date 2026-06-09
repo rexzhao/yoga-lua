@@ -40,3 +40,5 @@ The app imports the project modules from `../../src`; the `LOVE/` directory rema
 The active RPG layout entry is `layouts/rpg_game.lua`. RPG interface descriptions live in `layouts/rpg/`, with each screen kept in its own file.
 
 Generated base UI resources live in `assets/ui/`. They are imagegen-derived PNGs used by the Love2D renderer for panels, buttons, slots, bars, portraits, item art, and map tiles.
+
+UI asset roles, draw modes, and generation/QA rules are documented in `UI_ASSET_WORKFLOW.md`. The renderer now loads those assets through `ui_assets.lua`, which records expected PNG sizes plus whether each asset should draw as nine-slice, horizontal three-slice, cover, or contain.

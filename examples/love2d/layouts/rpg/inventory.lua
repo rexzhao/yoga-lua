@@ -12,7 +12,12 @@ local function item_slot(ctx, styles, item, selected)
     image = "slot",
     tint = selected and { 0.62, 0.82, 1, 1 } or (item.rarity == "rare" and { 1, 0.86, 0.48, 1 } or nil),
     fill = fill,
-    style = { width = 96, height = 76, padding = 8, gap = 4 },
+    style = {
+      width = common.metrics.slotWidth,
+      height = common.metrics.slotHeight,
+      padding = common.metrics.slotPadding,
+      gap = 4,
+    },
   }, {
     common.text(ctx, item.name, {
       action = "select-item",
@@ -30,23 +35,14 @@ local function item_slot(ctx, styles, item, selected)
   })
 end
 
-local function item_rows(ctx, styles, state)
-  local rows = {}
-  local row = {}
+local function item_slots(ctx, styles, state)
+  local slots = {}
 
-  for index, item in ipairs(state.inventory) do
-    row[#row + 1] = item_slot(ctx, styles, item, item.id == state.selectedItemId)
-    if #row == 5 or index == #state.inventory then
-      rows[#rows + 1] = common.box(ctx, styles, "row", {
-        debugName = "inventory row",
-        fill = { 0, 0, 0, 0 },
-        style = { height = 80 },
-      }, row)
-      row = {}
-    end
+  for _, item in ipairs(state.inventory) do
+    slots[#slots + 1] = item_slot(ctx, styles, item, item.id == state.selectedItemId)
   end
 
-  return rows
+  return slots
 end
 
 return {
@@ -76,8 +72,15 @@ return {
         common.panel(ctx, styles, {
           debugName = "inventory grid",
           fill = palette.panel,
-          style = { flex = 1 },
-        }, item_rows(ctx, styles, state)),
+          style = {
+            flex = 1,
+            flexDirection = "row",
+            flexWrap = "wrap",
+            alignContent = "flex-start",
+            alignItems = "flex-start",
+            gap = common.metrics.rowGap,
+          },
+        }, item_slots(ctx, styles, state)),
         common.panel(ctx, styles, {
           debugName = "item detail",
           fill = palette.panel,

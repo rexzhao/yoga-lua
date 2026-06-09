@@ -1,72 +1,77 @@
 -- RPG 公共布局辅助：提供按钮、导航、面板和状态条等可复用 Yoga 节点。
+local ui_assets = require("ui_assets")
+
 local common = {}
+common.metrics = ui_assets.metrics
 
 local function transparent()
   return { 0, 0, 0, 0 }
 end
 
 function common.styles(ctx, width, height)
+  local metrics = common.metrics
+
   return ctx.ui.stylesheet({
     screen = {
       width = width,
       height = height,
       flexDirection = "column",
-      padding = 14,
-      gap = 10,
+      padding = metrics.screenPadding,
+      gap = metrics.gap,
     },
     nav = {
-      height = 44,
+      height = metrics.navHeight,
       flexDirection = "row",
-      gap = 8,
+      gap = metrics.rowGap,
     },
     body = {
       flex = 1,
       flexDirection = "row",
-      gap = 10,
+      gap = metrics.gap,
     },
     column = {
       flex = 1,
       flexDirection = "column",
-      gap = 10,
+      gap = metrics.gap,
     },
     panel = {
       flexDirection = "column",
-      padding = 10,
-      gap = 8,
+      padding = metrics.panelPadding,
+      gap = metrics.panelGap,
     },
     row = {
       flexDirection = "row",
-      gap = 8,
+      gap = metrics.rowGap,
     },
     title = {
-      height = 30,
+      height = metrics.textTitleHeight,
     },
     text = {
-      height = 24,
+      height = metrics.textBodyHeight,
     },
     button = {
-      height = 34,
-      paddingHorizontal = 10,
-      paddingVertical = 7,
+      height = metrics.buttonHeight,
+      paddingHorizontal = metrics.buttonPaddingX,
+      paddingVertical = metrics.buttonPaddingY,
     },
     small_button = {
-      height = 30,
-      paddingHorizontal = 8,
-      paddingVertical = 6,
+      height = metrics.smallButtonHeight,
+      paddingHorizontal = metrics.smallButtonPaddingX,
+      paddingVertical = metrics.smallButtonPaddingY,
     },
     bar = {
-      height = 12,
+      height = metrics.barHeight,
       flexDirection = "row",
     },
     bar_fill = {
-      height = 12,
+      height = metrics.barHeight,
     },
   })
 end
 
 function common.text(ctx, text, props)
   props = props or {}
-  props.style = props.style or { height = 24 }
+  props.style = props.style or { height = common.metrics.textBodyHeight }
   props.debugName = props.debugName or text
   props.fill = props.fill or transparent()
   return ctx.ui.text(text, props)
@@ -106,7 +111,7 @@ function common.button(ctx, styles, label, action, props)
       questId = props.questId,
       shopId = props.shopId,
       debugName = label,
-      style = { height = props.small and 18 or 20 },
+      style = { height = props.small and common.metrics.textLabelHeight or common.metrics.textControlHeight },
       fill = transparent(),
       textColor = props.textColor,
     }),
@@ -129,7 +134,7 @@ function common.nav(ctx, styles, state, active)
     buttons[#buttons + 1] = common.button(ctx, styles, screen.label, "nav", {
       screen = screen.id,
       fill = screen.id == active and palette.accent or palette.panel_alt,
-      style = { width = 126, height = 34 },
+      style = { width = common.metrics.navButtonWidth, height = common.metrics.buttonHeight },
     })
   end
 
@@ -137,9 +142,9 @@ function common.nav(ctx, styles, state, active)
     debugName = "gold",
     fill = palette.gold,
     image = "button_gold",
-    style = { flex = 1, height = 34 },
+    style = { flex = 1, height = common.metrics.buttonHeight },
   }, {
-    common.text(ctx, "Gold " .. state.hero.gold, { style = { height = 20 }, fill = transparent() }),
+    common.text(ctx, "Gold " .. state.hero.gold, { style = { height = common.metrics.textControlHeight }, fill = transparent() }),
   })
 
   return common.box(ctx, styles, "nav", { debugName = "rpg navigation", fill = transparent() }, buttons)
@@ -154,10 +159,10 @@ function common.stat_bar(ctx, styles, label, value, max_value, color)
   return common.box(ctx, styles, "column", {
     debugName = label .. " bar group",
     fill = transparent(),
-    style = { height = 38, gap = 4 },
+    style = { height = common.metrics.statGroupHeight, gap = common.metrics.statGap },
   }, {
     common.text(ctx, string.format("%s %d/%d", label, value, max_value), {
-      style = { height = 18 },
+      style = { height = common.metrics.statLabelHeight },
       fill = transparent(),
     }),
     common.box(ctx, styles, "bar", {
@@ -170,7 +175,7 @@ function common.stat_bar(ctx, styles, label, value, max_value, color)
         fill = color,
         image = "bar_fill",
         tint = color,
-        style = { width = tostring(math.floor(percent * 100)) .. "%", height = 12 },
+        style = { width = tostring(math.floor(percent * 100)) .. "%", height = common.metrics.barHeight },
         stroke = false,
       }),
     }),
@@ -181,10 +186,10 @@ function common.message(ctx, styles, state)
   return common.panel(ctx, styles, {
     debugName = "message log",
     fill = ctx.palette.panel,
-    style = { height = 58, padding = 10 },
+    style = { height = common.metrics.messageHeight, padding = common.metrics.messagePadding },
   }, {
     common.text(ctx, state.message or "", {
-      style = { height = 36 },
+      style = { height = common.metrics.messageTextHeight },
       fill = transparent(),
       textColor = ctx.palette.text,
     }),
