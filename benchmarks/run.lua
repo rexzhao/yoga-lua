@@ -5,6 +5,7 @@ local ui = require("ui")
 
 local sizes = { 100, 1000, 5000 }
 local incremental_size = 5000
+local runtime_size = 1000
 local measured_incremental_size = 1000
 local iterations = math.max(1, tonumber(arg and arg[1]) or 20)
 local sample_count = math.max(1, tonumber(arg and arg[2]) or 5)
@@ -143,6 +144,73 @@ local function make_measured_tree(count)
   }, rows), leaves, counter
 end
 
+local function runtime_styles()
+  return ui.stylesheet({
+    root = {
+      width = 640,
+      flexDirection = "column",
+      padding = 8,
+      gap = 2,
+    },
+    row = {
+      flexDirection = "row",
+      height = 24,
+      gap = 2,
+      marginBottom = 2,
+    },
+    leaf = {
+      height = 12,
+    },
+  })
+end
+
+local function make_runtime_element(runtime, count, options)
+  options = options or {}
+
+  local rows = {}
+  local remaining = count
+  local index = 1
+  local target = math.floor(count / 2)
+
+  while remaining > 0 do
+    local row_count = math.min(10, remaining)
+    local leaves = {}
+    local row_start = index
+
+    for child_index = 1, row_count do
+      local item_offset = options.reorder and (row_count - child_index) or (child_index - 1)
+      local item_index = row_start + item_offset
+      local width = 18 + (item_index % 7)
+
+      if item_index == target and options.styleTick then
+        width = width + (options.styleTick % 2)
+      end
+
+      leaves[#leaves + 1] = runtime:div({
+        key = "leaf-" .. item_index,
+        class = "leaf",
+        fill = item_index == target and options.fill or nil,
+        style = {
+          width = width,
+          marginRight = item_index % 3,
+          marginBottom = item_index % 4,
+        },
+      })
+    end
+
+    local row_index = math.floor((index - 1) / 10) + 1
+    rows[#rows + 1] = runtime:div({
+      key = "row-" .. row_index,
+      class = "row",
+    }, leaves)
+
+    index = index + row_count
+    remaining = remaining - row_count
+  end
+
+  return runtime:div({ key = "root", class = "root" }, rows)
+end
+
 local function benchmark(count)
   local root = make_tree(count)
 
@@ -275,6 +343,71 @@ local function benchmark_measured_incremental(count)
     count = count,
     rootDirty = root_dirty,
     leafDirty = leaf_dirty,
+  }
+end
+
+local function time_runtime_render(step)
+  yoga._resetDebugStats()
+
+  local last_root
+  local start = now()
+  for index = 1, iterations do
+    last_root = step(index)
+  end
+  local elapsed = now() - start
+  local stats = yoga._debugStats()
+  yoga._clearDebugStats()
+
+  return {
+    iterations = iterations,
+    total = elapsed,
+    average = elapsed / iterations,
+    width = last_root.yogaNode.layout.width,
+    height = last_root.yogaNode.layout.height,
+    stats = stats,
+  }
+end
+
+local function benchmark_runtime(count)
+  local styles = runtime_styles()
+
+  local initial_mount = time_runtime_render(function()
+    local runtime = ui.createRuntime({ styles = styles })
+    return runtime:render(make_runtime_element(runtime, count))
+  end)
+
+  local clean_runtime = ui.createRuntime({ styles = styles })
+  clean_runtime:render(make_runtime_element(clean_runtime, count))
+  local clean = time_runtime_render(function()
+    return clean_runtime:render(make_runtime_element(clean_runtime, count))
+  end)
+
+  local prop_runtime = ui.createRuntime({ styles = styles })
+  prop_runtime:render(make_runtime_element(prop_runtime, count))
+  local prop_only = time_runtime_render(function(index)
+    local fill = index % 2 == 0 and { 1, 0, 0, 1 } or { 0, 1, 0, 1 }
+    return prop_runtime:render(make_runtime_element(prop_runtime, count, { fill = fill }))
+  end)
+
+  local style_runtime = ui.createRuntime({ styles = styles })
+  style_runtime:render(make_runtime_element(style_runtime, count))
+  local style_change = time_runtime_render(function(index)
+    return style_runtime:render(make_runtime_element(style_runtime, count, { styleTick = index }))
+  end)
+
+  local reorder_runtime = ui.createRuntime({ styles = styles })
+  reorder_runtime:render(make_runtime_element(reorder_runtime, count))
+  local keyed_reorder = time_runtime_render(function(index)
+    return reorder_runtime:render(make_runtime_element(reorder_runtime, count, { reorder = index % 2 == 0 }))
+  end)
+
+  return {
+    count = count,
+    initialMount = initial_mount,
+    clean = clean,
+    propOnly = prop_only,
+    styleChange = style_change,
+    keyedReorder = keyed_reorder,
   }
 end
 
@@ -508,6 +641,43 @@ print(string.format(
   rendered_average.median,
   visible_average.median
 ))
+
+local runtime_samples = run_samples(function()
+  return benchmark_runtime(runtime_size)
+end)
+print(string.format(
+  "runtime reconciler benchmark (%d leaves, %d iterations, %d samples, per-iteration avg median/min/max)",
+  runtime_size,
+  iterations,
+  sample_count
+))
+print_time_stats("  initial mount", runtime_samples, function(sample)
+  return sample.initialMount
+end)
+print_time_stats("  clean rerender", runtime_samples, function(sample)
+  return sample.clean
+end)
+print_time_stats("  prop-only rerender", runtime_samples, function(sample)
+  return sample.propOnly
+end)
+print_time_stats("  single style change", runtime_samples, function(sample)
+  return sample.styleChange
+end)
+print_time_stats("  keyed reorder", runtime_samples, function(sample)
+  return sample.keyedReorder
+end)
+print_debug_stats("  clean rerender", runtime_samples, function(sample)
+  return sample.clean
+end)
+print_debug_stats("  prop-only rerender", runtime_samples, function(sample)
+  return sample.propOnly
+end)
+print_debug_stats("  single style change", runtime_samples, function(sample)
+  return sample.styleChange
+end)
+print_debug_stats("  keyed reorder", runtime_samples, function(sample)
+  return sample.keyedReorder
+end)
 
 local incremental_samples = run_samples(function()
   return benchmark_incremental(incremental_size)

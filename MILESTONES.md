@@ -339,6 +339,8 @@ Planned checklist:
 - [x] Add tests proving style-only changes dirty the expected Yoga path while prop-only changes do not force relayout.
 - [x] Add tests proving removed instances are unmounted and new instances are mounted exactly once.
 - [x] Add a small demo layout that uses class lists and runtime-managed styles without passing `styles` into every node.
+- [x] Add runtime/reconciler benchmark coverage for mount, clean rerender, prop-only rerender, style change, and keyed reorder scenarios.
+- [x] Record runtime benchmark results for Lua 5.4 and Love2D/LuaJIT in `BENCHMARKS.md`.
 - [x] Document the runtime model, key guidance, renderer adapter contract, and the future FLIP/animation hook points.
 - [x] Verify `lua tests/run.lua` after implementation.
 - [x] Verify `.\LOVE\lovec.exe .\examples\love2d --smoke` after implementation.
