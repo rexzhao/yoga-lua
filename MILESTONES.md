@@ -306,6 +306,48 @@ Known skipped cases: none.
 
 Status: complete.
 
+## Milestone 10: Declarative Runtime and Reconciler
+
+Goal: preserve the current declarative layout authoring style while adding a backend-neutral runtime that can diff virtual UI descriptions, reuse mounted instances, and keep renderer-owned objects stable for retained engines such as Unity.
+
+Assumptions:
+
+- The existing direct `yoga.node` and current `ui` APIs stay usable during the transition.
+- The first runtime target is correctness and clean boundaries, not a full React/Vue feature set.
+- Reconciliation belongs above the `yoga` layout core; the core should continue to receive ordinary nodes, style updates, and tree mutations.
+- Animation is intentionally out of this milestone except for recording enough layout snapshots and stable instance identity to support FLIP later.
+
+Planned checklist:
+
+- [ ] Define a virtual element model for `div`, `text`, `image`, `button`, and `virtualList` descriptions without immediately creating Yoga nodes.
+- [ ] Preserve a compatibility path so existing layouts can continue returning Yoga nodes until migrated.
+- [ ] Add class-list support that ignores `nil`/`false` entries and merges classes from left to right before inline `style`.
+- [ ] Move style resolution toward an external stylesheet/runtime step so ordinary nodes can specify class names without repeatedly passing `styles`.
+- [ ] Define mounted instances that hold `type`, resolved key/path identity, props, resolved style, a Yoga node, child instances, renderer handle, visual state, and last layout snapshots.
+- [ ] Implement mount behavior that converts virtual elements into mounted instances and Yoga nodes.
+- [ ] Implement reconcile behavior that reuses instances when `key` and `type` match.
+- [ ] Implement fallback matching by type and child path/index when no explicit key is present.
+- [ ] Implement child insertion, removal, and reordering without rebuilding unaffected sibling instances.
+- [ ] Diff resolved layout styles and call `yoga.updateStyle` only when style inputs changed.
+- [ ] Diff non-layout props such as text, image, event props, debug names, fill/tint, and clipping flags without dirtying Yoga unnecessarily.
+- [ ] Keep tree mutation dirty propagation compatible with existing incremental layout behavior.
+- [ ] Define a minimal backend renderer interface: `mount`, `update`, `unmount`, and optional `draw`/`applyLayout`.
+- [ ] Adapt the Love2D visualizer to render from the instance tree while preserving existing smoke, debug-layout, hover, click, screenshot, and clipping behavior.
+- [ ] Add tests for stable instance reuse across repeated renders of the same virtual tree.
+- [ ] Add tests for keyed dynamic list insertion, deletion, and reorder preserving item instances.
+- [ ] Add tests for unkeyed static children matching by type/path.
+- [ ] Add tests proving style-only changes dirty the expected Yoga path while prop-only changes do not force relayout.
+- [ ] Add tests proving removed instances are unmounted and new instances are mounted exactly once.
+- [ ] Add a small demo layout that uses class lists and runtime-managed styles without passing `styles` into every node.
+- [ ] Document the runtime model, key guidance, renderer adapter contract, and the future FLIP/animation hook points.
+- [ ] Verify `lua tests/run.lua` after implementation.
+- [ ] Verify `.\LOVE\lovec.exe .\examples\love2d --smoke` after implementation.
+- [ ] Verify at least one targeted Love2D screenshot after the visualizer is migrated to the instance tree.
+
+Known skipped cases: none yet.
+
+Status: planned.
+
 ## Future Optimization Directions
 
 - [ ] Preprocess style metadata on `node`, `setStyle`, and `updateStyle` so layout can skip repeated hot-path style discovery.
