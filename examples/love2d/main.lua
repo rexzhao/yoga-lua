@@ -8,6 +8,7 @@ local root_instance
 local overlay_instance
 local content_runtime
 local overlay_runtime
+local content_flip
 local layout_ctx
 local current_case = 1
 local hovered
@@ -127,6 +128,7 @@ local function rebuild()
 
   root_instance = content_runtime:render(cases[current_case].build(width, layout_height), width, layout_height)
   root = root_instance.yogaNode
+  content_flip:sync(root_instance)
 end
 
 local function has_flag(args, flag)
@@ -521,10 +523,19 @@ local function case_action_node(node)
   return nil
 end
 
-local function draw_node(node, depth, parent_left, parent_top)
-  local left, top, width, height = absolute_rect(node, parent_left, parent_top)
+local function draw_node(node, depth, parent_left, parent_top, flip_animator)
+  local base_left, base_top, width, height = absolute_rect(node, parent_left, parent_top)
+  local left = base_left
+  local top = base_top
+  local draw_width = width
+  local draw_height = height
+  local instance = node._uiInstance
   local has_box = width > 0 and height > 0
   local props = node.props or {}
+
+  if flip_animator and instance then
+    left, top, draw_width, draw_height = flip_animator:rect(instance, base_left, base_top, width, height)
+  end
 
   if has_box then
     local fill = props.fill or palette.panel
@@ -533,22 +544,22 @@ local function draw_node(node, depth, parent_left, parent_top)
 
     if props.image and image_mode(props.image, props.imageFit) == "contain" and fill[4] ~= 0 then
       set_color(fill)
-      love.graphics.rectangle("fill", left, top, width, height, radius, radius)
+      love.graphics.rectangle("fill", left, top, draw_width, draw_height, radius, radius)
       filled = true
     end
 
-    local has_image = props.image and draw_image(props.image, left, top, width, height, props.tint, props.imageFit)
+    local has_image = props.image and draw_image(props.image, left, top, draw_width, draw_height, props.tint, props.imageFit)
 
     if not has_image and not filled and fill[4] ~= 0 then
       set_color(fill)
-      love.graphics.rectangle("fill", left, top, width, height, radius, radius)
+      love.graphics.rectangle("fill", left, top, draw_width, draw_height, radius, radius)
     end
 
     if debug_layout and props.stroke ~= false then
       local line = node == hovered and palette.hover or palette.line
       set_color(line)
       love.graphics.setLineWidth(node == hovered and 3 or 1)
-      love.graphics.rectangle("line", left, top, width, height, radius, radius)
+      love.graphics.rectangle("line", left, top, draw_width, draw_height, radius, radius)
     end
 
     draw_node_label(node, left, top)
@@ -562,15 +573,15 @@ local function draw_node(node, depth, parent_left, parent_top)
     love.graphics.setScissor(
       math.floor(left),
       math.floor(top),
-      math.ceil(width),
-      math.ceil(height)
+      math.ceil(draw_width),
+      math.ceil(draw_height)
     )
   end
 
-  local child_parent_top = top - ((node.virtual and node.virtual.scrollOffset) or 0)
+  local child_parent_top = base_top - ((node.virtual and node.virtual.scrollOffset) or 0)
 
   for _, child in ipairs(node.children or {}) do
-    draw_node(child, depth + 1, left, child_parent_top)
+    draw_node(child, depth + 1, base_left, child_parent_top, flip_animator)
   end
 
   if props_clip_children then
@@ -622,6 +633,7 @@ function love.load(args)
   ui = require("ui")
   content_runtime = ui.createRuntime()
   overlay_runtime = ui.createRuntime()
+  content_flip = ui.createFlipAnimator({ duration = 0.18, ease = "outCubic" })
 
   fonts.normal = love.graphics.newFont(14)
   fonts.small = love.graphics.newFont(12)
@@ -638,7 +650,9 @@ function love.load(args)
   end
 end
 
-function love.update()
+function love.update(dt)
+  content_flip:update(dt)
+
   local x, y = love.mouse.getPosition()
   if root then
     hovered, hovered_rect = find_deepest(root, x, y, 0, chrome.top)
@@ -650,7 +664,7 @@ end
 
 function love.draw()
   if root then
-    draw_node(root, 0, 0, chrome.top)
+    draw_node(root, 0, 0, chrome.top, content_flip)
   end
 
   draw_overlay()

@@ -154,6 +154,16 @@ return function(runner, helper)
     helper.assert_equal(root.layout.width, 120, "current layout snapshot")
   end)
 
+  runner:test("runtime can refresh layout snapshots after renderer coordinate adjustment", function()
+    local runtime = ui.createRuntime()
+    local root = runtime:render(runtime:div({ key = "root", style = { width = 100, height = 20 } }))
+
+    root.yogaNode.layout.top = 42
+    runtime:snapshotLayout("layout")
+
+    helper.assert_equal(root.layout.top, 42, "refreshed adjusted top")
+  end)
+
   runner:test("runtime styles demo builds without per-node styles props", function()
     local demo = assert(loadfile("examples/runtime_styles.lua"))()
     local root = demo.build(true)

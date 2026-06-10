@@ -308,6 +308,7 @@ function Runtime:_updateNodeMetadata(instance, element)
   node.text = element.text
   node.label = element.label
   node.virtual = element.virtual
+  node._uiInstance = instance
 end
 
 function Runtime:_mount(element, parent, index, path)
@@ -549,6 +550,14 @@ function Runtime:render(element, width, height, layout_direction)
   yoga.calculateLayout(self.root.yogaNode, width, height, layout_direction)
   self:_snapshotLayout(self.root, "layout")
   self:_applyLayout(self.root)
+
+  return self.root
+end
+
+function Runtime:snapshotLayout(field)
+  if self.root then
+    self:_snapshotLayout(self.root, field or "layout")
+  end
 
   return self.root
 end

@@ -89,6 +89,10 @@ function ui.createRuntime(options)
   return require("ui.runtime").create(options)
 end
 
+function ui.createFlipAnimator(options)
+  return require("ui.flip").create(options)
+end
+
 function ui.div(props, children)
   props, children = normalize_args(props, children)
   local node = yoga.node(merge_style(props), children)

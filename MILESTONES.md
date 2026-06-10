@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 525 tests, 1 skipped`
+- `lua tests/run.lua` -> `ok - 530 tests, 1 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 - `lua benchmarks/run.lua` and `.\LOVE\lovec.exe .\benchmarks\love2d` -> record 100, 1,000, and 5,000 node layout timings in `BENCHMARKS.md`
 
@@ -347,6 +347,27 @@ Planned checklist:
 - [x] Verify at least one targeted Love2D screenshot after the visualizer is migrated to the instance tree.
 
 Known skipped cases: none yet.
+
+Status: complete.
+
+## Milestone 11: FLIP Layout Animation
+
+Goal: provide reusable FLIP-style layout animation on top of runtime instance layout snapshots, while keeping Yoga layout deterministic and keeping renderer-specific drawing concerns outside the animation core.
+
+Planned checklist:
+
+- [x] Add a public `ui.createFlipAnimator` helper backed by a pure Lua `ui.flip` module.
+- [x] Compute visual x/y deltas from runtime `previousLayout` and `layout` snapshots.
+- [x] Support optional scale deltas for consumers that want size FLIP effects.
+- [x] Keep unchanged instances from starting animations and clear animations for instances removed from the synced tree.
+- [x] Expose a runtime layout snapshot helper for renderers that adjust layout coordinates after render.
+- [x] Integrate FLIP into the Love2D visualizer as a draw-time visual transform without changing Yoga layout or hit testing.
+- [x] Add focused unit tests for interpolation, scale deltas, unchanged layouts, and removed instances.
+- [x] Verify `lua tests/run.lua` after implementation.
+- [x] Verify `.\LOVE\lovec.exe .\examples\love2d --smoke` after implementation.
+- [x] Verify a targeted Love2D screenshot after the draw path applies visual rects.
+
+Known skipped cases: none.
 
 Status: complete.
 

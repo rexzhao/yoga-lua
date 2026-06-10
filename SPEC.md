@@ -142,12 +142,30 @@ local renderer = {
 
 Love2D can still draw the resulting Yoga node tree directly. Retained engines such as Unity can keep renderer-owned objects alive by storing them in the instance handle.
 
-The runtime records previous and current absolute layout snapshots for reused instances. That provides the hook needed for future FLIP-style animation:
+The runtime records previous and current absolute layout snapshots for reused instances. `ui.createFlipAnimator` uses those snapshots for reusable FLIP-style layout animation:
+
+```lua
+local runtime = ui.createRuntime()
+local flip = ui.createFlipAnimator({ duration = 0.18, ease = "outCubic" })
+
+local root = runtime:render(build_ui(), width, height)
+flip:sync(root)
+
+-- Each frame:
+flip:update(dt)
+
+-- Renderer draw path:
+local left, top, width, height = flip:rect(instance, left, top, width, height)
+```
+
+The animator computes visual transforms from old and new layout rectangles:
 
 1. Record the first rectangle before reconcile.
 2. Reconcile and calculate the last rectangle.
 3. Derive visual transform deltas from old/new rectangles.
 4. Animate those visual deltas back to zero without changing the final Yoga layout.
+
+By default the animator applies x/y visual offsets only. Consumers can opt into scale deltas with `animateScale = true`. Renderers decide how to apply the returned visual rect. Love2D uses it at draw time; hit testing still uses the final Yoga layout.
 
 ## Initial Style Surface
 
