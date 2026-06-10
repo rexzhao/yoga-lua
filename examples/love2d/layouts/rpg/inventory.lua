@@ -6,8 +6,7 @@ local function item_slot(ctx, styles, item, selected)
   local fill = selected and palette.accent or (item.rarity == "rare" and palette.gold or palette.panel_alt)
 
   return common.box(ctx, styles, "panel", {
-    key = "inventory.item." .. item.id,
-    flip = true,
+    flip = "inventory.item." .. item.id,
     action = "select-item",
     itemId = item.id,
     debugName = item.name,
@@ -93,6 +92,7 @@ return {
         }, category_children),
         common.panel(ctx, styles, {
           debugName = "inventory grid",
+          flipScope = "inventory.grid",
           fill = palette.panel,
           style = {
             flex = 1,

@@ -74,13 +74,7 @@ return function(runner, helper)
 
   runner:test("rpg inventory keyed items flip when resize changes wrapping", function()
     local runtime = ui.createRuntime()
-    local animator = ui.createFlipAnimator({
-      duration = 1,
-      ease = "linear",
-      filter = function(instance)
-        return instance.props and instance.props.flip == true
-      end,
-    })
+    local animator = ui.createFlipAnimator({ duration = 1, ease = "linear" })
     local state = rpg.createState()
     state.screen = "inventory"
     local ctx = {
@@ -95,7 +89,7 @@ return function(runner, helper)
     animator:sync(root)
 
     local animated = find_node(root, function(node)
-      return node.props and node.props.flip == true and animator:visual(node) ~= nil
+      return node.props and type(node.props.flip) == "string" and animator:visual(node) ~= nil
     end)
 
     helper.assert_equal(animated ~= nil, true, "resized inventory item animates")

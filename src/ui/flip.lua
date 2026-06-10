@@ -56,8 +56,55 @@ local function should_animate(delta, epsilon, animate_scale)
   return false
 end
 
-function Animator:_start(instance, delta)
-  self.animations[instance] = {
+local function props_key(props, name)
+  local value = props and props[name]
+
+  if type(value) == "table" then
+    value = value.key
+  end
+
+  if value == nil or type(value) == "boolean" then
+    return nil
+  end
+
+  return tostring(value)
+end
+
+local function flip_key(instance)
+  local props = instance.props or {}
+  return props_key(props, "flip") or (props.flip == true and instance.key and tostring(instance.key)) or nil
+end
+
+local function scope_key(instance)
+  return props_key(instance.props, "flipScope")
+end
+
+local function scoped_rect(instance, scope)
+  local layout = instance.layout
+  if not layout then
+    return nil
+  end
+
+  local scope_layout = scope and scope.layout
+  local scope_left = (scope_layout and scope_layout.left) or 0
+  local scope_top = (scope_layout and scope_layout.top) or 0
+
+  return {
+    left = layout.left - scope_left,
+    top = layout.top - scope_top,
+    width = layout.width,
+    height = layout.height,
+  }
+end
+
+local function token_for(scope, key)
+  local scope_key_value = (scope and scope.key) or "root"
+  return tostring(scope_key_value) .. "\0" .. tostring(key)
+end
+
+function Animator:_start(token, instance, delta)
+  self.animations[token] = {
+    instance = instance,
     elapsed = 0,
     duration = self.duration,
     pendingUpdate = self.deferFirstUpdate,
@@ -65,14 +112,72 @@ function Animator:_start(instance, delta)
   }
 end
 
-function Animator:_syncInstance(instance, seen)
-  local matched = self.filter(instance)
+function Animator:_accept(instance, key, scope)
+  if not key then
+    return false
+  end
 
-  if matched then
-    seen[instance] = true
+  if self.filter then
+    return self.filter(instance, key, scope and scope.key) ~= false
+  end
 
-    local previous = instance.previousLayout
-    local current = instance.layout
+  return true
+end
+
+function Animator:_collectInstance(instance, scope, records, ordered)
+  local key = flip_key(instance)
+  local rect = key and scoped_rect(instance, scope)
+
+  if rect and self:_accept(instance, key, scope) then
+    local token = token_for(scope, key)
+    local record = {
+      token = token,
+      key = key,
+      scope = (scope and scope.key) or "root",
+      instance = instance,
+      rect = rect,
+    }
+
+    records[token] = record
+    ordered[#ordered + 1] = record
+  end
+
+  local child_scope = scope
+  local next_scope_key = scope_key(instance)
+  if next_scope_key and instance.layout then
+    child_scope = {
+      key = next_scope_key,
+      layout = instance.layout,
+    }
+  end
+
+  for _, child in ipairs(instance.children or {}) do
+    self:_collectInstance(child, child_scope, records, ordered)
+  end
+end
+
+function Animator:sync(root)
+  local records = {}
+  local ordered = {}
+  local seen = {}
+
+  if root then
+    self:_collectInstance(root, { key = "root", layout = { left = 0, top = 0 } }, records, ordered)
+  end
+
+  self.instanceTokens = {}
+
+  for token, record in pairs(records) do
+    seen[token] = true
+    self.instanceTokens[record.instance] = token
+
+    local animation = self.animations[token]
+    if animation then
+      animation.instance = record.instance
+    end
+
+    local previous = self.lastRects[token]
+    local current = record.rect
     if previous and current then
       local delta = {
         x = previous.left - current.left,
@@ -82,46 +187,44 @@ function Animator:_syncInstance(instance, seen)
       }
 
       if should_animate(delta, self.epsilon, self.animateScale) then
-        self:_start(instance, delta)
+        self:_start(token, record.instance, delta)
       end
     end
   end
 
-  for _, child in ipairs(instance.children or {}) do
-    self:_syncInstance(child, seen)
-  end
-end
-
-function Animator:sync(root)
-  local seen = {}
-  if root then
-    self:_syncInstance(root, seen)
-  end
-
-  for instance in pairs(self.animations) do
-    if not seen[instance] or instance.unmounted then
-      self.animations[instance] = nil
+  for token, animation in pairs(self.animations) do
+    if not seen[token] or (animation.instance and animation.instance.unmounted) then
+      self.animations[token] = nil
     end
   end
+
+  self.lastRects = {}
+  for token, record in pairs(records) do
+    self.lastRects[token] = record.rect
+  end
+  self.current = ordered
+
+  return ordered
 end
 
 function Animator:update(dt)
   dt = math.max(0, tonumber(dt) or 0)
 
-  for instance, animation in pairs(self.animations) do
+  for token, animation in pairs(self.animations) do
     if animation.pendingUpdate then
       animation.pendingUpdate = false
     else
       animation.elapsed = animation.elapsed + dt
       if animation.elapsed >= animation.duration then
-        self.animations[instance] = nil
+        self.animations[token] = nil
       end
     end
   end
 end
 
 function Animator:visual(instance)
-  local animation = self.animations[instance]
+  local token = type(instance) == "string" and instance or self.instanceTokens[instance]
+  local animation = token and self.animations[token]
   if not animation then
     return nil
   end
@@ -140,6 +243,10 @@ function Animator:visual(instance)
   }
 end
 
+function Animator:targets()
+  return self.current or {}
+end
+
 function Animator:rect(instance, left, top, width, height)
   local visual = self:visual(instance)
   if not visual then
@@ -151,12 +258,7 @@ end
 
 function flip.create(options)
   options = options or {}
-  local filter = options.filter
-  if type(filter) ~= "function" then
-    filter = function()
-      return true
-    end
-  end
+  local filter = type(options.filter) == "function" and options.filter or nil
 
   return setmetatable({
     duration = math.max(0.0001, tonumber(options.duration) or 0.18),
@@ -166,6 +268,9 @@ function flip.create(options)
     deferFirstUpdate = options.deferFirstUpdate == true,
     filter = filter,
     animations = {},
+    instanceTokens = {},
+    lastRects = {},
+    current = {},
   }, Animator)
 end
 

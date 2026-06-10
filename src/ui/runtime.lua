@@ -92,6 +92,23 @@ local function is_yoga_node(value)
   return type(value) == "table" and type(value.style) == "table" and type(value.layout) == "table"
 end
 
+local function props_key(props)
+  props = props or {}
+  if props.key ~= nil then
+    return props.key
+  end
+
+  if type(props.flip) == "table" then
+    return props.flip.key
+  end
+
+  if type(props.flip) ~= "boolean" then
+    return props.flip
+  end
+
+  return nil
+end
+
 local function element_type(element)
   if is_element(element) then
     return element.type
@@ -110,7 +127,7 @@ local function element_key(element)
   end
 
   if is_yoga_node(element) then
-    return element.props and element.props.key
+    return props_key(element.props)
   end
 
   return nil
@@ -163,7 +180,7 @@ function Runtime:_element(type_name, props, children, fields)
   local element = {
     _uiElement = true,
     type = type_name,
-    key = props.key,
+    key = props_key(props),
     props = props,
     children = children,
   }
@@ -360,7 +377,7 @@ function Runtime:_mountExistingNode(node, parent, index, path)
   local props = node.props or {}
   local instance = {
     type = node.type or "node",
-    key = props.key,
+    key = props_key(props),
     path = path,
     props = props,
     resolvedStyle = node.style or {},

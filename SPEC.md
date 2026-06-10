@@ -142,20 +142,17 @@ local renderer = {
 
 Love2D can still draw the resulting Yoga node tree directly. Retained engines such as Unity can keep renderer-owned objects alive by storing them in the instance handle.
 
-The runtime records previous and current absolute layout snapshots for reused instances. `ui.createFlipAnimator` uses those snapshots for reusable FLIP-style layout animation:
+`ui.createFlipAnimator` collects nodes with `flip` keys from the rendered instance tree and uses those keys to drive reusable FLIP-style layout animation:
 
 ```lua
 local runtime = ui.createRuntime()
 local flip = ui.createFlipAnimator({
   duration = 0.18,
   ease = "outCubic",
-  filter = function(instance)
-    return instance.props and instance.props.flip == true
-  end,
 })
 
 local root = runtime:render(build_ui(), width, height)
-flip:sync(root)
+local targets = flip:sync(root)
 
 -- Each frame:
 flip:update(dt)
@@ -164,22 +161,46 @@ flip:update(dt)
 local left, top, width, height = flip:rect(instance, left, top, width, height)
 ```
 
-The animator computes visual transforms from old and new layout rectangles:
+Nodes opt into FLIP with a stable key:
 
-1. Record the first rectangle before reconcile.
-2. Reconcile and calculate the last rectangle.
-3. Derive visual transform deltas from old/new rectangles.
-4. Animate those visual deltas back to zero without changing the final Yoga layout.
+```lua
+ui.div({
+  flip = "inventory.item." .. item.id,
+})
+```
+
+When `key` is omitted, the runtime also uses a string `flip` value as the default reconcile key. That lets repeated UI items keep stable mounted instances without writing both `key` and `flip`.
+
+Containers can define a local FLIP coordinate space with `flipScope`:
+
+```lua
+ui.div({
+  flipScope = "inventory.grid",
+}, item_nodes)
+```
+
+Descendant `flip` nodes inside a scope animate from their previous local rectangle to their current local rectangle. This excludes movement of the scoped container itself, so a resized or moved inventory panel can animate item reflow relative to the panel instead of making items fly from their old screen-space positions. Nodes outside an explicit scope use root coordinates.
+
+The animator computes visual transforms from keyed old and new rectangles:
+
+1. Render and calculate the final Yoga layout.
+2. Collect all nodes with `flip` keys, using the nearest `flipScope` for local coordinates.
+3. Match current rectangles against the previous sync by `scope + flip key`.
+4. Derive visual transform deltas from old/new rectangles.
+5. Animate those visual deltas back to zero without changing the final Yoga layout.
 
 By default the animator applies x/y visual offsets only. Consumers can opt into scale deltas with `animateScale = true`. Renderers decide how to apply the returned visual rect. Love2D uses it at draw time; hit testing still uses the final Yoga layout.
 
-Renderers can scope FLIP to a subset of instances with `filter`. The Love2D RPG demo enables FLIP only for inventory item slots by giving each item a stable key and `flip = true`:
+Renderers can further restrict collected nodes with `filter`. The Love2D RPG demo enables scoped FLIP for inventory item slots by giving the grid a scope and each item a stable `flip` key:
 
 ```lua
+common.panel(ctx, styles, {
+  flipScope = "inventory.grid",
+}, {
 common.box(ctx, styles, "panel", {
-  key = "inventory.item." .. item.id,
-  flip = true,
+  flip = "inventory.item." .. item.id,
   itemId = item.id,
+})
 })
 ```
 
