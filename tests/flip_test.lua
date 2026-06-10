@@ -108,4 +108,34 @@ return function(runner, helper)
     helper.assert_equal(animator:visual(ignored), nil, "filtered-out instance")
     helper.assert_equal(animator:visual(matched) ~= nil, true, "matched instance")
   end)
+
+  runner:test("flip animator matches keyed items after parent resize", function()
+    local runtime = ui.createRuntime()
+    local animator = ui.createFlipAnimator({
+      duration = 1,
+      ease = "linear",
+      filter = function(instance)
+        return instance.props and instance.props.flip == true
+      end,
+    })
+    local function grid(width)
+      return runtime:div({
+        key = "grid",
+        style = { width = width, flexDirection = "row", flexWrap = "wrap", gap = 10 },
+      }, {
+        runtime:div({ key = "item.a", flip = true, style = { width = 100, height = 20 } }),
+        runtime:div({ key = "item.b", flip = true, style = { width = 100, height = 20 } }),
+        runtime:div({ key = "item.c", flip = true, style = { width = 100, height = 20 } }),
+      })
+    end
+
+    local root = runtime:render(grid(250))
+    local item_b = root.children[2]
+
+    root = runtime:render(grid(180))
+    animator:sync(root)
+
+    helper.assert_equal(root.children[2], item_b, "keyed item instance reused after resize")
+    helper.assert_equal(animator:visual(item_b) ~= nil, true, "resized keyed item animates")
+  end)
 end

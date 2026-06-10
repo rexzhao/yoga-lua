@@ -523,10 +523,10 @@ local function case_action_node(node)
   return nil
 end
 
-local function draw_node(node, depth, parent_left, parent_top, flip_animator)
+local function draw_node(node, depth, parent_left, parent_top, flip_animator, inherited_dx, inherited_dy)
   local base_left, base_top, width, height = absolute_rect(node, parent_left, parent_top)
-  local left = base_left
-  local top = base_top
+  local effective_dx = inherited_dx or 0
+  local effective_dy = inherited_dy or 0
   local draw_width = width
   local draw_height = height
   local instance = node._uiInstance
@@ -534,8 +534,16 @@ local function draw_node(node, depth, parent_left, parent_top, flip_animator)
   local props = node.props or {}
 
   if flip_animator and instance then
-    left, top, draw_width, draw_height = flip_animator:rect(instance, base_left, base_top, width, height)
+    local visual = flip_animator:visual(instance)
+    if visual then
+      effective_dx = visual.x
+      effective_dy = visual.y
+      draw_width = width * visual.scaleX
+      draw_height = height * visual.scaleY
+    end
   end
+  local left = base_left + effective_dx
+  local top = base_top + effective_dy
 
   if has_box then
     local fill = props.fill or palette.panel
@@ -581,7 +589,7 @@ local function draw_node(node, depth, parent_left, parent_top, flip_animator)
   local child_parent_top = base_top - ((node.virtual and node.virtual.scrollOffset) or 0)
 
   for _, child in ipairs(node.children or {}) do
-    draw_node(child, depth + 1, base_left, child_parent_top, flip_animator)
+    draw_node(child, depth + 1, base_left, child_parent_top, flip_animator, effective_dx, effective_dy)
   end
 
   if props_clip_children then

@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 531 tests, 1 skipped`
+- `lua tests/run.lua` -> `ok - 532 tests, 1 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 - `lua benchmarks/run.lua` and `.\LOVE\lovec.exe .\benchmarks\love2d` -> record 100, 1,000, and 5,000 node layout timings in `BENCHMARKS.md`
 
@@ -363,7 +363,9 @@ Planned checklist:
 - [x] Expose a runtime layout snapshot helper for renderers that adjust layout coordinates after render.
 - [x] Integrate FLIP into the Love2D visualizer as a draw-time visual transform without changing Yoga layout or hit testing.
 - [x] Scope Love2D FLIP playback to explicitly marked nodes and enable it only for keyed inventory item slots.
+- [x] Keep unmarked children visually moving with their marked parent node in the Love2D draw path.
 - [x] Add focused unit tests for interpolation, scale deltas, unchanged layouts, and removed instances.
+- [x] Add regression coverage proving keyed item FLIP starts after parent resize changes item layout.
 - [x] Verify `lua tests/run.lua` after implementation.
 - [x] Verify `.\LOVE\lovec.exe .\examples\love2d --smoke` after implementation.
 - [x] Verify a targeted Love2D screenshot after the draw path applies visual rects.

@@ -183,6 +183,8 @@ common.box(ctx, styles, "panel", {
 })
 ```
 
+Only marked item slot instances start FLIP animations in that demo. Their unmarked child nodes inherit the parent slot's draw-time visual offset, so item labels move with the slot while the rest of the interface stays on the final Yoga layout.
+
 ## Initial Style Surface
 
 Milestone 1 should cover:
