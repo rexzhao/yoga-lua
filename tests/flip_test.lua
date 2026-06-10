@@ -77,4 +77,35 @@ return function(runner, helper)
     animator:sync(root)
     helper.assert_equal(animator:visual(moved), nil, "removed child animation cleared")
   end)
+
+  runner:test("flip animator only animates instances accepted by filter", function()
+    local animator = ui.createFlipAnimator({
+      duration = 1,
+      ease = "linear",
+      filter = function(instance)
+        return instance.props and instance.props.flip == true
+      end,
+    })
+    local ignored = {
+      props = {},
+      previousLayout = { left = 0, top = 0, width = 10, height = 10 },
+      layout = { left = 20, top = 0, width = 10, height = 10 },
+      children = {},
+    }
+    local matched = {
+      props = { flip = true },
+      previousLayout = { left = 0, top = 0, width = 10, height = 10 },
+      layout = { left = 20, top = 0, width = 10, height = 10 },
+      children = {},
+    }
+    local root = {
+      props = {},
+      children = { ignored, matched },
+    }
+
+    animator:sync(root)
+
+    helper.assert_equal(animator:visual(ignored), nil, "filtered-out instance")
+    helper.assert_equal(animator:visual(matched) ~= nil, true, "matched instance")
+  end)
 end

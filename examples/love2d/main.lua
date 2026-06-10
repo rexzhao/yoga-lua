@@ -633,7 +633,13 @@ function love.load(args)
   ui = require("ui")
   content_runtime = ui.createRuntime()
   overlay_runtime = ui.createRuntime()
-  content_flip = ui.createFlipAnimator({ duration = 0.18, ease = "outCubic" })
+  content_flip = ui.createFlipAnimator({
+    duration = 0.18,
+    ease = "outCubic",
+    filter = function(instance)
+      return instance.props and instance.props.flip == true
+    end,
+  })
 
   fonts.normal = love.graphics.newFont(14)
   fonts.small = love.graphics.newFont(12)

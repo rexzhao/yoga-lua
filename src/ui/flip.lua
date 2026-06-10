@@ -65,20 +65,24 @@ function Animator:_start(instance, delta)
 end
 
 function Animator:_syncInstance(instance, seen)
-  seen[instance] = true
+  local matched = self.filter(instance)
 
-  local previous = instance.previousLayout
-  local current = instance.layout
-  if previous and current then
-    local delta = {
-      x = previous.left - current.left,
-      y = previous.top - current.top,
-      scaleX = self.animateScale and scale_from(previous.width, current.width) or 1,
-      scaleY = self.animateScale and scale_from(previous.height, current.height) or 1,
-    }
+  if matched then
+    seen[instance] = true
 
-    if should_animate(delta, self.epsilon, self.animateScale) then
-      self:_start(instance, delta)
+    local previous = instance.previousLayout
+    local current = instance.layout
+    if previous and current then
+      local delta = {
+        x = previous.left - current.left,
+        y = previous.top - current.top,
+        scaleX = self.animateScale and scale_from(previous.width, current.width) or 1,
+        scaleY = self.animateScale and scale_from(previous.height, current.height) or 1,
+      }
+
+      if should_animate(delta, self.epsilon, self.animateScale) then
+        self:_start(instance, delta)
+      end
     end
   end
 
@@ -142,12 +146,19 @@ end
 
 function flip.create(options)
   options = options or {}
+  local filter = options.filter
+  if type(filter) ~= "function" then
+    filter = function()
+      return true
+    end
+  end
 
   return setmetatable({
     duration = math.max(0.0001, tonumber(options.duration) or 0.18),
     ease = resolve_ease(options.ease),
     epsilon = tonumber(options.epsilon) or 0.001,
     animateScale = options.animateScale == true,
+    filter = filter,
     animations = {},
   }, Animator)
 end

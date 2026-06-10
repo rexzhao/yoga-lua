@@ -146,7 +146,13 @@ The runtime records previous and current absolute layout snapshots for reused in
 
 ```lua
 local runtime = ui.createRuntime()
-local flip = ui.createFlipAnimator({ duration = 0.18, ease = "outCubic" })
+local flip = ui.createFlipAnimator({
+  duration = 0.18,
+  ease = "outCubic",
+  filter = function(instance)
+    return instance.props and instance.props.flip == true
+  end,
+})
 
 local root = runtime:render(build_ui(), width, height)
 flip:sync(root)
@@ -166,6 +172,16 @@ The animator computes visual transforms from old and new layout rectangles:
 4. Animate those visual deltas back to zero without changing the final Yoga layout.
 
 By default the animator applies x/y visual offsets only. Consumers can opt into scale deltas with `animateScale = true`. Renderers decide how to apply the returned visual rect. Love2D uses it at draw time; hit testing still uses the final Yoga layout.
+
+Renderers can scope FLIP to a subset of instances with `filter`. The Love2D RPG demo enables FLIP only for inventory item slots by giving each item a stable key and `flip = true`:
+
+```lua
+common.box(ctx, styles, "panel", {
+  key = "inventory.item." .. item.id,
+  flip = true,
+  itemId = item.id,
+})
+```
 
 ## Initial Style Surface
 
