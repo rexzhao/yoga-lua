@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 532 tests, 1 skipped`
+- `lua tests/run.lua` -> `ok - 534 tests, 1 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 - `lua benchmarks/run.lua` and `.\LOVE\lovec.exe .\benchmarks\love2d` -> record 100, 1,000, and 5,000 node layout timings in `BENCHMARKS.md`
 
@@ -297,6 +297,7 @@ Status: complete.
 - [x] Define a manifest-driven UI asset contract for nine-slice, horizontal three-slice, cover, and contain rendering.
 - [x] Document the AI UI asset generation and screenshot QA workflow.
 - [x] Inventory item grid wraps slots through Yoga so item count per row responds to available width.
+- [x] Inventory category rows are clickable and filter the item grid while keeping the selected detail item in the visible category.
 - [x] Hide layout helper frames by default while keeping `--debug-layout` for targeted layout inspection.
 - [x] Verify `lua tests/run.lua` after implementation.
 - [x] Verify `.\LOVE\lovec.exe .\examples\love2d --smoke` after implementation.

@@ -40,11 +40,35 @@ end
 local function item_slots(ctx, styles, state)
   local slots = {}
 
-  for _, item in ipairs(state.inventory) do
+  for _, item in ipairs(state:getInventoryItems()) do
     slots[#slots + 1] = item_slot(ctx, styles, item, item.id == state.selectedItemId)
   end
 
   return slots
+end
+
+local function category_row(ctx, category, selected)
+  local palette = ctx.palette
+
+  return common.text(ctx, category.label, {
+    action = "select-category",
+    category = category.id,
+    debugName = "category " .. category.label,
+    style = { height = 30 },
+    fill = selected and palette.accent or palette.panel_alt,
+  })
+end
+
+local function category_rows(ctx, state)
+  local rows = {
+    common.text(ctx, "Categories", { style = { height = 28 }, fill = { 0, 0, 0, 0 } }),
+  }
+
+  for _, category in ipairs(state:getInventoryCategories()) do
+    rows[#rows + 1] = category_row(ctx, category, category.id == state.selectedInventoryCategory)
+  end
+
+  return rows
 end
 
 return {
@@ -52,6 +76,12 @@ return {
     local styles = common.styles(ctx, width, height)
     local palette = ctx.palette
     local selected = state:getSelectedItem()
+    local category_children = category_rows(ctx, state)
+
+    category_children[#category_children + 1] = common.button(ctx, styles, "Sort", "sort-items", {
+      fill = palette.green,
+      style = { height = 32 },
+    })
 
     return common.box(ctx, styles, "screen", { debugName = "inventory screen", fill = palette.background }, {
       common.nav(ctx, styles, state, "inventory"),
@@ -60,17 +90,7 @@ return {
           debugName = "inventory categories",
           fill = palette.panel,
           style = { width = 210, flex = 0 },
-        }, {
-          common.text(ctx, "Categories", { style = { height = 28 }, fill = { 0, 0, 0, 0 } }),
-          common.text(ctx, "Consumables", { style = { height = 30 }, fill = palette.accent }),
-          common.text(ctx, "Equipment", { style = { height = 30 }, fill = palette.panel_alt }),
-          common.text(ctx, "Materials", { style = { height = 30 }, fill = palette.panel_alt }),
-          common.text(ctx, "Quest Items", { style = { height = 30 }, fill = palette.panel_alt }),
-          common.button(ctx, styles, "Sort", "sort-items", {
-            fill = palette.green,
-            style = { height = 32 },
-          }),
-        }),
+        }, category_children),
         common.panel(ctx, styles, {
           debugName = "inventory grid",
           fill = palette.panel,

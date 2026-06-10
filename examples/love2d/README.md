@@ -31,6 +31,7 @@ Controls:
 
 - The app starts directly in the RPG field HUD.
 - Click top navigation buttons to open Character, Skills, Bag, Quests, or Camp.
+- In Bag, click category rows to filter the item grid.
 - `C`, `K`, `I`, `Q`, `M`, `H`: open Character, Skills, Bag, Quests, Camp, or Field.
 - `Esc`: close the current RPG panel back to the field HUD.
 - Run with `--debug-layout` and move the mouse over a node to inspect its computed layout.

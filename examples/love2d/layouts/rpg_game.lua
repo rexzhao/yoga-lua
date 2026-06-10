@@ -27,6 +27,13 @@ local screen_aliases = {
 local State = {}
 State.__index = State
 
+local inventory_categories = {
+  { id = "consumables", label = "Consumables", types = { Consumable = true } },
+  { id = "equipment", label = "Equipment", types = { Trinket = true, Tool = true } },
+  { id = "materials", label = "Materials", types = { Material = true } },
+  { id = "quest", label = "Quest Items", types = { Quest = true } },
+}
+
 function State:findById(list, id)
   for _, item in ipairs(list) do
     if item.id == id then
@@ -37,8 +44,36 @@ function State:findById(list, id)
   return nil
 end
 
+function State:getInventoryCategories()
+  return inventory_categories
+end
+
+function State:getInventoryCategory(category_id)
+  for _, category in ipairs(inventory_categories) do
+    if category.id == category_id then
+      return category
+    end
+  end
+
+  return nil
+end
+
+function State:getInventoryItems()
+  local category = self:getInventoryCategory(self.selectedInventoryCategory) or inventory_categories[1]
+  local items = {}
+
+  for _, item in ipairs(self.inventory) do
+    if category.types[item.type] then
+      items[#items + 1] = item
+    end
+  end
+
+  return items
+end
+
 function State:getSelectedItem()
-  return self:findById(self.inventory, self.selectedItemId) or self.inventory[1]
+  local items = self:getInventoryItems()
+  return self:findById(items, self.selectedItemId) or items[1] or self.inventory[1]
 end
 
 function State:getSelectedSkill()
@@ -67,6 +102,23 @@ function State:setScreen(screen)
   return false
 end
 
+function State:setInventoryCategory(category_id)
+  local category = self:getInventoryCategory(category_id)
+  if not category then
+    return false
+  end
+
+  self.selectedInventoryCategory = category.id
+
+  local selected = self:getSelectedItem()
+  if selected then
+    self.selectedItemId = selected.id
+  end
+
+  self.message = "Showing " .. category.label .. "."
+  return true
+end
+
 function State:addInventoryItem(template)
   local existing = self:findById(self.inventory, template.id)
   if existing then
@@ -86,6 +138,7 @@ end
 local function create_state()
   return setmetatable({
     screen = "hud",
+    selectedInventoryCategory = "consumables",
     selectedItemId = "potion",
     selectedSkillId = "moonshot",
     selectedQuestId = "courier",
@@ -389,6 +442,10 @@ return {
       state.message = "The party rests. HP and MP restored."
     elseif action == "select-item" then
       state.selectedItemId = props.itemId
+    elseif action == "select-category" then
+      if not state:setInventoryCategory(props.category) then
+        return false
+      end
     elseif action == "use-item" then
       state.selectedItemId = props.itemId
       use_item(state, state:getSelectedItem())
