@@ -644,6 +644,7 @@ function love.load(args)
   content_flip = ui.createFlipAnimator({
     duration = 0.18,
     ease = "outCubic",
+    deferFirstUpdate = true,
     filter = function(instance)
       return instance.props and instance.props.flip == true
     end,

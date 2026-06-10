@@ -60,6 +60,7 @@ function Animator:_start(instance, delta)
   self.animations[instance] = {
     elapsed = 0,
     duration = self.duration,
+    pendingUpdate = self.deferFirstUpdate,
     from = delta,
   }
 end
@@ -108,9 +109,13 @@ function Animator:update(dt)
   dt = math.max(0, tonumber(dt) or 0)
 
   for instance, animation in pairs(self.animations) do
-    animation.elapsed = animation.elapsed + dt
-    if animation.elapsed >= animation.duration then
-      self.animations[instance] = nil
+    if animation.pendingUpdate then
+      animation.pendingUpdate = false
+    else
+      animation.elapsed = animation.elapsed + dt
+      if animation.elapsed >= animation.duration then
+        self.animations[instance] = nil
+      end
     end
   end
 end
@@ -158,6 +163,7 @@ function flip.create(options)
     ease = resolve_ease(options.ease),
     epsilon = tonumber(options.epsilon) or 0.001,
     animateScale = options.animateScale == true,
+    deferFirstUpdate = options.deferFirstUpdate == true,
     filter = filter,
     animations = {},
   }, Animator)

@@ -4,7 +4,7 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 534 tests, 1 skipped`
+- `lua tests/run.lua` -> `ok - 536 tests, 1 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
 - `lua benchmarks/run.lua` and `.\LOVE\lovec.exe .\benchmarks\love2d` -> record 100, 1,000, and 5,000 node layout timings in `BENCHMARKS.md`
 
@@ -367,6 +367,7 @@ Planned checklist:
 - [x] Keep unmarked children visually moving with their marked parent node in the Love2D draw path.
 - [x] Add focused unit tests for interpolation, scale deltas, unchanged layouts, and removed instances.
 - [x] Add regression coverage proving keyed item FLIP starts after parent resize changes item layout.
+- [x] Defer Love2D FLIP playback by one update after sync so window resize cannot consume the animation before its first draw.
 - [x] Verify `lua tests/run.lua` after implementation.
 - [x] Verify `.\LOVE\lovec.exe .\examples\love2d --smoke` after implementation.
 - [x] Verify a targeted Love2D screenshot after the draw path applies visual rects.

@@ -36,8 +36,8 @@ return function(runner, helper)
   runner:test("rpg inventory category click filters visible items", function()
     local state = rpg.createState()
 
-    helper.assert_equal(state.selectedInventoryCategory, "consumables", "initial category")
-    helper.assert_equal(#state:getInventoryItems(), 3, "initial consumable count")
+    helper.assert_equal(state.selectedInventoryCategory, "all", "initial category")
+    helper.assert_equal(#state:getInventoryItems(), 7, "initial all count")
 
     helper.assert_equal(rpg.handleClick(state, { action = "select-category", category = "materials" }), true, "category click handled")
     helper.assert_equal(state.selectedInventoryCategory, "materials", "selected category")
@@ -45,8 +45,12 @@ return function(runner, helper)
     helper.assert_equal(state:getSelectedItem().id, "ironwood", "selected item moves into category")
     helper.assert_equal(state.message, "Showing Materials.", "category message")
 
+    helper.assert_equal(rpg.handleClick(state, { action = "select-category", category = "all" }), true, "all category click handled")
+    helper.assert_equal(#state:getInventoryItems(), 7, "all count")
+    helper.assert_equal(state:getSelectedItem().id, "ironwood", "all keeps selected visible item")
+
     helper.assert_equal(rpg.handleClick(state, { action = "select-category", category = "missing" }), false, "invalid category ignored")
-    helper.assert_equal(state.selectedInventoryCategory, "materials", "invalid category preserves state")
+    helper.assert_equal(state.selectedInventoryCategory, "all", "invalid category preserves state")
   end)
 
   runner:test("rpg inventory category nodes carry click action props", function()
@@ -66,5 +70,34 @@ return function(runner, helper)
     helper.assert_equal(materials.props.action, "select-category", "materials category action")
     helper.assert_equal(rpg.handleClick(state, materials.props), true, "materials category props are handled")
     helper.assert_equal(state.selectedInventoryCategory, "materials", "materials category selected")
+  end)
+
+  runner:test("rpg inventory keyed items flip when resize changes wrapping", function()
+    local runtime = ui.createRuntime()
+    local animator = ui.createFlipAnimator({
+      duration = 1,
+      ease = "linear",
+      filter = function(instance)
+        return instance.props and instance.props.flip == true
+      end,
+    })
+    local state = rpg.createState()
+    state.screen = "inventory"
+    local ctx = {
+      ui = runtime:ui(),
+      palette = palette(),
+      unpack = table.unpack or unpack,
+    }
+
+    local root = runtime:render(rpg.build(ctx, 1100, 600, state), 1100, 600)
+    animator:sync(root)
+    root = runtime:render(rpg.build(ctx, 900, 600, state), 900, 600)
+    animator:sync(root)
+
+    local animated = find_node(root, function(node)
+      return node.props and node.props.flip == true and animator:visual(node) ~= nil
+    end)
+
+    helper.assert_equal(animated ~= nil, true, "resized inventory item animates")
   end)
 end

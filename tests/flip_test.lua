@@ -57,6 +57,25 @@ return function(runner, helper)
     helper.assert_equal(animator:visual(instance), nil, "unchanged instance has no visual transform")
   end)
 
+  runner:test("flip animator can defer the first update after sync", function()
+    local animator = ui.createFlipAnimator({ duration = 1, ease = "linear", deferFirstUpdate = true })
+    local instance = {
+      previousLayout = { left = 0, top = 0, width = 20, height = 10 },
+      layout = { left = 10, top = 0, width = 20, height = 10 },
+      children = {},
+    }
+
+    animator:sync(instance)
+    animator:update(2)
+
+    local visual = animator:visual(instance)
+    helper.assert_near(visual.x, -10, "deferred first x")
+
+    animator:update(0.5)
+    visual = animator:visual(instance)
+    helper.assert_near(visual.x, -5, "deferred half x")
+  end)
+
   runner:test("flip animator drops animations for instances outside the synced tree", function()
     local animator = ui.createFlipAnimator({ duration = 1, ease = "linear" })
     local moved = {

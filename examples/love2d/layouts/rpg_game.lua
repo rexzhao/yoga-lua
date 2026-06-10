@@ -28,6 +28,7 @@ local State = {}
 State.__index = State
 
 local inventory_categories = {
+  { id = "all", label = "All", all = true },
   { id = "consumables", label = "Consumables", types = { Consumable = true } },
   { id = "equipment", label = "Equipment", types = { Trinket = true, Tool = true } },
   { id = "materials", label = "Materials", types = { Material = true } },
@@ -63,7 +64,7 @@ function State:getInventoryItems()
   local items = {}
 
   for _, item in ipairs(self.inventory) do
-    if category.types[item.type] then
+    if category.all or category.types[item.type] then
       items[#items + 1] = item
     end
   end
@@ -138,7 +139,7 @@ end
 local function create_state()
   return setmetatable({
     screen = "hud",
-    selectedInventoryCategory = "consumables",
+    selectedInventoryCategory = "all",
     selectedItemId = "potion",
     selectedSkillId = "moonshot",
     selectedQuestId = "courier",
