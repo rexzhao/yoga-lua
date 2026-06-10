@@ -121,18 +121,12 @@ local function load_cases()
   end
 end
 
-local function offset_layout(node, dx, dy)
-  node.layout.left = node.layout.left + dx
-  node.layout.top = node.layout.top + dy
-end
-
 local function rebuild()
   local width, window_height = love.graphics.getDimensions()
   local layout_height = math.max(1, window_height - chrome.top - chrome.bottom)
 
   root_instance = content_runtime:render(cases[current_case].build(width, layout_height), width, layout_height)
   root = root_instance.yogaNode
-  offset_layout(root, 0, chrome.top)
 end
 
 local function has_flag(args, flag)
@@ -647,7 +641,7 @@ end
 function love.update()
   local x, y = love.mouse.getPosition()
   if root then
-    hovered, hovered_rect = find_deepest(root, x, y)
+    hovered, hovered_rect = find_deepest(root, x, y, 0, chrome.top)
   else
     hovered = nil
     hovered_rect = nil
@@ -656,7 +650,7 @@ end
 
 function love.draw()
   if root then
-    draw_node(root, 0)
+    draw_node(root, 0, 0, chrome.top)
   end
 
   draw_overlay()
@@ -691,7 +685,7 @@ function love.mousepressed(x, y, button)
   end
 
   local case = cases[current_case]
-  local node = root and find_deepest(root, x, y)
+  local node = root and find_deepest(root, x, y, 0, chrome.top)
   local action_node = case_action_node(node)
 
   if case and case.handleClick and action_node and case.handleClick(case.state, action_node.props, action_node) then
