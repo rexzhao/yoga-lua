@@ -1,4 +1,5 @@
 local yoga = require("yoga")
+local scroll = require("ui.scroll")
 
 local runtime = {}
 
@@ -215,6 +216,19 @@ function Runtime:button(label, props)
   }, { label = label })
 end
 
+function Runtime:scrollView(props, children)
+  props, children = normalize_args(props, children)
+
+  local scroll_props = shallow_copy(props)
+  local scroll_style = shallow_copy(props.style)
+  scroll.applyContainerStyle(scroll_style, props.axis)
+  scroll_props.style = scroll_style
+
+  return self:_element("scrollView", scroll_props, children, {
+    scroll = scroll.initialMetrics(props),
+  })
+end
+
 function Runtime:virtualList(props)
   props = props or {}
 
@@ -281,6 +295,12 @@ function Runtime:virtualList(props)
       topSpacerHeight = top_height,
       bottomSpacerHeight = bottom_height,
     },
+    scroll = scroll.virtualMetrics({
+      scrollOffset = scroll_offset,
+      maxScroll = max_scroll,
+      contentHeight = content_height,
+      viewportHeight = viewport_height,
+    }),
   })
 end
 
@@ -298,8 +318,14 @@ function Runtime:ui()
     button = function(label, props)
       return self:button(label, props)
     end,
+    scrollView = function(props, children)
+      return self:scrollView(props, children)
+    end,
     virtualList = function(props)
       return self:virtualList(props)
+    end,
+    scrollDelta = function(scroll_state, delta, metrics)
+      return scroll.delta(scroll_state, delta, metrics)
     end,
     stylesheet = function(definitions)
       return definitions or {}
@@ -325,6 +351,7 @@ function Runtime:_updateNodeMetadata(instance, element)
   node.text = element.text
   node.label = element.label
   node.virtual = element.virtual
+  node.scroll = element.scroll
   node._uiInstance = instance
 end
 
@@ -352,6 +379,7 @@ function Runtime:_mount(element, parent, index, path)
     text = element.text,
     label = element.label,
     virtual = element.virtual,
+    scroll = element.scroll,
     visual = {},
   }
 
@@ -386,6 +414,7 @@ function Runtime:_mountExistingNode(node, parent, index, path)
     text = node.text,
     label = node.label,
     virtual = node.virtual,
+    scroll = node.scroll,
     visual = {},
     compatibleNode = true,
   }
@@ -446,6 +475,7 @@ function Runtime:_reconcile(instance, element, parent, index, path)
   instance.text = element.text
   instance.label = element.label
   instance.virtual = element.virtual
+  instance.scroll = element.scroll
 
   if style_changed then
     yoga.setStyle(instance.yogaNode, resolved_style)
@@ -531,7 +561,8 @@ function Runtime:_reconcileChildren(instance, child_elements, path)
 end
 
 function Runtime:_snapshotLayout(instance, field, parent_left, parent_top)
-  local layout = instance.yogaNode.layout
+  local node = instance.yogaNode
+  local layout = node.layout
   local left = (parent_left or 0) + layout.left
   local top = (parent_top or 0) + layout.top
 
@@ -542,9 +573,39 @@ function Runtime:_snapshotLayout(instance, field, parent_left, parent_top)
     height = layout.height,
   }
 
-  local child_parent_top = top - ((instance.yogaNode.virtual and instance.yogaNode.virtual.scrollOffset) or 0)
+  local has_box = layout.width > 0 and layout.height > 0
+  local props = node.props or {}
+  local style = node.style or {}
+  local clips = has_box
+    and (props.clipChildren == true or style.overflow == "hidden" or style.overflow == "scroll")
+  local metrics = scroll.updateNodeMetrics(node)
+
+  instance.clip = nil
+  if clips then
+    instance.clip = {
+      left = left,
+      top = top,
+      width = layout.width,
+      height = layout.height,
+    }
+  end
+
+  if metrics then
+    metrics.clip = instance.clip
+    instance.scroll = metrics
+  else
+    instance.scroll = node.scroll
+  end
+
+  local scroll_x, scroll_y = scroll.offset(node.scroll)
+  if (scroll_x == 0 and scroll_y == 0) and node.virtual then
+    scroll_y = node.virtual.scrollOffset or 0
+  end
+
+  local child_parent_left = left - scroll_x
+  local child_parent_top = top - scroll_y
   for _, child in ipairs(instance.children or {}) do
-    self:_snapshotLayout(child, field, left, child_parent_top)
+    self:_snapshotLayout(child, field, child_parent_left, child_parent_top)
   end
 end
 
@@ -577,6 +638,46 @@ function Runtime:snapshotLayout(field)
   end
 
   return self.root
+end
+
+local function point_in_rect(x, y, rect)
+  if not rect or rect.width <= 0 or rect.height <= 0 then
+    return false
+  end
+
+  return x >= rect.left and y >= rect.top and x <= rect.left + rect.width and y <= rect.top + rect.height
+end
+
+local function hit_test(instance, x, y)
+  local rect = instance.layout
+  local has_box = rect and rect.width > 0 and rect.height > 0
+  local hit = has_box and point_in_rect(x, y, rect)
+  local clipped = instance.clip ~= nil
+  local inside_clip = not clipped or point_in_rect(x, y, instance.clip)
+
+  if inside_clip and (hit or not has_box or not clipped) then
+    for index = #(instance.children or {}), 1, -1 do
+      local child, child_rect = hit_test(instance.children[index], x, y)
+      if child then
+        return child, child_rect
+      end
+    end
+  end
+
+  if hit then
+    return instance, rect
+  end
+
+  return nil
+end
+
+function Runtime:hitTest(x, y, root)
+  root = root or self.root
+  if not root then
+    return nil
+  end
+
+  return hit_test(root, x, y)
 end
 
 function runtime.create(options)

@@ -4,8 +4,9 @@ Update this checklist in the same change set whenever a feature lands, a fixture
 
 Current verification:
 
-- `lua tests/run.lua` -> `ok - 538 tests, 1 skipped`
+- `lua tests/run.lua` -> `ok - 544 tests, 1 skipped`
 - `.\LOVE\lovec.exe .\examples\love2d --smoke` -> `ok - love2d visualizer loaded`
+- `.\LOVE\lovec.exe .\examples\love2d --case scroll-view --screenshot <temp>` -> `ok - love2d screenshot saved <temp>`
 - `lua benchmarks/run.lua` and `.\LOVE\lovec.exe .\benchmarks\love2d` -> record 100, 1,000, and 5,000 node layout timings in `BENCHMARKS.md`
 
 ## Milestone 0: Project Skeleton
@@ -205,10 +206,13 @@ Status: complete for the supported Milestone 4 scope.
 - [x] Migrated `YGMinMaxDimensionTest` overflow justify/min/max case.
 - [x] Migrated `YGFlexWrapTest` overflowing margin content-sizing case.
 - [x] Love2D renderer clips children for `overflow = "hidden" | "scroll"`.
+- [x] UI-level generic ScrollView exposes controlled offset clamp, content size, viewport size, max scroll, and clip metrics for ordinary children.
+- [x] Runtime ScrollView layout snapshots offset children without changing parent Yoga layout and exclude clipped children from hit testing.
 - [x] Layout results expose Yoga-compatible `hadOverflow`.
 - [x] UI-level virtualized scroll list builds visible rows, overscan rows, and spacer nodes only.
 - [x] Fixed-height virtualized list supports direct jumps without laying out skipped rows.
 - [x] Love2D visual demo for a large virtualized scroll list.
+- [x] Love2D visual demo for a generic ScrollView with variable-height children.
 - [x] Relayout behavior tests.
 - [x] Dirty marking tests.
 - [x] Basic measure callback layout tests.
