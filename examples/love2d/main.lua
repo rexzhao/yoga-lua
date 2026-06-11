@@ -79,6 +79,7 @@ end
 
 local layout_modules = {
   "layouts.rpg_game",
+  "layouts.scroll_view",
 }
 
 local cases = {}
@@ -115,6 +116,7 @@ local function load_cases()
         return layout.build(layout_ctx, width, height, state)
       end,
       handleClick = layout.handleClick,
+      wheelmoved = layout.wheelmoved,
       keypressed = layout.keypressed,
       applyArgs = layout.applyArgs,
       hint = layout.hint,
@@ -244,6 +246,24 @@ local function clips_children(node, has_box)
   return props.clipChildren == true or style.overflow == "hidden" or style.overflow == "scroll"
 end
 
+local function node_scroll_offset(node)
+  local metrics = node.scroll
+  if metrics then
+    local offset = metrics.scrollOffset or 0
+    if metrics.axis == "x" then
+      return offset, 0
+    end
+
+    return 0, offset
+  end
+
+  if node.virtual then
+    return 0, node.virtual.scrollOffset or 0
+  end
+
+  return 0, 0
+end
+
 local function find_deepest(node, x, y, parent_left, parent_top)
   local left, top, width, height = absolute_rect(node, parent_left, parent_top)
   local has_box = width > 0 and height > 0
@@ -251,9 +271,11 @@ local function find_deepest(node, x, y, parent_left, parent_top)
   local clipped = clips_children(node, has_box)
 
   if hit or not has_box or not clipped then
-    local child_parent_top = top - ((node.virtual and node.virtual.scrollOffset) or 0)
+    local scroll_x, scroll_y = node_scroll_offset(node)
+    local child_parent_left = left - scroll_x
+    local child_parent_top = top - scroll_y
     for index = #(node.children or {}), 1, -1 do
-      local child, rect = find_deepest(node.children[index], x, y, left, child_parent_top)
+      local child, rect = find_deepest(node.children[index], x, y, child_parent_left, child_parent_top)
       if child then
         return child, rect
       end
@@ -586,10 +608,12 @@ local function draw_node(node, depth, parent_left, parent_top, flip_animator, in
     )
   end
 
-  local child_parent_top = base_top - ((node.virtual and node.virtual.scrollOffset) or 0)
+  local scroll_x, scroll_y = node_scroll_offset(node)
+  local child_parent_left = base_left - scroll_x
+  local child_parent_top = base_top - scroll_y
 
   for _, child in ipairs(node.children or {}) do
-    draw_node(child, depth + 1, base_left, child_parent_top, flip_animator, effective_dx, effective_dy)
+    draw_node(child, depth + 1, child_parent_left, child_parent_top, flip_animator, effective_dx, effective_dy)
   end
 
   if props_clip_children then
@@ -701,6 +725,19 @@ function love.keypressed(key)
   elseif key == "escape" then
     rebuild()
   elseif key == "r" then
+    rebuild()
+  end
+end
+
+function love.wheelmoved(x, y)
+  local case = cases[current_case]
+  if not (case and case.wheelmoved) then
+    return
+  end
+
+  local mouse_x, mouse_y = love.mouse.getPosition()
+  local node = root and find_deepest(root, mouse_x, mouse_y, 0, chrome.top)
+  if case.wheelmoved(case.state, x, y, node) then
     rebuild()
   end
 end

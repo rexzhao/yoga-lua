@@ -164,6 +164,102 @@ return function(runner, helper)
     helper.assert_equal(root.layout.top, 42, "refreshed adjusted top")
   end)
 
+  runner:test("runtime scrollView offsets child snapshots and exposes clip metrics", function()
+    local runtime = ui.createRuntime()
+    local root = runtime:render(runtime:scrollView({
+      scrollOffset = 30,
+      style = { width = 100, height = 50 },
+    }, {
+      runtime:div({ key = "first", style = { height = 40 } }),
+      runtime:div({ key = "second", style = { height = 40 } }),
+      runtime:div({ key = "third", style = { height = 40 } }),
+    }), 100, 50)
+
+    helper.assert_equal(root.scroll.viewportHeight, 50, "viewport height")
+    helper.assert_equal(root.scroll.contentHeight, 120, "content height")
+    helper.assert_equal(root.scroll.maxScroll, 70, "max scroll")
+    helper.assert_equal(root.scroll.scrollOffset, 30, "scroll offset")
+    helper.assert_equal(root.clip.left, 0, "clip left")
+    helper.assert_equal(root.clip.top, 0, "clip top")
+    helper.assert_equal(root.clip.width, 100, "clip width")
+    helper.assert_equal(root.clip.height, 50, "clip height")
+    helper.assert_equal(root.scroll.clip, root.clip, "scroll metrics clip")
+    helper.assert_equal(root.children[1].layout.top, -30, "first child scrolled up")
+    helper.assert_equal(root.children[2].layout.top, 10, "second child scrolled up")
+    helper.assert_equal(root.children[3].layout.top, 50, "third child scrolled up")
+  end)
+
+  runner:test("runtime scrollView clamps child snapshots to max scroll", function()
+    local runtime = ui.createRuntime()
+    local root = runtime:render(runtime:scrollView({
+      scrollOffset = 1000,
+      style = { width = 100, height = 50 },
+    }, {
+      runtime:div({ key = "first", style = { height = 40 } }),
+      runtime:div({ key = "second", style = { height = 40 } }),
+      runtime:div({ key = "third", style = { height = 40 } }),
+    }), 100, 50)
+
+    helper.assert_equal(root.scroll.maxScroll, 70, "max scroll")
+    helper.assert_equal(root.scroll.scrollOffset, 70, "oversized offset clamped")
+    helper.assert_equal(root.children[1].layout.top, -70, "first child clamped position")
+    helper.assert_equal(root.children[3].layout.top, 10, "third child clamped position")
+  end)
+
+  runner:test("runtime hitTest ignores scrollView children outside the clip", function()
+    local runtime = ui.createRuntime()
+    local root = runtime:render(runtime:scrollView({
+      scrollOffset = 30,
+      style = { width = 100, height = 50 },
+    }, {
+      runtime:div({ key = "first", style = { height = 40 } }),
+      runtime:div({ key = "second", style = { height = 40 } }),
+      runtime:button("Hidden", { key = "third", style = { height = 40 } }),
+    }), 100, 50)
+
+    local hit = runtime:hitTest(10, 5)
+    helper.assert_equal(hit.key, "first", "visible scrolled child hit")
+
+    hit = runtime:hitTest(10, 45)
+    helper.assert_equal(hit.key, "second", "visible lower child hit")
+
+    hit = runtime:hitTest(10, 55)
+    helper.assert_equal(hit, nil, "below viewport clipped")
+
+    hit = runtime:hitTest(10, -5)
+    helper.assert_equal(hit, nil, "above viewport clipped")
+
+    helper.assert_equal(root.children[3].layout.top, 50, "third child sits outside viewport")
+  end)
+
+  runner:test("runtime scrollView recomputes metrics after dynamic children change", function()
+    local runtime = ui.createRuntime()
+
+    local function build(child_count)
+      local children = {}
+      for index = 1, child_count do
+        children[#children + 1] = runtime:div({ key = tostring(index), style = { height = 40 } })
+      end
+
+      return runtime:scrollView({
+        key = "scroll",
+        scrollOffset = 1000,
+        style = { width = 100, height = 50 },
+      }, children)
+    end
+
+    local root = runtime:render(build(3), 100, 50)
+    helper.assert_equal(root.scroll.contentHeight, 120, "initial content height")
+    helper.assert_equal(root.scroll.maxScroll, 70, "initial max scroll")
+    helper.assert_equal(root.scroll.scrollOffset, 70, "initial clamped offset")
+
+    root = runtime:render(build(1), 100, 50)
+    helper.assert_equal(root.scroll.contentHeight, 40, "updated content height")
+    helper.assert_equal(root.scroll.maxScroll, 0, "updated max scroll")
+    helper.assert_equal(root.scroll.scrollOffset, 0, "updated clamped offset")
+    helper.assert_equal(#root.children, 1, "children updated")
+  end)
+
   runner:test("runtime styles demo builds without per-node styles props", function()
     local demo = assert(loadfile("examples/runtime_styles.lua"))()
     local root = demo.build(true)

@@ -112,6 +112,7 @@ return function(runner, helper)
     helper.assert_equal(list.type, "virtualList", "virtual list type")
     helper.assert_equal(list.virtual.visibleStart, 2, "visible start")
     helper.assert_equal(list.virtual.visibleEnd, 6, "visible end")
+    helper.assert_equal(list.scroll.maxScroll, 1940, "scroll metrics max")
     helper.assert_equal(#rendered, 5, "rendered count")
     helper.assert_equal(rendered[1], 2, "first rendered")
     helper.assert_equal(rendered[#rendered], 6, "last rendered")
@@ -160,5 +161,43 @@ return function(runner, helper)
     helper.assert_equal(list.virtual.scrollOffset, 60, "clamped scroll offset")
     helper.assert_equal(list.virtual.visibleStart, 7, "clamped visible start")
     helper.assert_equal(list.virtual.visibleEnd, 10, "clamped visible end")
+  end)
+
+  runner:test("scrollView exposes post-layout content metrics and clamps negative offset", function()
+    local view = ui.scrollView({
+      scrollOffset = -24,
+      style = { width = 100, height = 50 },
+    }, {
+      ui.div({ style = { height = 30 } }),
+      ui.div({ style = { height = 40 } }),
+    })
+
+    yoga.calculateLayout(view)
+    ui.updateScrollMetrics(view)
+
+    helper.assert_equal(view.type, "scrollView", "scroll view type")
+    helper.assert_equal(view.style.overflow, "scroll", "scroll view overflow")
+    helper.assert_equal(view.style.flexDirection, "column", "default scroll direction")
+    helper.assert_equal(view.scroll.viewportHeight, 50, "viewport height")
+    helper.assert_equal(view.scroll.contentHeight, 70, "content height")
+    helper.assert_equal(view.scroll.maxScroll, 20, "max scroll")
+    helper.assert_equal(view.scroll.scrollOffset, 0, "negative offset clamped")
+  end)
+
+  runner:test("scrollView clamps oversized offset to max scroll", function()
+    local view = ui.scrollView({
+      scrollOffset = 1000,
+      style = { width = 100, height = 50 },
+    }, {
+      ui.div({ style = { height = 40 } }),
+      ui.div({ style = { height = 40 } }),
+    })
+
+    yoga.calculateLayout(view)
+    ui.updateScrollMetrics(view)
+
+    helper.assert_equal(view.scroll.contentHeight, 80, "content height")
+    helper.assert_equal(view.scroll.maxScroll, 30, "max scroll")
+    helper.assert_equal(view.scroll.scrollOffset, 30, "oversized offset clamped")
   end)
 end

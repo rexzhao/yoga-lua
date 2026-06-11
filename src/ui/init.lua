@@ -1,4 +1,5 @@
 local yoga = require("yoga")
+local scroll = require("ui.scroll")
 
 local ui = {}
 
@@ -129,6 +130,20 @@ function ui.button(label, props)
   return attach_measure(node, props)
 end
 
+function ui.scrollView(props, children)
+  props, children = normalize_args(props, children)
+
+  local style = merge_style(props)
+  scroll.applyContainerStyle(style, props.axis)
+
+  local node = yoga.node(style, children)
+  node.type = "scrollView"
+  node.props = props
+  node.scroll = scroll.initialMetrics(props)
+
+  return attach_measure(node, props)
+end
+
 function ui.virtualList(props)
   props = props or {}
 
@@ -195,8 +210,22 @@ function ui.virtualList(props)
     topSpacerHeight = top_height,
     bottomSpacerHeight = bottom_height,
   }
+  node.scroll = scroll.virtualMetrics({
+    scrollOffset = scroll_offset,
+    maxScroll = max_scroll,
+    contentHeight = content_height,
+    viewportHeight = viewport_height,
+  })
 
   return attach_measure(node, props)
+end
+
+function ui.updateScrollMetrics(node)
+  return scroll.updateTree(node)
+end
+
+function ui.scrollDelta(scroll_state, delta, metrics)
+  return scroll.delta(scroll_state, delta, metrics)
 end
 
 return ui
